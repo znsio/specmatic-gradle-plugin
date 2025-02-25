@@ -1,0 +1,12 @@
+{
+  "transformationRules": [
+    {
+      "bundleName": "BSD-3-Clause",
+      "licenseUrlPattern": "https://golang.org/LICENSE"
+    },
+    {
+      "bundleName": "LGPL-2.1-only",
+      "licenseNamePattern": "GNU LESSER GENERAL PUBLIC LICENSE 2.1"
+    }
+  ]
+}
