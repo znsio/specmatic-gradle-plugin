@@ -5,6 +5,10 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_run:
+    workflows: [ "Java Build with Gradle" ]
+    types:
+      - completed
 
 jobs:
   publish:
