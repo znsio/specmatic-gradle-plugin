@@ -83,13 +83,25 @@ publishing {
             }
         }
     }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/znsio/specmatic-gradle-plugin")
+            credentials {
+
+                username = if (project.hasProperty("github.actor")) {
+                    project.findProperty("github.actor").toString()
+                } else {
+                    System.getenv("GITHUB_ACTOR")
+                }
+
+                password = if (project.hasProperty("github.token")) {
+                    project.findProperty("github.token").toString()
+                } else {
+                    System.getenv("GITHUB_TOKEN")
+                }
+            }
+        }
+    }
 }
-
-
-//allprojects {
-//    java {
-//        toolchain {
-//            languageVersion.set(JavaLanguageVersion.of(javaVersion))
-//        }
-//    }
-//}
