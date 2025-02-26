@@ -1,8 +1,8 @@
 pluginManagement {
     repositories {
-        gradlePluginPortal()
-        mavenCentral()
-        mavenLocal()
+        maven {
+            url = uri("https://maven.pkg.github.com/znsio/specmatic-gradle-plugin")
+        }
     }
 }
 
