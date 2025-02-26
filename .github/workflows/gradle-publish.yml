@@ -1,10 +1,6 @@
 name: Java Publish with Gradle
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
   workflow_run:
     workflows: [ "Java Build with Gradle" ]
     types:
