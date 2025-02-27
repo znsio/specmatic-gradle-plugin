@@ -1,11 +1,8 @@
 pluginManagement {
     repositories {
-        maven {
-            url = uri("https://maven.pkg.github.com/znsio/specmatic-gradle-plugin")
-        }
+        gradlePluginPortal()
+        mavenLocal()
     }
 }
-
 rootProject.name = "specmatic-gradle-plugin"
 include("plugin")
-

@@ -2,6 +2,8 @@ plugins {
     `maven-publish`
     `java-gradle-plugin`
     `kotlin-dsl`
+    signing
+    id("com.gradle.plugin-publish") version "1.2.1"
 }
 
 apply(plugin = "org.jetbrains.kotlin.jvm")
@@ -27,11 +29,20 @@ dependencies {
 
 gradlePlugin {
     plugins {
-        create("io.specmatic.gradle") {
+        create("specmatic-gradle-plugin") {
             id = "io.specmatic.gradle"
             implementationClass = "io.specmatic.gradle.SpecmaticGradlePlugin"
+            displayName = "Specmatic Gradle Plugin"
+            description = buildString {
+                append("This plugin is used to run Specmatic tests as part of the build process.")
+                append("It ensures some standardization for build processes across specmatic repositories.")
+            }
+            tags = listOf("specmatic", "internal", "standardization")
         }
     }
+
+    website = "https://specmatic.io"
+    vcsUrl = "https://github.com/znsio/specmatic-gradle-plugin"
 }
 
 val functionalTestSourceSet = sourceSets.create("functionalTest") {}
@@ -83,25 +94,13 @@ publishing {
             }
         }
     }
+}
 
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/znsio/specmatic-gradle-plugin")
-            credentials {
-
-                username = if (project.hasProperty("github.actor")) {
-                    project.findProperty("github.actor").toString()
-                } else {
-                    System.getenv("GITHUB_ACTOR")
-                }
-
-                password = if (project.hasProperty("github.token")) {
-                    project.findProperty("github.token").toString()
-                } else {
-                    System.getenv("GITHUB_TOKEN")
-                }
-            }
-        }
-    }
+signing {
+    useInMemoryPgpKeys(
+        System.getenv("SPECMATIC_GPG_KEY_ID"),
+        System.getenv("SPECMATIC_GPG_PRIVATE_KEY"),
+        System.getenv("SPECMATIC_GPG_PRIVATE_KEY_PASSPHRASE")
+    )
+    sign(publishing.publications)
 }
