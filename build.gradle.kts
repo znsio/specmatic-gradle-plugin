@@ -46,5 +46,5 @@ tasks.getByName("beforeReleaseBuild") {
 }
 
 tasks.getByName("afterReleaseBuild") {
-    dependsOn("core:publish")
+    dependsOn("plugin:publishPlugins")
 }
