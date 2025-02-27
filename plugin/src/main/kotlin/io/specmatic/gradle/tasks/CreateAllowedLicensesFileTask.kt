@@ -35,7 +35,9 @@ open class CreateAllowedLicensesFileTask : DefaultTask() {
 }
 
 fun createDefaultAllowedLicensesFile(project: Project): File {
-    val allowedLicensesFile = File(project.layout.buildDirectory.get().asFile, "allowed-licenses.json")
+    val buildDir = project.layout.buildDirectory.get().asFile
+    buildDir.mkdirs()
+    val allowedLicensesFile = File(buildDir, "allowed-licenses.json")
     val allowedLicensesDocument = ALLOWED_LICENSES.map({ eachLicense ->
         mapOf(
             "moduleLicense" to eachLicense, "moduleName" to ".*"
