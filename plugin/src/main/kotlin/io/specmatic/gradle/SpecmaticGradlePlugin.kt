@@ -20,3 +20,14 @@ class SpecmaticGradlePlugin : Plugin<Project> {
         ConfigureExecTask(project)
     }
 }
+
+fun findSpecmaticExtension(project: Project): SpecmaticGradleExtension? {
+    var currentProject: Project? = project
+    while (currentProject != null) {
+        currentProject.extensions.findByType(SpecmaticGradleExtension::class.java)?.let {
+            return it
+        }
+        currentProject = currentProject.parent
+    }
+    return null
+}

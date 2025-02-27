@@ -1,6 +1,5 @@
 package io.specmatic.gradle
 
-import io.specmatic.gradle.extensions.SpecmaticGradleExtension
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
@@ -41,17 +40,6 @@ class ConfigureCompilerOptions(project: Project) {
                 }
             }
         }
-    }
-
-    private fun findSpecmaticExtension(project: Project): SpecmaticGradleExtension? {
-        var currentProject: Project? = project
-        while (currentProject != null) {
-            currentProject.extensions.findByType(SpecmaticGradleExtension::class.java)?.let {
-                return it
-            }
-            currentProject = currentProject.parent
-        }
-        return null
     }
 
 }

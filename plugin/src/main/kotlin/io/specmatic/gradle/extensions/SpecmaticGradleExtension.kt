@@ -3,11 +3,7 @@ package io.specmatic.gradle.extensions
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 
 data class ModuleLicenseData(
-    val name: String,
-    val version: String,
-    val projectUrl: String?,
-    val license: String,
-    val licenseUrl: String?
+    val name: String, val version: String, val projectUrl: String?, val license: String, val licenseUrl: String?
 )
 
 open class SpecmaticGradleExtension {
