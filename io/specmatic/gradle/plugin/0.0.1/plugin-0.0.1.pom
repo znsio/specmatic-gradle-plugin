@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <!-- This module was also published with a richer model, Gradle metadata,  -->
+  <!-- which should be used instead. Do not delete the following line which  -->
+  <!-- is to indicate to Gradle or any Gradle module metadata file consumer  -->
+  <!-- that they should prefer consuming it instead. -->
+  <!-- do_not_remove: published-with-gradle-metadata -->
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>io.specmatic.gradle</groupId>
+  <artifactId>plugin</artifactId>
+  <version>0.0.1</version>
+  <name>Specmatic Gradle Plugin</name>
+  <description>For internal use by the specmatic team</description>
+  <url>https://specmatic.io</url>
+  <licenses>
+    <license>
+      <name>MIT</name>
+      <url>https://opensource.org/license/mit</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>specmaticBuilders</id>
+      <name>Specmatic Builders</name>
+      <email>info@specmatic.io</email>
+    </developer>
+  </developers>
+  <scm>
+    <connection>https://github.com/znsio/specmatic-gradle-plugin</connection>
+    <url>https://github.com/znsio/specmatic-gradle-plugin</url>
+  </scm>
+  <dependencies>
+    <dependency>
+      <groupId>com.github.jk1</groupId>
+      <artifactId>gradle-license-report</artifactId>
+      <version>2.9</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.adarshr</groupId>
+      <artifactId>gradle-test-logger-plugin</artifactId>
+      <version>4.0.0</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>net.researchgate</groupId>
+      <artifactId>gradle-release</artifactId>
+      <version>3.1.0</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.barfuin.gradle.taskinfo</groupId>
+      <artifactId>gradle-taskinfo</artifactId>
+      <version>2.2.0</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains.kotlin</groupId>
+      <artifactId>kotlin-gradle-plugin</artifactId>
+      <version>1.9.25</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jgit</groupId>
+      <artifactId>org.eclipse.jgit</artifactId>
+      <version>7.1.0.202411261347-r</version>
+      <scope>runtime</scope>
+    </dependency>
+  </dependencies>
+</project>
