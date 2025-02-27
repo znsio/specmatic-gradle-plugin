@@ -97,6 +97,9 @@ publishing {
 }
 
 signing {
+    setRequired({
+        !version.toString().endsWith("SNAPSHOT") && gradle.taskGraph.hasTask("publish")
+    })
     useInMemoryPgpKeys(
         System.getenv("SPECMATIC_GPG_KEY_ID"),
         System.getenv("SPECMATIC_GPG_PRIVATE_KEY"),
