@@ -13,5 +13,3 @@ jobs:
       contents: write # This is required so that the dependency check can push dependency graph to the github repository
     steps:
       - uses: znsio/specmatic-github-workflows/action-publish-gradle@main
-        with:
-          gradle-extra-args: "-Pgithub.actor=dummy -Pgithub.token=${{secrets.ACTIONS_REPO_RW_TOKEN}}"
