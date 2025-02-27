@@ -23,4 +23,4 @@ jobs:
     steps:
       - uses: znsio/specmatic-github-workflows/action-release-gradle@main
         with:
-
+          extra-gradle-args: -Prelease.useAutomaticVersion=true -Prelease.releaseVersion=${{ github.event.inputs.release_version }} -Prelease.newVersion=${{ github.event.inputs.next_version }}
