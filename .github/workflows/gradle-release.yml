@@ -1,6 +1,11 @@
 name: Release
 
 on:
+  workflow_run:
+    workflows: [ "Java Build with Gradle" ]
+    types:
+      - completed
+
   workflow_dispatch:
     inputs:
       release_version:
@@ -17,3 +22,5 @@ jobs:
       contents: write # This is required so that the dependency check can push dependency graph to the github repository
     steps:
       - uses: znsio/specmatic-github-workflows/action-release-gradle@main
+        with:
+
