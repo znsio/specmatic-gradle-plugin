@@ -17,17 +17,17 @@ class ProguardConfiguration(project: Project) {
 
     private fun configureProguard(project: Project) {
         project.afterEvaluate {
-            val proguardTaskProvider = project.tasks.register("proguard", ProGuardTask::class.java)
+            val obfuscateJarTask = project.tasks.register("obfuscateJar", ProGuardTask::class.java)
 
             project.tasks.withType(Jar::class.java).configureEach {
                 archiveClassifier.set("original")
-                finalizedBy(proguardTaskProvider)
+                finalizedBy(obfuscateJarTask)
             }
 
             val jarTask = project.tasks.getByName("jar") as Jar
             val jarTaskFile = jarTask.archiveFile.get().asFile
 
-            proguardTaskProvider.configure {
+            obfuscateJarTask.configure {
                 group = "build"
                 description = "Run Proguard on the output of the `jar` task"
                 dependsOn("jar")
