@@ -20,6 +20,7 @@ dependencies {
     implementation("org.barfuin.gradle.taskinfo:org.barfuin.gradle.taskinfo.gradle.plugin:2.2.0")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.25")
     implementation("org.eclipse.jgit:org.eclipse.jgit:7.1.0.202411261347-r")
+    implementation("com.guardsquare:proguard-gradle:7.6.1")
 
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.assertj:assertj-core:3.27.3")

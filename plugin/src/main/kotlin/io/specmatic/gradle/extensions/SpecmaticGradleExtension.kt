@@ -1,5 +1,6 @@
 package io.specmatic.gradle.extensions
 
+import org.gradle.api.Project
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 
 data class ModuleLicenseData(
@@ -16,6 +17,7 @@ open class SpecmaticGradleExtension {
 
     val allowedLicenses: MutableList<ModuleLicenseData> = mutableListOf()
 
+    val obfuscatedProjects: MutableList<Project> = mutableListOf()
     fun allowedLicense(block: ModuleLicenseDataBuilder.() -> Unit) {
         allowedLicenses.add(ModuleLicenseDataBuilder().apply(block).build())
     }

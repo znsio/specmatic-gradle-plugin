@@ -18,6 +18,8 @@ class SpecmaticGradlePlugin : Plugin<Project> {
         EnsureReproducibleArtifacts(project)
         EnsureJarsAreStamped(project)
         ConfigureExecTask(project)
+
+        ProguardConfiguration(project)
     }
 }
 
