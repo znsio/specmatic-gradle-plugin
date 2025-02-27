@@ -41,3 +41,10 @@ specmatic {
     }
 }
 
+tasks.getByName("beforeReleaseBuild") {
+    dependsOn("check")
+}
+
+tasks.getByName("afterReleaseBuild") {
+    dependsOn("core:publish")
+}
