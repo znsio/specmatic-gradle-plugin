@@ -2,11 +2,9 @@ package io.specmatic.gradle
 
 import org.gradle.api.GradleException
 import org.gradle.api.Project
-import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.compile.JavaCompile
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
-import org.jetbrains.kotlin.gradle.plugin.KotlinBasePlugin
 
 class ConfigureCompilerOptions(project: Project) {
     init {
@@ -21,19 +19,23 @@ class ConfigureCompilerOptions(project: Project) {
 
         val jvmVersion = specmaticGradleExtension.jvmVersion
 
-        if (project.plugins.hasPlugin(JavaPlugin::class.java)) {
+        project.pluginManager.withPlugin("java") {
+            println("Configuring compiler options on $project")
+
             project.extensions.configure(JavaPluginExtension::class.java) {
                 toolchain.languageVersion.set(jvmVersion)
             }
 
             project.tasks.withType(JavaCompile::class.java).configureEach {
+                println("Configuring compiler options for ${this.path}")
                 options.encoding = "UTF-8"
                 options.compilerArgs.add("-Werror") // Terminate compilation if warnings occur
                 options.compilerArgs.add("-Xlint:unchecked") // Warn about unchecked operations.
             }
         }
 
-        if (project.plugins.hasPlugin(KotlinBasePlugin::class.java)) {
+        project.pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
+            println("Configuring Kotlin compiler options on $project")
             project.extensions.configure(KotlinProjectExtension::class.java) {
                 jvmToolchain {
                     languageVersion.set(jvmVersion)

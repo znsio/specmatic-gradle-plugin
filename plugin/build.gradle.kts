@@ -2,8 +2,7 @@ plugins {
     `maven-publish`
     `java-gradle-plugin`
     `kotlin-dsl`
-    signing
-    id("com.gradle.plugin-publish") version "1.2.1"
+    id("com.gradle.plugin-publish") version "1.3.1"
 }
 
 apply(plugin = "org.jetbrains.kotlin.jvm")
@@ -18,9 +17,10 @@ dependencies {
     implementation("com.adarshr.test-logger:com.adarshr.test-logger.gradle.plugin:4.0.0")
     implementation("net.researchgate:gradle-release:3.1.0")
     implementation("org.barfuin.gradle.taskinfo:org.barfuin.gradle.taskinfo.gradle.plugin:2.2.0")
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.25")
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.10")
     implementation("org.eclipse.jgit:org.eclipse.jgit:7.1.0.202411261347-r")
-    implementation("com.guardsquare:proguard-gradle:7.6.1")
+    implementation("com.github.johnrengelman.shadow:com.github.johnrengelman.shadow.gradle.plugin:8.1.1")
+    implementation("com.vanniktech.maven.publish:com.vanniktech.maven.publish.gradle.plugin:0.31.0-rc1")
 
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.assertj:assertj-core:3.27.3")
@@ -46,7 +46,7 @@ gradlePlugin {
     vcsUrl = "https://github.com/znsio/specmatic-gradle-plugin"
 }
 
-val functionalTestSourceSet = sourceSets.create("functionalTest") {}
+val functionalTestSourceSet = sourceSets.create("functionalTest")
 
 configurations["functionalTestImplementation"].extendsFrom(configurations["testImplementation"])
 configurations["functionalTestRuntimeOnly"].extendsFrom(configurations["testRuntimeOnly"])
@@ -68,43 +68,12 @@ tasks.named<Test>("test") {
     maxParallelForks = 3
 }
 
+val stagingRepo = layout.buildDirectory.dir("mvn-repo").get()
+
 publishing {
-    publications {
-        create<MavenPublication>("pluginMaven") {
-            pom {
-                name = "Specmatic Gradle Plugin"
-                description = "For internal use by the specmatic team"
-                url = "https://specmatic.io"
-                licenses {
-                    license {
-                        name = "MIT"
-                        url = "https://opensource.org/license/mit"
-                    }
-                }
-                developers {
-                    developer {
-                        id = "specmaticBuilders"
-                        name = "Specmatic Builders"
-                        email = "info@specmatic.io"
-                    }
-                }
-                scm {
-                    connection = "https://github.com/znsio/specmatic-gradle-plugin"
-                    url = "https://github.com/znsio/specmatic-gradle-plugin"
-                }
-            }
+    repositories {
+        maven {
+            url = stagingRepo.asFile.toURI()
         }
     }
-}
-
-signing {
-    setRequired({
-        !version.toString().endsWith("SNAPSHOT") && gradle.taskGraph.hasTask("publish")
-    })
-    useInMemoryPgpKeys(
-        System.getenv("SPECMATIC_GPG_KEY_ID"),
-        System.getenv("SPECMATIC_GPG_PRIVATE_KEY"),
-        System.getenv("SPECMATIC_GPG_PRIVATE_KEY_PASSPHRASE")
-    )
-    sign(publishing.publications)
 }

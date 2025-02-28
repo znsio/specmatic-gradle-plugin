@@ -3,7 +3,6 @@ package io.specmatic.gradle
 import com.github.jk1.license.ImportedModuleBundle
 import com.github.jk1.license.ImportedModuleData
 import com.github.jk1.license.LicenseReportExtension
-import com.github.jk1.license.LicenseReportPlugin
 import com.github.jk1.license.filter.LicenseBundleNormalizer
 import com.github.jk1.license.filter.SpdxLicenseBundleNormalizer
 import com.github.jk1.license.importer.DependencyDataImporter
@@ -20,22 +19,6 @@ import org.gradle.api.Project
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.tasks.Jar
 
-val ALLOWED_LICENSES = arrayOf(
-    "0BSD",
-    "Apache-2.0",
-    "BSD-2-Clause",
-    "BSD-3-Clause",
-    "CC0-1.0",
-    "CDDL-1.0",
-    "CDDL-1.1",
-    "EDL-1.0",
-    "EPL-1.0",
-    "EPL-2.0",
-    "MIT",
-    "MPL-2.0",
-    "Public-Domain",
-    "LGPL-2.1-only"
-)
 
 internal class CustomLicenseImporter(private val allowedLicenses: MutableList<ModuleLicenseData>) :
     DependencyDataImporter {
@@ -58,31 +41,34 @@ internal class LicenseReportingConfiguration(project: Project) {
     }
 
     private fun configureLicenseReporting(project: Project) {
-        project.plugins.apply(LicenseReportPlugin::class.java)
-        val specmaticExtension = project.extensions.getByType(SpecmaticGradleExtension::class.java)
+        println("Configuring license reporting on $project")
+        project.pluginManager.apply("com.github.jk1.dependency-license-report")
+        project.pluginManager.withPlugin("com.github.jk1.dependency-license-report") {
+            val specmaticExtension = project.extensions.getByType(SpecmaticGradleExtension::class.java)
 
-        val prettyPrintLicenseCheckFailuresTask = createPrettyPrintLicenseCheckFailuresTask(project)
-        val createAllowedLicensesFileTask = createCreateAllowedLicensesFileTask(project)
+            val prettyPrintLicenseCheckFailuresTask = createPrettyPrintLicenseCheckFailuresTask(project)
+            val createAllowedLicensesFileTask = createCreateAllowedLicensesFileTask(project)
 
-        // because we applied LicenseReportPlugin, we have to install a callback to configure the rest of the stuff
-        project.afterEvaluate({
-            val reportExtension = licenseReportExtension(project)
+            // because we applied LicenseReportPlugin, we have to install a callback to configure the rest of the stuff
+            project.afterEvaluate({
+                val reportExtension = licenseReportExtension(project)
 
-            val buildDir = project.layout.buildDirectory.get().asFile
-            if (!buildDir.exists()) {
-                buildDir.mkdirs()
-            }
+                val buildDir = project.layout.buildDirectory.get().asFile
+                if (!buildDir.exists()) {
+                    buildDir.mkdirs()
+                }
 
-            reportExtension.filters = filters()
-            reportExtension.importers = arrayOf(CustomLicenseImporter(specmaticExtension.allowedLicenses))
-            reportExtension.renderers = renderers()
-            reportExtension.allowedLicensesFile = createDefaultAllowedLicensesFile(project)
-            reportExtension.excludeGroups = arrayOf("io.specmatic.*")
+                reportExtension.filters = filters()
+                reportExtension.importers = arrayOf(CustomLicenseImporter(specmaticExtension.licenseData))
+                reportExtension.renderers = renderers()
+                reportExtension.allowedLicensesFile = createDefaultAllowedLicensesFile(project)
+                reportExtension.excludeGroups = arrayOf("io.specmatic.*")
 
-            configureTaskDependencies(
-                project, prettyPrintLicenseCheckFailuresTask, createAllowedLicensesFileTask
-            )
-        })
+                configureTaskDependencies(
+                    project, prettyPrintLicenseCheckFailuresTask, createAllowedLicensesFileTask
+                )
+            })
+        }
     }
 
 
