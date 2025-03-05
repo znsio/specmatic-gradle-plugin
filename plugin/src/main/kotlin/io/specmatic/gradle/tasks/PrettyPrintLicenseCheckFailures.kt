@@ -32,8 +32,12 @@ open class PrettyPrintLicenseCheckFailures : DefaultTask() {
 
             unsupportedLicensesGroupedByLicense.forEach { (license, modules) ->
                 messages.add("License: $license")
-                (modules as List<Map<*, *>>).forEach { module ->
-                    messages.add("   - ${module["moduleName"]} (${module["moduleVersion"]})")
+                (modules as List<*>).forEach { module ->
+                    if (module is Map<*, *>) {
+                        messages.add("   - ${module["moduleName"]} (${module["moduleVersion"]})")
+                    } else {
+                        throw GradleException("Unexpected module format: $module")
+                    }
                 }
                 messages.add("")
             }
