@@ -1,11 +1,10 @@
 package io.specmatic.gradle
 
-import assertk.assertFailure
-import assertk.assertThat
-import assertk.assertions.*
 import com.github.jk1.license.LicenseReportPlugin
 import io.specmatic.gradle.extensions.SpecmaticGradleExtension
 import net.researchgate.release.ReleasePlugin
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatCode
 import org.barfuin.gradle.taskinfo.GradleTaskInfoPlugin
 import org.eclipse.jgit.api.Git
 import org.gradle.api.Project
@@ -264,16 +263,21 @@ class SpecmaticGradlePluginTest {
         }
 
         private fun assertGeneratedResourcesSourceExists(project: Project) {
-            val generatedResourcesDir = project.file("src/main/resources-gen")
-
             val mainResources = project.the<SourceSetContainer>()["main"].resources
-            assertThat(mainResources.srcDirs).contains(generatedResourcesDir)
+            assertThat(mainResources.srcDirs).contains(project.file("src/main/gen-resources"))
+
+            val mainJava = project.the<SourceSetContainer>()["main"].java
+            assertThat(mainJava.srcDirs).contains(project.file("src/main/gen-kt"))
         }
 
         private fun assertGeneratedResourcesDoesNotExist(project: Project) {
-            assertFailure {
+            assertThatCode {
                 project.the<SourceSetContainer>()["main"].resources
-            }.hasClass(UnknownDomainObjectException::class)
+            }.isInstanceOf(UnknownDomainObjectException::class.java)
+
+            assertThatCode {
+                project.the<SourceSetContainer>()["main"].java
+            }.isInstanceOf(UnknownDomainObjectException::class.java)
         }
     }
 }

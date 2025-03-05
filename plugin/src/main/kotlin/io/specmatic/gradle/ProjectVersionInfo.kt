@@ -27,11 +27,11 @@ data class ProjectVersionInfo(
 
     private fun shortCommit() = gitCommit.take(8)
 
-    fun packageDir() = kotlinPackage().replace("\\.", "/")
+    fun packageDir() = kotlinPackage().replace(".", "/")
     fun kotlinFilePath() = "${packageDir()}/VersionInfo.kt"
     fun propertiesFilePath() = "${packageDir()}/version.properties"
 
-    private fun kotlinPackage() = "${group}.${name}".replace("[^a-zA-Z0-9]".toRegex(), ".")
+    fun kotlinPackage() = "${group}.${name}".lowercase().replace("[^a-zA-Z0-9]".toRegex(), ".")
 
 
     fun toPropertiesFile(): String {

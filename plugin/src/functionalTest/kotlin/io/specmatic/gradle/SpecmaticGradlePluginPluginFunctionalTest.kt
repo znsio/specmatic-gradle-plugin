@@ -1,10 +1,6 @@
 package io.specmatic.gradle
 
-import assertk.assertThat
-import assertk.assertions.contains
-import assertk.assertions.doesNotContain
-import assertk.assertions.exists
-import assertk.assertions.isEqualTo
+import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.io.TempDir
@@ -79,7 +75,7 @@ class SpecmaticGradlePluginPluginFunctionalTest {
     @Test
     fun `it should create version properties file`() {
         // Set up the test build
-        settingsFile.writeText("rootProject.name = \"foobar\"")
+        settingsFile.writeText("rootProject.name = \"fooBar\"")
         buildFile.writeText(
             """
             plugins {
@@ -101,9 +97,15 @@ class SpecmaticGradlePluginPluginFunctionalTest {
 
         // Verify the result
         assertThat(result.task(":createVersionPropertiesFile")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+        assertThat(result.task(":createVersionInfoKotlin")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
         val versionPropertiesFile =
-            projectDir.resolve("src/main/resources-gen/version-com.example.group-foobar.properties")
+            projectDir.resolve("src/main/gen-resources/com/example/group/foobar/version.properties")
         assertThat(versionPropertiesFile).exists()
         assertThat(versionPropertiesFile.readText()).contains("version=unspecified")
+
+        val versinInfoKotlinFile =
+            projectDir.resolve("src/main/gen-kt/com/example/group/foobar/VersionInfo.kt")
+        assertThat(versinInfoKotlinFile).exists()
+        assertThat(versinInfoKotlinFile.readText()).contains("val version = \"unspecified\"")
     }
 }
