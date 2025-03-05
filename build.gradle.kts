@@ -100,3 +100,7 @@ tasks.getByName("afterReleaseBuild") {
     dependsOn("plugin:publishPlugins")
     dependsOn("plugin:publishToMavenCentral")
 }
+
+release {
+    failOnSnapshotDependencies = false
+}
