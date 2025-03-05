@@ -51,7 +51,7 @@ class SpecmaticGradlePluginTest {
             val prettyPrintLicenseCheckFailuresTask = project.tasks.named("prettyPrintLicenseCheckFailures")
             val createAllowedLicensesFileTask = project.tasks.named("createAllowedLicensesFile")
 
-            assertThat(checkLicenseTask.dependsOn).contains(createAllowedLicensesFileTask)
+            assertThat(checkLicenseTask.taskDependencies.getDependencies(null)).contains(createAllowedLicensesFileTask.get())
             assertThat(checkLicenseTask.finalizedBy.getDependencies(null)).contains(prettyPrintLicenseCheckFailuresTask.get())
         }
     }

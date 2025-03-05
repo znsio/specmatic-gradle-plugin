@@ -27,7 +27,7 @@ class SpecmaticGradlePluginPluginFunctionalTest {
             }
             
             tasks.register("myExec", Exec) {
-                commandLine("echo", "hello")
+                commandLine("echo", "hello", "world")
             }
         """.trimIndent()
         )
@@ -40,7 +40,7 @@ class SpecmaticGradlePluginPluginFunctionalTest {
         val result = runner.withArguments("-i", "myExec").build()
 
         // Verify the result
-        assertThat(result.output).contains("hello")
+        assertThat(result.output).contains("hello world")
     }
 
     @Test
@@ -55,7 +55,7 @@ class SpecmaticGradlePluginPluginFunctionalTest {
             }
             
             tasks.register("myExec", Exec) {
-                commandLine("echo", "hello")
+                commandLine("echo", "hello", "world")
             }
         """.trimIndent()
         )
@@ -68,7 +68,7 @@ class SpecmaticGradlePluginPluginFunctionalTest {
         val result = runner.withArguments("myExec").build()
 
         // Verify the result
-        assertThat(result.output).doesNotContain("hello")
+        assertThat(result.output).doesNotContain("hello world")
         assertThat(result.task(":myExec")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     }
 }
