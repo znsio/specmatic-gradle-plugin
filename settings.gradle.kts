@@ -6,9 +6,6 @@ pluginManagement {
                 snapshotsOnly()
             }
         }
-        maven {
-            url = uri("https://znsio.github.io/specmatic-gradle-plugin")
-        }
     }
 }
 
