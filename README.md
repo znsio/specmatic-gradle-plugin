@@ -82,3 +82,5 @@ ORG_GRADLE_PROJECT_signingInMemoryKeyPassword="..." # passphrase for the gpg key
 * Ensure that all `Exec` tasks are configured to emit output to the console
 * Adds tasks to create shadow jars, if configured
 * Adds tasks to obfuscate jars, if configured
+* Adds task to publish jars to local maven repository (`publishToMavenLocal`)
+* Adds task to publish jars to maven repo in build dir(`publishAllPublicationsToStagingRepository`)

@@ -69,10 +69,10 @@ class ConfigurePublications(project: Project) {
 
             publishing.repositories {
                 maven {
+                    name = "staging"
                     url = project.uri(stagingRepo)
                 }
             }
-
 
 
             project.extensions.getByType(MavenPublishBaseExtension::class.java).apply {
