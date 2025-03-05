@@ -1,15 +1,22 @@
 package io.specmatic.gradle
 
+import assertk.assertFailure
+import assertk.assertThat
+import assertk.assertions.*
 import com.github.jk1.license.LicenseReportPlugin
 import io.specmatic.gradle.extensions.SpecmaticGradleExtension
 import net.researchgate.release.ReleasePlugin
-import org.assertj.core.api.Assertions.assertThat
 import org.barfuin.gradle.taskinfo.GradleTaskInfoPlugin
 import org.eclipse.jgit.api.Git
+import org.gradle.api.Project
+import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestFramework
 import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.bundling.AbstractArchiveTask
+import org.gradle.kotlin.dsl.get
+import org.gradle.kotlin.dsl.the
 import org.gradle.testfixtures.ProjectBuilder
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.junit.jupiter.api.Nested
@@ -223,6 +230,50 @@ class SpecmaticGradlePluginTest {
             }
         }
 
+    }
 
+    @Nested
+    inner class Sourcesets {
+        @Test
+        fun `should add generated resources dir to main resources if project is root project, and no subprojects exist`() {
+            val project = ProjectBuilder.builder().build()
+            project.plugins.apply("java")
+            project.plugins.apply("io.specmatic.gradle")
+            project.evaluationDependsOn(":") // force execution of `afterEvaluate` block
+
+            assertGeneratedResourcesSourceExists(project)
+        }
+
+        @Test
+        fun `should add generated resources dir to main resources on java subprojects`() {
+            val rootProject = ProjectBuilder.builder().withName("root").build()
+            rootProject.plugins.apply("io.specmatic.gradle")
+
+            val subProjectWithJava =
+                ProjectBuilder.builder().withName("java-subproject").withParent(rootProject).build()
+            subProjectWithJava.plugins.apply("java")
+
+            val subProjectWithoutJava =
+                ProjectBuilder.builder().withName("non-java-subproject").withParent(rootProject).build()
+
+            rootProject.evaluationDependsOn(":") // force execution of `afterEvaluate` block
+
+            assertGeneratedResourcesSourceExists(subProjectWithJava)
+            assertGeneratedResourcesDoesNotExist(subProjectWithoutJava)
+            assertGeneratedResourcesDoesNotExist(rootProject)
+        }
+
+        private fun assertGeneratedResourcesSourceExists(project: Project) {
+            val generatedResourcesDir = project.file("src/main/resources-gen")
+
+            val mainResources = project.the<SourceSetContainer>()["main"].resources
+            assertThat(mainResources.srcDirs).contains(generatedResourcesDir)
+        }
+
+        private fun assertGeneratedResourcesDoesNotExist(project: Project) {
+            assertFailure {
+                project.the<SourceSetContainer>()["main"].resources
+            }.hasClass(UnknownDomainObjectException::class)
+        }
     }
 }

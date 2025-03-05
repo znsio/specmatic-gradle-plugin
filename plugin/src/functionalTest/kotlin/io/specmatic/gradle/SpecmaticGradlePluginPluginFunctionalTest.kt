@@ -1,6 +1,10 @@
 package io.specmatic.gradle
 
-import org.assertj.core.api.Assertions.assertThat
+import assertk.assertThat
+import assertk.assertions.contains
+import assertk.assertions.doesNotContain
+import assertk.assertions.exists
+import assertk.assertions.isEqualTo
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.io.TempDir
@@ -70,5 +74,36 @@ class SpecmaticGradlePluginPluginFunctionalTest {
         // Verify the result
         assertThat(result.output).doesNotContain("hello world")
         assertThat(result.task(":myExec")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    }
+
+    @Test
+    fun `it should create version properties file`() {
+        // Set up the test build
+        settingsFile.writeText("rootProject.name = \"foobar\"")
+        buildFile.writeText(
+            """
+            plugins {
+                id('java')
+                id('io.specmatic.gradle')
+            }
+            
+            version="unspecified"
+            group="com.example.group"
+        """.trimIndent()
+        )
+
+        // Run the build
+        val runner = GradleRunner.create()
+        runner.forwardOutput()
+        runner.withPluginClasspath()
+        runner.withProjectDir(projectDir)
+        val result = runner.withArguments("assemble").build()
+
+        // Verify the result
+        assertThat(result.task(":createVersionPropertiesFile")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+        val versionPropertiesFile =
+            projectDir.resolve("src/main/resources-gen/version-com.example.group-foobar.properties")
+        assertThat(versionPropertiesFile).exists()
+        assertThat(versionPropertiesFile.readText()).contains("version=unspecified")
     }
 }

@@ -5,3 +5,5 @@
 build
 .idea/
 .kotlin/
+gen-kt/
+gen-resources/

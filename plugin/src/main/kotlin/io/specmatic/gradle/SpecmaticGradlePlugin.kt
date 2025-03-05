@@ -1,10 +1,9 @@
 package io.specmatic.gradle
 
 import io.specmatic.gradle.extensions.SpecmaticGradleExtension
+import io.specmatic.gradle.plugin.VersionInfo
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import java.io.File
-import java.util.jar.JarFile
 
 @Suppress("unused")
 class SpecmaticGradlePlugin : Plugin<Project> {
@@ -12,11 +11,8 @@ class SpecmaticGradlePlugin : Plugin<Project> {
         val specmaticGradleExtension = project.extensions.create("specmatic", SpecmaticGradleExtension::class.java)
 
         if (project.hasProperty("specmatic.plugin.printVersion")) {
-            val jar = File(SpecmaticGradlePlugin::class.java.protectionDomain.codeSource.location.toURI().path)
-            val timestamp = JarFile(jar).use { jarFile ->
-                jarFile.manifest.mainAttributes.getValue("x-specmatic-compile-timestamp")
-            }
-            println("Specmatic Gradle Plugin loaded from $jar, timestamp: $timestamp")
+            // append the timestamp to the version if it is available
+            println("Specmatic Gradle Plugin v${VersionInfo.describe()}")
         }
 
         project.afterEvaluate {
@@ -27,11 +23,14 @@ class SpecmaticGradlePlugin : Plugin<Project> {
                 }
         }
 
+        ConfigureVersionInfo(project)
+
         // apply whatever plugins we need to apply
         LicenseReportingConfiguration(project)
         ConfigureTests(project)
         ConfigureReleases(project)
         ConfigureTaskInfo(project)
+        ConfigureVersionFiles(project)
 
         // setup obfuscation, shadowing, publishing...
         ObfuscateConfiguration(project)
@@ -56,3 +55,5 @@ fun findSpecmaticExtension(project: Project): SpecmaticGradleExtension? {
     }
     return null
 }
+
+

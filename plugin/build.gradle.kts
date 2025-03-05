@@ -23,7 +23,7 @@ dependencies {
     implementation("com.vanniktech.maven.publish:com.vanniktech.maven.publish.gradle.plugin:0.31.0-rc1")
 
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testImplementation("org.assertj:assertj-core:3.27.3")
+    testImplementation("com.willowtreeapps.assertk:assertk:0.28.1")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
