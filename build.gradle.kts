@@ -98,4 +98,5 @@ tasks.getByName("beforeReleaseBuild") {
 
 tasks.getByName("afterReleaseBuild") {
     dependsOn("plugin:publishPlugins")
+    dependsOn("plugin:publishToMavenCentral")
 }
