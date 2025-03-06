@@ -31,7 +31,6 @@ specmatic {
         // shadow jar task config
     }
 
-
     // choose what type of jars to publish. These only apply if you are obfuscating, or shadowing jars. Ignore if you are not.
     val whatToPublish = listOf(
             PublicationType.OBFUSCATED_ORIGINAL,
@@ -51,6 +50,12 @@ specmatic {
 }
 ```
 
+```gitignore
+# Add the following to the .gitignore file
+gen-kt/
+gen-resources/
+```
+
 ## Variables required for publishing
 
 ```shell
@@ -63,6 +68,25 @@ ORG_GRADLE_PROJECT_signingInMemoryKey="-----BEGIN PGP PRIVATE KEY BLOCK----- ...
 ORG_GRADLE_PROJECT_signingInMemoryKeyId="abcdef12" # 8 digit key id (last 8 digits of the key)
 ORG_GRADLE_PROJECT_signingInMemoryKeyPassword="..." # passphrase for the gpg key
 ```
+
+## Some additional nuances to be aware of
+
+* The plugin will not work if the `specmatic` block is not present in the root project.
+* If a project is obfuscated and/or shadowed, the plugin will rename the default `jar` publication to be called
+  `original` instead. This is to avoid confusion between the original jar and the obfuscated/shadowed jars. To use this
+  dependency in another sibling project, you will need to use the `original` classifier. For example, if you have an
+  obfuscated project (with the name `core`), and you want to use it in another project, you will need to add the
+  following to the `dependencies` block in the sibling project:
+  ```groovy
+    dependencies {
+        // depend on the original jar of a sibling project
+        implementation project(":core", configuration: "maven") // yes, the configuration is "maven". Yak shave for another day
+  
+        // Other alternatives for the configuration are:
+        
+        implementation "io.specmatic.blah:flux-capacitor:1.0.0:[obfuscated|all-obfuscated|shadowed|all-shadowed]"
+    }
+  ```
 
 ## Under the hood, what does this provide
 
@@ -83,4 +107,4 @@ ORG_GRADLE_PROJECT_signingInMemoryKeyPassword="..." # passphrase for the gpg key
 * Adds tasks to create shadow jars, if configured
 * Adds tasks to obfuscate jars, if configured
 * Adds task to publish jars to local maven repository (`publishToMavenLocal`)
-* Adds task to publish jars to maven repo in build dir(`publishAllPublicationsToStagingRepository`)
+* Adds task to publish jars to root project's build dir (`publishAllPublicationsToStagingRepository`)

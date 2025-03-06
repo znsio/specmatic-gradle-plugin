@@ -1,5 +1,6 @@
-package io.specmatic.gradle
+package io.specmatic.gradle.exec
 
+import io.specmatic.gradle.pluginDebug
 import org.eclipse.jgit.util.io.NullOutputStream
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -16,12 +17,12 @@ class ConfigureExecTask(project: Project) {
         project.afterEvaluate {
             project.tasks.whenObjectAdded {
                 if (this is AbstractExecTask<*>) {
-                    println("Exec task added... ${this.path}")
+                    pluginDebug("Exec task added... ${this.path}")
                     configureTask(this)
                 }
 
                 if (this is JavaExec) {
-                    println("Exec task added... ${this.path}")
+                    pluginDebug("Exec task added... ${this.path}")
                     configureTask(this)
                 }
             }
@@ -37,7 +38,7 @@ class ConfigureExecTask(project: Project) {
     }
 
     private fun configureTask(task: Task) {
-        println("Configuring exec task ${task.path}")
+        pluginDebug("Configuring exec task ${task.path}")
         if (task is BaseExecSpec) {
             task.apply {
                 if (project.logger.isInfoEnabled) {
@@ -64,7 +65,7 @@ class ConfigureExecTask(project: Project) {
                     }
 
 
-                    println("[${workingDir}]\$ ${shellEscapedArgs(cliArgs)}")
+                    pluginDebug("[${workingDir}]\$ ${shellEscapedArgs(cliArgs)}")
                 }
             }
         }

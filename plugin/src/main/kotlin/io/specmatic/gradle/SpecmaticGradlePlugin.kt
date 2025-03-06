@@ -1,7 +1,20 @@
 package io.specmatic.gradle
 
+import io.specmatic.gradle.artifacts.EnsureJarsAreStamped
+import io.specmatic.gradle.artifacts.EnsureReproducibleArtifacts
+import io.specmatic.gradle.compiler.ConfigureCompilerOptions
+import io.specmatic.gradle.exec.ConfigureExecTask
 import io.specmatic.gradle.extensions.SpecmaticGradleExtension
+import io.specmatic.gradle.license.LicenseReportingConfiguration
+import io.specmatic.gradle.obfuscate.ObfuscateConfiguration
 import io.specmatic.gradle.plugin.VersionInfo
+import io.specmatic.gradle.publishing.ConfigurePublications
+import io.specmatic.gradle.releases.ConfigureReleases
+import io.specmatic.gradle.shadow.ShadowJarConfiguration
+import io.specmatic.gradle.taskinfo.ConfigureTaskInfo
+import io.specmatic.gradle.tests.ConfigureTests
+import io.specmatic.gradle.versioninfo.CaptureVersionInfo
+import io.specmatic.gradle.versioninfo.ConfigureVersionFiles
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -10,10 +23,7 @@ class SpecmaticGradlePlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val specmaticGradleExtension = project.extensions.create("specmatic", SpecmaticGradleExtension::class.java)
 
-        if (project.hasProperty("specmatic.plugin.printVersion")) {
-            // append the timestamp to the version if it is available
-            println("Specmatic Gradle Plugin v${VersionInfo.describe()}")
-        }
+        pluginDebug("Specmatic Gradle Plugin ${VersionInfo.describe()}")
 
         project.afterEvaluate {
             // force this plugin to be applied to all projects that have been configured with the `specmatic` block
@@ -23,7 +33,7 @@ class SpecmaticGradlePlugin : Plugin<Project> {
                 }
         }
 
-        ConfigureVersionInfo(project)
+        CaptureVersionInfo(project)
 
         // apply whatever plugins we need to apply
         LicenseReportingConfiguration(project)
@@ -56,4 +66,7 @@ fun findSpecmaticExtension(project: Project): SpecmaticGradleExtension? {
     return null
 }
 
+fun pluginDebug(message: String = "") {
+    println("[Specmatic Gradle Plugin]: $message")
+}
 

@@ -1,5 +1,6 @@
-package io.specmatic.gradle
+package io.specmatic.gradle.artifacts
 
+import io.specmatic.gradle.pluginDebug
 import org.gradle.api.Project
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.tasks.bundling.AbstractArchiveTask
@@ -20,7 +21,7 @@ class EnsureReproducibleArtifacts(project: Project) {
     }
 
     private fun configureTask(archiveTask: AbstractArchiveTask) {
-        println("Ensuring that ${archiveTask.path} generates reproducible artifacts")
+        pluginDebug("Ensuring that ${archiveTask.path} generates reproducible artifacts")
         archiveTask.includeEmptyDirs = false
         archiveTask.duplicatesStrategy = DuplicatesStrategy.EXCLUDE
         archiveTask.isPreserveFileTimestamps = false

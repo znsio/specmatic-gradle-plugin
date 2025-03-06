@@ -1,4 +1,4 @@
-package io.specmatic.gradle
+package io.specmatic.gradle.versioninfo
 
 import org.gradle.api.java.archives.Manifest
 

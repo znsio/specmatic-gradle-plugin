@@ -1,5 +1,7 @@
-package io.specmatic.gradle
+package io.specmatic.gradle.artifacts
 
+import io.specmatic.gradle.pluginDebug
+import io.specmatic.gradle.versioninfo.CaptureVersionInfo
 import org.gradle.api.Project
 import org.gradle.jvm.tasks.Jar
 
@@ -23,8 +25,8 @@ class EnsureJarsAreStamped(project: Project) {
     }
 
     private fun Jar.configureJar() {
-        println("Ensuring that ${this.path} is stamped")
-        ConfigureVersionInfo.fetchVersionInfoForProject(this.project).addToManifest(this.manifest)
+        pluginDebug("Ensuring that ${this.path} is stamped")
+        CaptureVersionInfo.fetchVersionInfoForProject(this.project).addToManifest(this.manifest)
     }
 
 }

@@ -25,7 +25,6 @@ data class PublicationDefinition(
 
 open class SpecmaticGradleExtension {
     var jvmVersion: JavaLanguageVersion = JavaLanguageVersion.of(17)
-        get() = field
         set(value) {
             require(value.asInt() >= 17) { "JVM version must be at least 17" }
             field = value

@@ -1,4 +1,4 @@
-package io.specmatic.gradle
+package io.specmatic.gradle.license
 
 import com.github.jk1.license.ImportedModuleBundle
 import com.github.jk1.license.ImportedModuleData
@@ -9,8 +9,10 @@ import com.github.jk1.license.importer.DependencyDataImporter
 import com.github.jk1.license.render.InventoryHtmlReportRenderer
 import com.github.jk1.license.render.ReportRenderer
 import com.github.jk1.license.render.SimpleHtmlReportRenderer
+import io.specmatic.gradle.SpecmaticGradlePlugin
 import io.specmatic.gradle.extensions.ModuleLicenseData
 import io.specmatic.gradle.extensions.SpecmaticGradleExtension
+import io.specmatic.gradle.pluginDebug
 import io.specmatic.gradle.tasks.CreateAllowedLicensesFileTask
 import io.specmatic.gradle.tasks.PrettyPrintLicenseCheckFailures
 import io.specmatic.gradle.tasks.createDefaultAllowedLicensesFile
@@ -41,7 +43,7 @@ internal class LicenseReportingConfiguration(project: Project) {
     }
 
     private fun configureLicenseReporting(project: Project) {
-        println("Configuring license reporting on $project")
+        pluginDebug("Configuring license reporting on $project")
         project.pluginManager.apply("com.github.jk1.dependency-license-report")
         project.pluginManager.withPlugin("com.github.jk1.dependency-license-report") {
             val specmaticExtension = project.extensions.getByType(SpecmaticGradleExtension::class.java)

@@ -1,4 +1,4 @@
-package io.specmatic.gradle
+package io.specmatic.gradle.versioninfo
 
 import org.eclipse.jgit.api.Git
 import org.gradle.api.Project
@@ -6,7 +6,7 @@ import org.gradle.internal.extensions.core.extra
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-class ConfigureVersionInfo(project: Project) {
+class CaptureVersionInfo(project: Project) {
     init {
 
         project.rootProject.extra.set("specmaticPluginGitSha", gitSha(project))

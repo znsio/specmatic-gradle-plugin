@@ -1,5 +1,6 @@
 package io.specmatic.gradle
 
+import io.specmatic.gradle.versioninfo.ProjectVersionInfo
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 

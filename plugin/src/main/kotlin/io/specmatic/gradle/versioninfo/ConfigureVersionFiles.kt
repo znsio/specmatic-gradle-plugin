@@ -1,5 +1,6 @@
-package io.specmatic.gradle
+package io.specmatic.gradle.versioninfo
 
+import io.specmatic.gradle.pluginDebug
 import org.gradle.api.Project
 import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.SourceSetContainer
@@ -13,7 +14,7 @@ class ConfigureVersionFiles(project: Project) {
 
     private fun createVersionInfoClass(project: Project) {
         project.pluginManager.withPlugin("java") {
-            println("Configuring version properties file on $project")
+            pluginDebug("Configuring version properties file on $project")
             val generatedKotlinSourcesDir = project.file("src/main/gen-kt")
             val generatedResourcesDir = project.file("src/main/gen-resources")
 
@@ -25,7 +26,7 @@ class ConfigureVersionFiles(project: Project) {
             val createVersionInfoKotlinTask = project.tasks.register("createVersionInfoKotlin") {
                 group = "build"
 
-                val versionInfoForProject = ConfigureVersionInfo.fetchVersionInfoForProject(project)
+                val versionInfoForProject = CaptureVersionInfo.fetchVersionInfoForProject(project)
                 inputs.property("projectVersion", versionInfoForProject.toString())
 
                 outputs.dir(generatedKotlinSourcesDir)
@@ -34,7 +35,7 @@ class ConfigureVersionFiles(project: Project) {
                     val versionInfoKotlinFile =
                         project.file("${generatedKotlinSourcesDir}/${versionInfoForProject.kotlinFilePath()}")
                     versionInfoKotlinFile.parentFile.mkdirs()
-                    println("Writing version info class to $versionInfoKotlinFile")
+                    pluginDebug("Writing version info class to $versionInfoKotlinFile")
                     versionInfoKotlinFile.writeText(versionInfoForProject.toKotlinClass())
 
                 }
@@ -43,7 +44,7 @@ class ConfigureVersionFiles(project: Project) {
             val createVersionPropertiesFileTask = project.tasks.register("createVersionPropertiesFile") {
                 group = "build"
 
-                val versionInfoForProject = ConfigureVersionInfo.fetchVersionInfoForProject(project)
+                val versionInfoForProject = CaptureVersionInfo.fetchVersionInfoForProject(project)
                 inputs.property("projectVersion", versionInfoForProject.toString())
 
                 outputs.dir(generatedResourcesDir)
@@ -52,7 +53,7 @@ class ConfigureVersionFiles(project: Project) {
                     val versionInfoPropertiesFile =
                         project.file("${generatedResourcesDir}/${versionInfoForProject.propertiesFilePath()}")
                     versionInfoPropertiesFile.parentFile.mkdirs()
-                    println("Writing version info properties to $versionInfoPropertiesFile")
+                    pluginDebug("Writing version info properties to $versionInfoPropertiesFile")
                     versionInfoPropertiesFile.writeText(versionInfoForProject.toPropertiesFile())
                 }
             }

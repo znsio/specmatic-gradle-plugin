@@ -1,5 +1,7 @@
-package io.specmatic.gradle
+package io.specmatic.gradle.obfuscate
 
+import io.specmatic.gradle.findSpecmaticExtension
+import io.specmatic.gradle.pluginDebug
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.tasks.JavaExec
@@ -71,12 +73,10 @@ class ObfuscateConfiguration(project: Project) {
     }
 
     private fun configureProguard(project: Project, obfuscateConfig: List<String>?) {
-        println("Installing obfuscation hook on $project")
+        pluginDebug("Installing obfuscation hook on $project")
         project.pluginManager.withPlugin("java") {
-            println("Configuring obfuscation for on $project")
+            pluginDebug("Configuring obfuscation for on $project")
             val obfuscateJarInternalTask = project.tasks.register(OBFUSCATE_JAR_INTERNAL, ProguardTask::class.java) {
-                group = "build"
-                description = "Run obfuscation on the output of the `jar` task"
 
                 val jarTask = project.tasks.named("jar", Jar::class.java).get()
                 val jarTaskFile = jarTask.archiveFile
@@ -91,6 +91,9 @@ class ObfuscateConfiguration(project: Project) {
 
             // Jar tasks automatically register as maven publication, so we "copy" the proguard jar into another one
             val obfuscateJarTask = project.tasks.register(OBFUSCATE_JAR_TASK, Jar::class.java) {
+                group = "build"
+                description = "Run obfuscation on the output of the `jar` task"
+
                 dependsOn(obfuscateJarInternalTask)
                 from(project.zipTree(obfuscateJarInternalTask.get().getOutputJar()))
                 archiveClassifier.set("obfuscated")
@@ -98,7 +101,6 @@ class ObfuscateConfiguration(project: Project) {
             obfuscateJarInternalTask.get().finalizedBy(obfuscateJarTask)
 
             project.tasks.getByName("assemble").dependsOn(obfuscateJarTask)
-
         }
     }
 }

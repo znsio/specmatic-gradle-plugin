@@ -1,5 +1,6 @@
-package io.specmatic.gradle
+package io.specmatic.gradle.tests
 
+import io.specmatic.gradle.pluginDebug
 import org.gradle.api.Project
 import org.gradle.api.tasks.testing.Test
 import org.gradle.testing.jacoco.tasks.JacocoReport
@@ -12,7 +13,7 @@ internal class ConfigureTests(project: Project) {
     }
 
     private fun configureProject(eachProject: Project) {
-        println("Configuring test logger on $eachProject")
+        pluginDebug("Configuring test logger on $eachProject")
         eachProject.pluginManager.apply("com.adarshr.test-logger")
 
         eachProject.pluginManager.withPlugin("java") {
@@ -26,7 +27,7 @@ internal class ConfigureTests(project: Project) {
     }
 
     private fun configureJunit(eachProject: Project) {
-        println("Configuring junit on ${eachProject}")
+        pluginDebug("Configuring junit on $eachProject")
 
         eachProject.tasks.withType(Test::class.java).configureEach {
             useJUnitPlatform()
@@ -36,15 +37,15 @@ internal class ConfigureTests(project: Project) {
     }
 
     private fun configureJacoco(eachProject: Project) {
-        println("Configuring jacoco on $eachProject")
+        pluginDebug("Configuring jacoco on $eachProject")
 
         eachProject.tasks.withType(Test::class.java).configureEach {
-            println("Ensure that ${this.path} is finalized by jacocoTestReport")
+            pluginDebug("Ensure that ${this.path} is finalized by jacocoTestReport")
             finalizedBy(eachProject.tasks.getByName("jacocoTestReport"))
         }
 
         eachProject.tasks.withType(JacocoReport::class.java).configureEach {
-            println("Configuring jacocoTestReport on ${this.path}")
+            pluginDebug("Configuring jacocoTestReport on ${this.path}")
             reports {
                 xml.required.set(true)
                 csv.required.set(true)

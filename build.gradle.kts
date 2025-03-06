@@ -1,18 +1,5 @@
 plugins {
-    id("io.specmatic.gradle") version ("0.0.3")
-}
-
-buildscript {
-    repositories {
-        mavenCentral()
-        gradlePluginPortal()
-    }
-
-    dependencies {
-        classpath("io.specmatic.gradle:plugin:0.0.2-SNAPSHOT") {
-            isChanging = true
-        }
-    }
+    id("io.specmatic.gradle") version ("0.0.4")
 }
 
 specmatic {
@@ -99,8 +86,4 @@ tasks.getByName("beforeReleaseBuild") {
 tasks.getByName("afterReleaseBuild") {
     dependsOn("plugin:publishPlugins")
     dependsOn("plugin:publishToMavenCentral")
-}
-
-release {
-    failOnSnapshotDependencies = false
 }
