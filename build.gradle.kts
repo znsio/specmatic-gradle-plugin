@@ -9,7 +9,7 @@ buildscript {
     }
 
     dependencies {
-        classpath("io.specmatic.gradle:plugin:0.0.2-SNAPSHOT") {
+        classpath("io.specmatic.gradle:plugin:0.0.3") {
             isChanging = true
         }
     }
