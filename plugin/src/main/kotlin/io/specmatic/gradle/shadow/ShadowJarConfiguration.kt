@@ -1,60 +1,46 @@
 package io.specmatic.gradle.shadow
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import io.specmatic.gradle.findSpecmaticExtension
+import io.specmatic.gradle.extensions.ProjectConfiguration
 import io.specmatic.gradle.obfuscate.OBFUSCATE_JAR_TASK
 import io.specmatic.gradle.pluginDebug
 import org.gradle.api.Action
-import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.jvm.tasks.Jar
 
 const val SHADOW_ORIGINAL_JAR = "shadowOriginalJar"
 const val SHADOW_OBFUSCATED_JAR = "shadowObfuscatedJar"
 
-class ShadowJarConfiguration(project: Project) {
+class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConfiguration) {
     init {
-        val specmaticExtension =
-            findSpecmaticExtension(project) ?: throw GradleException("SpecmaticGradleExtension not found")
-
-        val shadowJarProjects = specmaticExtension.shadowConfigurations
-        project.afterEvaluate {
-            shadowJarProjects.forEach(::configureShadowJar)
-        }
+        configureShadowJar(project, projectConfiguration.shadowAction)
     }
 
-    private fun configureShadowJar(project: Project, shadowJarConfig: Action<ShadowJar>?) {
+    private fun configureShadowJar(project: Project, shadowAction: Action<ShadowJar>?) {
         project.pluginManager.withPlugin("java") {
             pluginDebug("Configuring shadow jar on $project")
-            shadowOriginalJar(project, shadowJarConfig)
-            shadowObfuscatedJar(project, shadowJarConfig)
+            shadowOriginalJar(project, shadowAction)
+            shadowObfuscatedJar(project, shadowAction)
         }
     }
 
     private fun shadowObfuscatedJar(project: Project, shadowJarConfig: Action<ShadowJar>?) {
         val obfuscateJarTask = project.tasks.findByName(OBFUSCATE_JAR_TASK) as Jar? ?: return
         val jarTask = project.jarTaskProvider().get()
-        val shadowObfuscatedJarTask = project.tasks.register(SHADOW_OBFUSCATED_JAR, ShadowJar::class.java)
-
-        project.tasks.getByName("assemble").dependsOn(shadowObfuscatedJarTask)
-
-        shadowObfuscatedJarTask.configure {
+        pluginDebug("Created task $SHADOW_OBFUSCATED_JAR on $project")
+        val shadowObfuscatedJarTask = project.tasks.register(SHADOW_OBFUSCATED_JAR, ShadowJar::class.java) {
             group = "build"
             description = "Shadow the obfuscated jar"
 
             dependsOn(obfuscateJarTask)
             dependsOn(jarTask) // since we use manifest from jarTask, we make this explicit, although obfuscateJarTask depends on jarTask
+            project.tasks.getByName("assemble").dependsOn(this)
+
             archiveClassifier.set("all-obfuscated")
+
             from(obfuscateJarTask.archiveFile)
 
-            manifest.inheritFrom(jarTask.manifest)
-            configurations = listOf(
-                project.configurations.findByName("runtimeClasspath") ?: project.configurations.findByName("runtime")
-            )
-            exclude("META-INF/INDEX.LIST", "META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "module-info.class")
-            dependencies {
-                exclude(dependency(project.dependencies.gradleApi()))
-            }
+            configureShadowJar(jarTask, project)
         }
 
         // any extra config specified by the user
@@ -63,17 +49,18 @@ class ShadowJarConfiguration(project: Project) {
 
     private fun shadowOriginalJar(project: Project, shadowJarConfig: Action<ShadowJar>?) {
         val jarTask = project.jarTaskProvider().get()
-        val shadowOriginalJarTask = project.tasks.register(SHADOW_ORIGINAL_JAR, ShadowJar::class.java)
-
-        project.tasks.getByName("assemble").dependsOn(shadowOriginalJarTask)
-
-        shadowOriginalJarTask.configure {
+        pluginDebug("Created task $SHADOW_ORIGINAL_JAR on $project")
+        val shadowOriginalJarTask = project.tasks.register(SHADOW_ORIGINAL_JAR, ShadowJar::class.java) {
             group = "build"
             description = "Shadow the original jar"
 
             dependsOn(jarTask)
+            project.tasks.getByName("assemble").dependsOn(this)
+
             archiveClassifier.set("all-original")
+
             from(jarTask.archiveFile)
+            manifest.inheritFrom(jarTask.manifest)
 
             configureShadowJar(jarTask, project)
         }

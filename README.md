@@ -1,52 +1,48 @@
-# Specmatic gradle plugin
+# Specmatic gradle obfuscation and fatjar plugin
 
-This plugin is used to run Specmatic tests as part of the build process. It ensures some standardization for build
-processes across specmatic repositories. Provides the necessary tooling to obfuscate, shadow and seamlessly publish
-artifacts to different repositories.
+Obfuscation and shadowing plugin for dummies! Setting up obfuscation, getting the shadow jar, and publishing to maven
+central is now a breeze! Just add this plugin, configure your intent using the `specmatic` block (more below), and the
+plugin will take care of the rest. Batteries included. Just provide the credentials for signing and publishing.
 
 ## Usage
 
 ```groovy
 // in the root project only
 plugins {
-    id("io.specmatic.gradle") version("A.B.C") // specify version as appropriate
+  id("io.specmatic.gradle") version("A.B.C") // specify version as appropriate
 }
 
 specmatic {
-    // Provide license details for any libraries that don't have license information in their POM.
-    licenseData {
-        name = "net.researchgate:gradle-release"
-        version = "3.1.0"
-        projectUrl = "https://github.com/researchgate/gradle-release"
-        license = "MIT"
+  // Provide license details for any libraries that don't have license information in their POM.
+  licenseData {
+    name = "net.researchgate:gradle-release"
+    version = "3.1.0"
+    projectUrl = "https://github.com/researchgate/gradle-release"
+    license = "MIT"
+  }
+
+  withProject(project(":core")) {
+    // enable obfuscation, pass any args to proguard https://www.guardsquare.com/manual/configuration/usage
+    obfuscate("-some-arg")
+    obfuscate("-more-args", "-some-more-args")
+
+    // enable shadow, if there is any shadowing configuration, apply it here. 
+    // Check shadowjar plugin documentation for more details
+    shadow {
+      relocationPrefix = "..."
     }
 
-    // sub projects to obfuscate
-    obfuscate(project("core")) {
-        // obfuscate task config
+    // choose what type of jars to publish. These only apply if you are obfuscating, 
+    // or shadowing jars. Ignore if you are not.
+    publish(PublicationType.OBFUSCATED_ORIGINAL, PublicationType.SHADOWED_ORIGINAL, PublicationType.SHADOWED_OBFUSCATED) {
+      // configure `MavenPublish`, pom, and other publication settings
+      pom {
+        name.set("Specmatic License Validation")
+        description.set("Specmatic License parsing and validation library")
+        url.set("https://specmatic.io")
+      }
     }
-
-    // sub projects to shadow. If obfuscate is also enabled, shadow will run on the obfuscated jar
-    shadow(project(":core")) {
-        // shadow jar task config
-    }
-
-    // choose what type of jars to publish. These only apply if you are obfuscating, or shadowing jars. Ignore if you are not.
-    val whatToPublish = listOf(
-            PublicationType.OBFUSCATED_ORIGINAL,
-            PublicationType.SHADOWED_ORIGINAL,
-            PublicationType.SHADOWED_OBFUSCATED
-    )
-
-    // sub projects to publish, and configure the pom
-    publication(project(":core"), whatToPublish) {
-        // configure `MavenPublish`, pom, and other publication settings
-        pom {
-            name.set("Specmatic License Validation")
-            description.set("Specmatic License parsing and validation library")
-            url.set("https://specmatic.io")
-        }
-    }
+  }
 }
 ```
 

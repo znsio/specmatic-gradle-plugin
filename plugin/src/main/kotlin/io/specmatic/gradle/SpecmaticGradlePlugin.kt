@@ -5,12 +5,10 @@ import io.specmatic.gradle.artifacts.EnsureReproducibleArtifacts
 import io.specmatic.gradle.compiler.ConfigureCompilerOptions
 import io.specmatic.gradle.exec.ConfigureExecTask
 import io.specmatic.gradle.extensions.SpecmaticGradleExtension
+import io.specmatic.gradle.jar.massage.ObfuscateShadowAndPublish
 import io.specmatic.gradle.license.LicenseReportingConfiguration
-import io.specmatic.gradle.obfuscate.ObfuscateConfiguration
 import io.specmatic.gradle.plugin.VersionInfo
-import io.specmatic.gradle.publishing.ConfigurePublications
 import io.specmatic.gradle.releases.ConfigureReleases
-import io.specmatic.gradle.shadow.ShadowJarConfiguration
 import io.specmatic.gradle.taskinfo.ConfigureTaskInfo
 import io.specmatic.gradle.tests.ConfigureTests
 import io.specmatic.gradle.versioninfo.CaptureVersionInfo
@@ -26,11 +24,11 @@ class SpecmaticGradlePlugin : Plugin<Project> {
         pluginDebug("Specmatic Gradle Plugin ${VersionInfo.describe()}")
 
         project.afterEvaluate {
+
             // force this plugin to be applied to all projects that have been configured with the `specmatic` block
-            (specmaticGradleExtension.obfuscatedProjects.keys + specmaticGradleExtension.publicationProjects.keys + specmaticGradleExtension.shadowConfigurations.keys).toSet()
-                .forEach { project ->
-                    project.pluginManager.apply("java")
-                }
+            specmaticGradleExtension.projectConfigurations.keys.forEach { project ->
+                project.pluginManager.apply("java")
+            }
         }
 
         CaptureVersionInfo(project)
@@ -43,9 +41,7 @@ class SpecmaticGradlePlugin : Plugin<Project> {
         ConfigureVersionFiles(project)
 
         // setup obfuscation, shadowing, publishing...
-        ObfuscateConfiguration(project)
-        ShadowJarConfiguration(project)
-        ConfigurePublications(project)
+        ObfuscateShadowAndPublish(project)
 
         // after everything is configured, we can setup the tasks to apply specmatic conventions/defaults
         ConfigureCompilerOptions(project)

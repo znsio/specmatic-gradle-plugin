@@ -1,29 +1,31 @@
 plugins {
-    id("io.specmatic.gradle") version ("0.0.4")
+    id("io.specmatic.gradle") version ("0.0.4-SNAPSHOT")
 }
 
 specmatic {
-    publication(project(":plugin")) {
-        pom {
-            name = "Specmatic Gradle Plugin"
-            description = "For internal use by the specmatic team"
-            url = "https://specmatic.io"
-            licenses {
-                license {
-                    name = "MIT"
-                    url = "https://opensource.org/license/mit"
+    this.withProject(project(":plugin")) {
+        this.publish {
+            pom {
+                name = "Specmatic Gradle Plugin"
+                description = "For internal use by the specmatic team"
+                url = "https://specmatic.io"
+                licenses {
+                    license {
+                        name = "MIT"
+                        url = "https://opensource.org/license/mit"
+                    }
                 }
-            }
-            developers {
-                developer {
-                    id = "specmaticBuilders"
-                    name = "Specmatic Builders"
-                    email = "info@specmatic.io"
+                developers {
+                    developer {
+                        id = "specmaticBuilders"
+                        name = "Specmatic Builders"
+                        email = "info@specmatic.io"
+                    }
                 }
-            }
-            scm {
-                connection = "https://github.com/znsio/specmatic-gradle-plugin"
-                url = "https://github.com/znsio/specmatic-gradle-plugin"
+                scm {
+                    connection = "https://github.com/znsio/specmatic-gradle-plugin"
+                    url = "https://github.com/znsio/specmatic-gradle-plugin"
+                }
             }
         }
     }

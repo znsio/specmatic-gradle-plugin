@@ -18,11 +18,6 @@ enum class PublicationType {
     SHADOWED_OBFUSCATED
 }
 
-
-data class PublicationDefinition(
-    val types: Collection<PublicationType>, val action: Action<MavenPublication>?
-)
-
 open class SpecmaticGradleExtension {
     var jvmVersion: JavaLanguageVersion = JavaLanguageVersion.of(17)
         set(value) {
@@ -31,31 +26,42 @@ open class SpecmaticGradleExtension {
         }
 
     val licenseData: MutableList<ModuleLicenseData> = mutableListOf()
-
-    val obfuscatedProjects: MutableMap<Project, List<String>?> = mutableMapOf()
-    val shadowConfigurations: MutableMap<Project, Action<ShadowJar>?> = mutableMapOf()
-    val publicationProjects: MutableMap<Project, PublicationDefinition> = mutableMapOf()
+    internal val projectConfigurations: MutableMap<Project, ProjectConfiguration> = mutableMapOf()
 
     fun licenseData(block: ModuleLicenseData.() -> Unit) {
         licenseData.add(ModuleLicenseData().apply(block))
     }
 
-    fun shadow(project: Project, configuration: Action<ShadowJar>? = null) {
-        shadowConfigurations[project] = configuration
+    fun withProject(project: Project, block: ProjectConfiguration.() -> Unit) {
+        val projectConfig = ProjectConfiguration().apply(block)
+        projectConfigurations[project] = projectConfig
     }
 
-    fun obfuscate(project: Project, configuration: List<String>? = null) {
-        obfuscatedProjects[project] = configuration
+}
+
+class ProjectConfiguration {
+    internal var publicationEnabled = false
+    internal var publicationTypes = mutableListOf<PublicationType>()
+    internal var publicationConfigurations: Action<MavenPublication>? = null
+
+    internal var proguardEnabled = false
+    internal var proguardExtraArgs = mutableListOf<String>()
+    internal var shadowAction: Action<ShadowJar>? = null
+
+    fun shadow(action: Action<ShadowJar> = Action {}) {
+        shadowAction = action
     }
 
-    fun publication(
-        project: Project,
-        types: Collection<PublicationType> = listOf(),
-        configuration: Action<MavenPublication>? = null
-    ) {
-        publicationProjects[project] = PublicationDefinition(types, configuration)
+    fun obfuscate(proguardExtraArgs: List<String>? = emptyList()) {
+        this.proguardEnabled = true
+        this.proguardExtraArgs.addAll(proguardExtraArgs.orEmpty())
     }
 
+    fun publish(vararg publicationTypes: PublicationType, configuration: Action<MavenPublication>) {
+        this.publicationEnabled = true
+        this.publicationTypes.addAll(publicationTypes)
+        this.publicationConfigurations = configuration
+    }
 }
 
 class ModuleLicenseData {

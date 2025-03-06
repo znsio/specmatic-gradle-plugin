@@ -1,8 +1,7 @@
 package io.specmatic.gradle.obfuscate
 
-import io.specmatic.gradle.findSpecmaticExtension
+import io.specmatic.gradle.extensions.ProjectConfiguration
 import io.specmatic.gradle.pluginDebug
-import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.tasks.JavaExec
 import org.gradle.api.tasks.OutputDirectory
@@ -62,17 +61,12 @@ open class ProguardTask : JavaExec() {
 
 private const val OBFUSCATE_JAR_INTERNAL = "obfuscateJarInternal"
 
-class ObfuscateConfiguration(project: Project) {
+class ObfuscateConfiguration(project: Project, projectConfiguration: ProjectConfiguration) {
     init {
-        project.afterEvaluate {
-            val specmaticExtension =
-                findSpecmaticExtension(project) ?: throw GradleException("SpecmaticGradleExtension not found")
-            val obfuscatedProjects = specmaticExtension.obfuscatedProjects
-            obfuscatedProjects.forEach(::configureProguard)
-        }
+        configureProguard(project, projectConfiguration.proguardExtraArgs)
     }
 
-    private fun configureProguard(project: Project, obfuscateConfig: List<String>?) {
+    private fun configureProguard(project: Project, proguardExtraArgs: List<String>?) {
         pluginDebug("Installing obfuscation hook on $project")
         project.pluginManager.withPlugin("java") {
             pluginDebug("Configuring obfuscation for on $project")
@@ -84,8 +78,8 @@ class ObfuscateConfiguration(project: Project) {
                 args("-injars", jarTaskFile.get().asFile)
                 args("-outjars", getOutputJar())
 
-                if (obfuscateConfig != null) {
-                    args(obfuscateConfig)
+                if (proguardExtraArgs != null) {
+                    args(proguardExtraArgs)
                 }
             }
 

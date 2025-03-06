@@ -1,17 +1,16 @@
-package io.specmatic.gradle.publishing
+package io.specmatic.gradle.jar.publishing
 
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import com.vanniktech.maven.publish.MavenPublishPlugin
 import com.vanniktech.maven.publish.SonatypeHost
-import io.specmatic.gradle.extensions.PublicationDefinition
+import io.specmatic.gradle.extensions.ProjectConfiguration
 import io.specmatic.gradle.extensions.PublicationType
-import io.specmatic.gradle.findSpecmaticExtension
 import io.specmatic.gradle.obfuscate.OBFUSCATE_JAR_TASK
 import io.specmatic.gradle.pluginDebug
 import io.specmatic.gradle.shadow.SHADOW_OBFUSCATED_JAR
 import io.specmatic.gradle.shadow.SHADOW_ORIGINAL_JAR
 import io.specmatic.gradle.shadow.jarTaskProvider
-import org.gradle.api.GradleException
+import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
@@ -23,17 +22,12 @@ import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.get
 import org.gradle.plugins.signing.SigningPlugin
 
-class ConfigurePublications(project: Project) {
+class ConfigurePublications(project: Project, projectConfiguration: ProjectConfiguration) {
     init {
-        project.afterEvaluate {
-            val specmaticExtension =
-                findSpecmaticExtension(project) ?: throw GradleException("SpecmaticGradleExtension not found")
-            val publicationProjects = specmaticExtension.publicationProjects
-            publicationProjects.forEach(::configure)
-        }
+        configure(project, projectConfiguration)
     }
 
-    fun configure(project: Project, configuration: PublicationDefinition) {
+    private fun configure(project: Project, projectConfiguration: ProjectConfiguration) {
         project.plugins.apply(MavenPublishPlugin::class.java)
         project.plugins.apply(SigningPlugin::class.java)
 
@@ -46,24 +40,11 @@ class ConfigurePublications(project: Project) {
             pluginDebug("Configuring maven publishing on ${project}")
             val stagingRepo = project.rootProject.layout.buildDirectory.dir("mvn-repo")
 
-            val specmaticExtension =
-                findSpecmaticExtension(project) ?: throw GradleException("SpecmaticGradleExtension not found")
-
             val publishing = project.extensions.getByType(PublishingExtension::class.java)
 
-//            configureAnyExistingOrNewPublications(publishing, project, configuration)
             configurePublishingToStagingRepo(publishing, project, stagingRepo)
 
-            if (!configuration.types.isEmpty()) {
-                if (!specmaticExtension.obfuscatedProjects.containsKey(project) && !specmaticExtension.shadowConfigurations.containsKey(
-                        project
-                    )
-                ) {
-                    printWarning(project)
-                }
-            }
-
-            configureJarPublishing(publishing, project, configuration)
+            configureJarPublishing(publishing, project, projectConfiguration)
             configureMavenCentralPublishing(project)
         }
     }
@@ -76,33 +57,22 @@ class ConfigurePublications(project: Project) {
     }
 
     private fun configureJarPublishing(
-        publishing: PublishingExtension, project: Project, configuration: PublicationDefinition
+        publishing: PublishingExtension, project: Project, configuration: ProjectConfiguration
     ) {
 
-        configureOriginalJarPublication(publishing, project, configuration)
+        configureOriginalJarPublication(publishing, project, configuration.publicationConfigurations)
 
-        if (configuration.types.contains(PublicationType.OBFUSCATED_ORIGINAL)) {
-            configureObfuscatedOriginalJarPublication(publishing, project, configuration)
+        if (configuration.publicationTypes.contains(PublicationType.OBFUSCATED_ORIGINAL)) {
+            configureObfuscatedOriginalJarPublication(publishing, project, configuration.publicationConfigurations)
         }
 
-        if (configuration.types.contains(PublicationType.SHADOWED_ORIGINAL)) {
-            configureShadowOriginalJarPublication(publishing, project, configuration)
+        if (configuration.publicationTypes.contains(PublicationType.SHADOWED_ORIGINAL)) {
+            configureShadowOriginalJarPublication(publishing, project, configuration.publicationConfigurations)
         }
 
-        if (configuration.types.contains(PublicationType.SHADOWED_OBFUSCATED)) {
-            configureShadowObfuscatedJarPublication(publishing, project, configuration)
+        if (configuration.publicationTypes.contains(PublicationType.SHADOWED_OBFUSCATED)) {
+            configureShadowObfuscatedJarPublication(publishing, project, configuration.publicationConfigurations)
         }
-    }
-
-    private fun printWarning(project: Project) {
-        val message =
-            "ERROR. $project is both obfuscated and shadowed. Don't specify publication types in `specmatic` block for $project"
-        pluginDebug()
-        pluginDebug("!".repeat(message.length))
-        pluginDebug(message)
-        pluginDebug("ERROR. The build will fail".padEnd(message.length))
-        pluginDebug("!".repeat(message.length))
-        pluginDebug()
     }
 
     private fun configurePublishingToStagingRepo(
@@ -115,7 +85,7 @@ class ConfigurePublications(project: Project) {
     }
 
     private fun configureShadowObfuscatedJarPublication(
-        publishing: PublishingExtension, project: Project, configuration: PublicationDefinition
+        publishing: PublishingExtension, project: Project, configuration: Action<MavenPublication>?
     ) {
         val shadowObfuscatedJarTask = project.tasks.named(SHADOW_OBFUSCATED_JAR, Jar::class.java)
         publishing.publications.register(SHADOW_OBFUSCATED_JAR, MavenPublication::class.java) {
@@ -123,14 +93,14 @@ class ConfigurePublications(project: Project) {
             artifactId = project.name + "-shadow-obfuscated"
             pom.packaging = "jar"
 
-            configuration.action?.execute(this)
+            configuration?.execute(this)
         }
 
         project.createConfigurationAndAddArtifacts(shadowObfuscatedJarTask)
     }
 
     private fun configureShadowOriginalJarPublication(
-        publishing: PublishingExtension, project: Project, configuration: PublicationDefinition
+        publishing: PublishingExtension, project: Project, configuration: Action<MavenPublication>?
     ) {
         val shadowOriginalJarTask = project.tasks.named(SHADOW_ORIGINAL_JAR, Jar::class.java)
 
@@ -138,7 +108,7 @@ class ConfigurePublications(project: Project) {
             artifact(shadowOriginalJarTask)
             artifactId = project.name + "-shadow-original"
             pom.packaging = "jar"
-            configuration.action?.execute(this)
+            configuration?.execute(this)
         }
 
         project.createConfigurationAndAddArtifacts(shadowOriginalJarTask)
@@ -146,23 +116,21 @@ class ConfigurePublications(project: Project) {
 
 
     private fun configureOriginalJarPublication(
-        publishing: PublishingExtension, project: Project, configuration: PublicationDefinition
+        publishing: PublishingExtension, project: Project, configuration: Action<MavenPublication>?
     ) {
         val name = "originalJar"
         publishing.publications.register(name, MavenPublication::class.java) {
             from(project.components["java"])
             artifactId = project.name + "-original"
             pom.packaging = "jar"
-            configuration.action?.execute(this)
+            configuration?.execute(this)
         }
 
         project.createConfigurationAndAddArtifacts(name, project.jarTaskProvider())
     }
 
     private fun configureObfuscatedOriginalJarPublication(
-        publishing: PublishingExtension,
-        project: Project,
-        configuration: PublicationDefinition
+        publishing: PublishingExtension, project: Project, configuration: Action<MavenPublication>?
     ) {
         val obfuscateJarTask = project.tasks.named(OBFUSCATE_JAR_TASK, Jar::class.java)
         publishing.publications.register(OBFUSCATE_JAR_TASK, MavenPublication::class.java) {
@@ -183,7 +151,7 @@ class ConfigurePublications(project: Project) {
                 }
             }
 
-            configuration.action?.execute(this)
+            configuration?.execute(this)
         }
 
         project.createConfigurationAndAddArtifacts(OBFUSCATE_JAR_TASK, obfuscateJarTask)
@@ -205,4 +173,3 @@ class ConfigurePublications(project: Project) {
         artifacts.add(obfuscatedJarConfig.name, artifactTask)
     }
 }
-
