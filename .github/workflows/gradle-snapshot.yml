@@ -25,3 +25,4 @@ jobs:
       - uses: znsio/specmatic-github-workflows/action-gradle-post-build@main
         with:
           gradle-extra-env-file: ~/.specmatic-secrets
+          gradle-extra-args: publishAllPublicationsToMavenCentralRepository
