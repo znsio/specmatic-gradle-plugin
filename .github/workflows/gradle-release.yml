@@ -11,6 +11,12 @@ on:
         required: true
 
 jobs:
+  dummy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dummy step
+        run: echo "This is a dummy job to satisfy the requirement of having at least one job with no dependencies."
+
   release:
     needs: [ gradle-snapshot ]
     runs-on: ubuntu-latest
