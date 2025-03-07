@@ -15,4 +15,4 @@ jobs:
     steps:
       - uses: znsio/specmatic-github-workflows/action-gradle-post-build@main
         with:
-          extra-gradle-args: "publishAllPublicationsToMavenCentralRepository"
+          gradle-extra-args: "publishAllPublicationsToMavenCentralRepository"
