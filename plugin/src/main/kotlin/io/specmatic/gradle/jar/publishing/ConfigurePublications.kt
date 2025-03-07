@@ -37,9 +37,9 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
 
         project.pluginManager.withPlugin("signing") {
             project.extensions.getByType(SigningExtension::class.java).apply {
-                val keyId = System.getenv("SPECMATIC_GPG_KEY_ID")
-                val key = System.getenv("SPECMATIC_GPG_PRIVATE_KEY")
-                val password = System.getenv("SPECMATIC_GPG_PRIVATE_KEY_PASSPHRASE")
+                val keyId = System.getenv("ORG_GRADLE_PROJECT_signingInMemoryKeyId")
+                val key = System.getenv("ORG_GRADLE_PROJECT_signingInMemoryKey")
+                val password = System.getenv("ORG_GRADLE_PROJECT_signingInMemoryKeyPassword")
                 useInMemoryPgpKeys(keyId, key, password)
             }
 
