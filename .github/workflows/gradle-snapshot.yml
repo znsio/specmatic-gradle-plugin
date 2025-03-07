@@ -13,12 +13,15 @@ jobs:
     permissions:
       contents: read
     steps:
+      - name: Create secrets file
+        run: |
+          echo "" > ~/.specmatic-secrets
+          echo "export ORG_GRADLE_PROJECT_mavenCentralUsername='${{ secrets.SPECMATIC_MAVEN_CENTRAL_USERNAME }}'" >> ~/.specmatic-secrets
+          echo "export ORG_GRADLE_PROJECT_mavenCentralPassword='${{ secrets.SPECMATIC_MAVEN_CENTRAL_PASSWORD }}'" >> ~/.specmatic-secrets
+          echo "export ORG_GRADLE_PROJECT_signingInMemoryKey='${{ secrets.SPECMATIC_GPG_PRIVATE_KEY }}'" >> ~/.specmatic-secrets
+          echo "export ORG_GRADLE_PROJECT_signingInMemoryKeyId='${{ secrets.SPECMATIC_GPG_PRIVATE_KEY_ID }}'" >> ~/.specmatic-secrets
+          echo "export ORG_GRADLE_PROJECT_signingInMemoryKeyPassword='${{ secrets.SPECMATIC_GPG_PRIVATE_KEY_PASSPHRASE }}'" >> ~/.specmatic-secrets
+
       - uses: znsio/specmatic-github-workflows/action-gradle-post-build@main
         with:
-          gradle-extra-args: >
-            publishAllPublicationsToMavenCentralRepository 
-            -PmavenCentralUsername='${{ secrets.SPECMATIC_MAVEN_CENTRAL_USERNAME }}' 
-            -PmavenCentralPassword='${{ secrets.SPECMATIC_MAVEN_CENTRAL_PASSWORD }}'
-            -PsigningInMemoryKeyId='${{ secrets.SPECMATIC_GPG_PRIVATE_KEY_ID }}'
-            -PsigningInMemoryKeyPassword="${{ secrets.SPECMATIC_GPG_PRIVATE_KEY_PASSPHRASE }}"
-            -PsigningInMemoryKey='${{ secrets.SPECMATIC_GPG_PRIVATE_KEY }}'
+          gradle-extra-env-file: ~/.specmatic-secrets
