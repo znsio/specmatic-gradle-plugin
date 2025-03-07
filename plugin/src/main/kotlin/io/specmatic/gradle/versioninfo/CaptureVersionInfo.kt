@@ -3,7 +3,7 @@ package io.specmatic.gradle.versioninfo
 import org.eclipse.jgit.api.Git
 import org.gradle.api.Project
 import org.gradle.internal.extensions.core.extra
-import java.time.LocalDateTime
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 class CaptureVersionInfo(project: Project) {
@@ -11,8 +11,8 @@ class CaptureVersionInfo(project: Project) {
 
         project.rootProject.extra.set("specmaticPluginGitSha", gitSha(project))
         if (hasTimestamp(project)) {
-            val now = LocalDateTime.now()
-            val timestamp = now.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            val now = ZonedDateTime.now()
+            val timestamp = now.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
             project.rootProject.extra.set("specmaticPluginBuildTime", timestamp)
         }
     }
