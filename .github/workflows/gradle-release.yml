@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       release_version:
-        description: 'Release version'
+        description: 'Release version (from gradle.properties, without -SNAPSHOT)'
         required: true
       next_version:
-        description: 'Next version'
+        description: 'Next version (Ensure to add -SNAPSHOT)'
         required: true
 
 jobs:
