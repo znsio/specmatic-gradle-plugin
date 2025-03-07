@@ -26,5 +26,3 @@ jobs:
         with:
           gradle-extra-env-file: ~/.specmatic-secrets
           gradle-extra-args: publishAllPublicationsToMavenCentralRepository
-          pre-gradle-command: git clean -fddx
-
