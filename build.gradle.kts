@@ -96,3 +96,5 @@ tasks.getByName("afterReleaseBuild") {
 release {
     failOnSnapshotDependencies = false
 }
+
+project(":plugin").evaluationDependsOn(":dummy")

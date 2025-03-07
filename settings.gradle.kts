@@ -29,4 +29,4 @@ pluginManagement {
 }
 
 rootProject.name = "specmatic-gradle-plugin"
-include("plugin")
+include("plugin", "dummy")
