@@ -99,7 +99,6 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
             )
 
             removeTasksAndPublicationsWeDoNotWant(publishing, project)
-
         }
 
         if (configuration.publicationTypes.contains(PublicationType.OBFUSCATED_ORIGINAL)) {
@@ -122,7 +121,25 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
             pluginDebug("Removing publication ${it.name}")
             it.name == "maven"
         }
-        project.tasks.named("publishMavenPublicationToStagingRepository").get().enabled = false
+
+        // disable if already exists
+        project.disableTasks("publishMavenPublicationToStagingRepository")
+    }
+
+    private fun Project.disableTasks(taskName: String) {
+        val findByName = tasks.findByName(taskName)
+        if (findByName != null) {
+            pluginDebug("Disabling task $taskName")
+            findByName.enabled = false
+        }
+
+        // disable if created/added in the future
+        tasks.whenObjectAdded {
+            if (name == taskName) {
+                pluginDebug("Disabling task $taskName")
+                enabled = false
+            }
+        }
     }
 
     private fun configurePublishingToStagingRepo(
