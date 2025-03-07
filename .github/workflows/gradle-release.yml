@@ -30,4 +30,7 @@ jobs:
         with:
           gradle-extra-env-file: ~/.specmatic-secrets
           gradle-extra-args: release -Prelease.useAutomaticVersion=true -Prelease.releaseVersion=${{ github.event.inputs.release_version }} -Prelease.newVersion=${{ github.event.inputs.next_version }}
-          pre-gradle-command: git clean -fd
+          pre-gradle-command:  |
+            git config --local user.email "github-service-account@specmatic.io"
+            git config --local user.name "Specmatic GitHub Service Account"
+            git clean -fd
