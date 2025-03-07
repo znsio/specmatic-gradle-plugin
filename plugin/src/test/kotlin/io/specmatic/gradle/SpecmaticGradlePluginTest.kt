@@ -12,8 +12,10 @@ import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestFramework
 import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.bundling.AbstractArchiveTask
+import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.the
 import org.gradle.testfixtures.ProjectBuilder
@@ -280,4 +282,5 @@ class SpecmaticGradlePluginTest {
             }.isInstanceOf(UnknownDomainObjectException::class.java)
         }
     }
+
 }

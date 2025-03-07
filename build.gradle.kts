@@ -3,9 +3,11 @@ plugins {
 }
 
 specmatic {
-    this.withProject(project(":plugin")) {
+    publishToMavenCentral = true
+
+    withProject(project(":plugin")) {
         // from com.gradle.publish.PublishPlugin#PUBLISH_TASK_NAME
-        this.publishWithName("pluginMaven") {
+        publish("pluginMaven") {
             pom {
                 name = "Specmatic Gradle Plugin"
                 description = "For internal use by the specmatic team"

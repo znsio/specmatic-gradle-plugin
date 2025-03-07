@@ -76,11 +76,10 @@ ORG_GRADLE_PROJECT_signingInMemoryKeyPassword="..." # passphrase for the gpg key
   ```groovy
     dependencies {
         // depend on the original jar of a sibling project
-        implementation project(":core", configuration: "maven") // yes, the configuration is "maven". Yak shave for another day
+        implementation project(":core")
   
         // Other alternatives for the configuration are:
-        
-        implementation "io.specmatic.blah:flux-capacitor:1.0.0:[obfuscated|all-obfuscated|shadowed|all-shadowed]"
+        implementation "io.specmatic.blah:flux-capacitor-[original|obfuscated-original|shadow-obfuscated|shadow-original]:1.0.0"
     }
   ```
 
