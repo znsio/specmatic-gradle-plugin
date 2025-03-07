@@ -93,8 +93,10 @@ tasks.getByName("afterReleaseBuild") {
     dependsOn("plugin:publishToMavenCentral")
 }
 
-release {
-    failOnSnapshotDependencies = false
+afterEvaluate {
+    release {
+        failOnSnapshotDependencies = false
+    }
 }
 
 project(":plugin").evaluationDependsOn(":dummy")
