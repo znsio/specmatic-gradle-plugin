@@ -17,12 +17,10 @@ class ConfigureExecTask(project: Project) {
         project.afterEvaluate {
             project.tasks.whenObjectAdded {
                 if (this is AbstractExecTask<*>) {
-                    pluginDebug("Exec task added... ${this.path}")
                     configureTask(this)
                 }
 
                 if (this is JavaExec) {
-                    pluginDebug("Exec task added... ${this.path}")
                     configureTask(this)
                 }
             }
