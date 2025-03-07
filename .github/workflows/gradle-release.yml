@@ -27,10 +27,5 @@ jobs:
       - uses: znsio/specmatic-github-workflows/action-gradle-post-build@main
         with:
           gradle-extra-env-file: ~/.specmatic-secrets
-          gradle-extra-args: release
-
-      - uses: znsio/specmatic-github-workflows/action-gradle-post-build@main
-        with:
-          gradle-extra-env-file: ~/.specmatic-secrets
           gradle-extra-args: release -Prelease.useAutomaticVersion=true -Prelease.releaseVersion=${{ github.event.inputs.release_version }} -Prelease.newVersion=${{ github.event.inputs.next_version }}
           pre-gradle-command: git clean -fd
