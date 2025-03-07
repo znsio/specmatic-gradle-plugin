@@ -40,6 +40,7 @@ open class SpecmaticGradleExtension {
 }
 
 class ProjectConfiguration {
+    internal var publicationName: String = "mavenJava"
     internal var publicationEnabled = false
     internal var publicationTypes = mutableListOf<PublicationType>()
     internal var publicationConfigurations: Action<MavenPublication>? = null
@@ -58,6 +59,17 @@ class ProjectConfiguration {
     }
 
     fun publish(vararg publicationTypes: PublicationType, configuration: Action<MavenPublication>) {
+        this.publicationEnabled = true
+        this.publicationTypes.addAll(publicationTypes)
+        this.publicationConfigurations = configuration
+    }
+
+    fun publishWithName(
+        name: String,
+        vararg publicationTypes: PublicationType,
+        configuration: Action<MavenPublication>
+    ) {
+        this.publicationName = name
         this.publicationEnabled = true
         this.publicationTypes.addAll(publicationTypes)
         this.publicationConfigurations = configuration
