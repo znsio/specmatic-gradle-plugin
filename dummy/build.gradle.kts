@@ -9,4 +9,8 @@ buildscript {
             isChanging = true
         }
     }
+
+    configurations.all {
+        resolutionStrategy.cacheChangingModulesFor(0, "seconds")
+    }
 }
