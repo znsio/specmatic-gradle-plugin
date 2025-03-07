@@ -43,7 +43,7 @@ open class PrettyPrintLicenseCheckFailures : DefaultTask() {
             }
 
             val joinedMessages = messages.joinToString("\n")
-            throw GradleException("The following dependencies have licenses that are not allowed:\n\n$joinedMessages")
+            throw GradleException("The following dependencies have licenses that are not allowed:\n\n$joinedMessages\n\nYou may use -xCheckLicense argument to disable license checking.")
         }
     }
 
