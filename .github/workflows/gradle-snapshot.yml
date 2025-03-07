@@ -17,8 +17,8 @@ jobs:
         with:
           gradle-extra-args: >
             publishAllPublicationsToMavenCentralRepository 
-            -PmavenCentralUsername=${{ secrets.SPECMATIC_MAVEN_CENTRAL_USERNAME }} 
-            -PmavenCentralPassword=${{ secrets.SPECMATIC_MAVEN_CENTRAL_PASSWORD }}
-            -PsigningInMemoryKeyId=${{ secrets.SPECMATIC_GPG_PRIVATE_KEY_ID }}
-            -PsigningInMemoryKeyPassword=${{ secrets.SPECMATIC_GPG_PRIVATE_KEY_PASSPHRASE }}
-            -PsigningInMemoryKey=${{ secrets.SPECMATIC_GPG_PRIVATE_KEY }}
+            -PmavenCentralUsername='${{ secrets.SPECMATIC_MAVEN_CENTRAL_USERNAME }}' 
+            -PmavenCentralPassword='${{ secrets.SPECMATIC_MAVEN_CENTRAL_PASSWORD }}'
+            -PsigningInMemoryKeyId='${{ secrets.SPECMATIC_GPG_PRIVATE_KEY_ID }}'
+            -PsigningInMemoryKeyPassword="${{ secrets.SPECMATIC_GPG_PRIVATE_KEY_PASSPHRASE }}"
+            -PsigningInMemoryKey='${{ secrets.SPECMATIC_GPG_PRIVATE_KEY }}'
