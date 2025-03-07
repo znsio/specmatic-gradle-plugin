@@ -21,6 +21,7 @@ jobs:
           echo "export ORG_GRADLE_PROJECT_signingInMemoryKey='${{ secrets.SPECMATIC_GPG_PRIVATE_KEY }}'" >> ~/.specmatic-secrets
           echo "export ORG_GRADLE_PROJECT_signingInMemoryKeyId='${{ secrets.SPECMATIC_GPG_PRIVATE_KEY_ID }}'" >> ~/.specmatic-secrets
           echo "export ORG_GRADLE_PROJECT_signingInMemoryKeyPassword='${{ secrets.SPECMATIC_GPG_PRIVATE_KEY_PASSPHRASE }}'" >> ~/.specmatic-secrets
+          sha256sum ~/.specmatic-secrets
 
       - uses: znsio/specmatic-github-workflows/action-gradle-post-build@main
         with:
