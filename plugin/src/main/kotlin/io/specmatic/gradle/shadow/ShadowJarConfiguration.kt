@@ -38,7 +38,7 @@ class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConf
 
             archiveClassifier.set("all-obfuscated")
 
-            from(obfuscateJarTask.archiveFile)
+            from(project.zipTree(obfuscateJarTask.archiveFile))
 
             configureShadowJar(jarTask, project)
         }
@@ -62,7 +62,7 @@ class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConf
 
             archiveClassifier.set("all-original")
 
-            from(jarTask.archiveFile)
+            from(project.zipTree(jarTask.archiveFile))
             manifest.inheritFrom(jarTask.manifest)
 
             configureShadowJar(jarTask, project)
