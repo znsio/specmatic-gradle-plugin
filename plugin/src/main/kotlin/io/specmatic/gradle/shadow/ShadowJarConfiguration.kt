@@ -44,7 +44,10 @@ class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConf
         }
 
         // any extra config specified by the user
-        shadowJarConfig?.let { shadowObfuscatedJarTask.configure(it) }
+        shadowJarConfig?.let {
+            pluginDebug("Applying custom shadow jar configuration on $project")
+            shadowObfuscatedJarTask.configure(it)
+        }
     }
 
     private fun shadowOriginalJar(project: Project, shadowJarConfig: Action<ShadowJar>?) {
@@ -66,15 +69,20 @@ class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConf
         }
 
         // any extra config specified by the user
-        shadowJarConfig?.let { shadowOriginalJarTask.configure(it) }
+        shadowJarConfig?.let {
+            pluginDebug("Applying custom shadow jar configuration on $project")
+            shadowOriginalJarTask.configure(it)
+        }
     }
 }
 
 fun Project.jarTaskProvider() = tasks.named("jar", Jar::class.java)
 fun ShadowJar.configureShadowJar(jarTask: Jar, project: Project) {
     manifest.inheritFrom(jarTask.manifest)
-    configurations = listOf(
-        project.configurations.findByName("runtimeClasspath") ?: project.configurations.findByName("runtime")
+    configurations.set(
+        listOf(
+            project.configurations.findByName("runtimeClasspath") ?: project.configurations.findByName("runtime")
+        )
     )
     exclude("META-INF/INDEX.LIST", "META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "module-info.class")
     dependencies {
