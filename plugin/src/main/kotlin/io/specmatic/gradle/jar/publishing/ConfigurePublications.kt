@@ -156,7 +156,11 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
     ) {
         val shadowObfuscatedJarTask = project.tasks.named(SHADOW_OBFUSCATED_JAR, Jar::class.java)
         publishing.publications.register(SHADOW_OBFUSCATED_JAR, MavenPublication::class.java) {
-            artifact(shadowObfuscatedJarTask)
+            artifact(shadowObfuscatedJarTask) {
+                // we keep the classifier when building the jar, because we need to distinguish between the original and obfuscated jars, in the `lib` dir.
+                // but we remove the classifier when publishing, because we don't want the classifier in the published jar name.
+                classifier = null
+            }
             artifactId = project.name + "-shadow-obfuscated"
             pom.packaging = "jar"
 
@@ -172,7 +176,11 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
         val shadowOriginalJarTask = project.tasks.named(SHADOW_ORIGINAL_JAR, Jar::class.java)
 
         publishing.publications.register(SHADOW_ORIGINAL_JAR, MavenPublication::class.java) {
-            artifact(shadowOriginalJarTask)
+            artifact(shadowOriginalJarTask) {
+                // we keep the classifier when building the jar, because we need to distinguish between the original and obfuscated jars, in the `lib` dir.
+                // but we remove the classifier when publishing, because we don't want the classifier in the published jar name.
+                classifier = null
+            }
             artifactId = project.name + "-shadow-original"
             pom.packaging = "jar"
             configuration?.execute(this)
@@ -200,8 +208,13 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
     ) {
         val obfuscateJarTask = project.tasks.named(OBFUSCATE_JAR_TASK, Jar::class.java)
         publishing.publications.register(OBFUSCATE_JAR_TASK, MavenPublication::class.java) {
-            artifact(obfuscateJarTask)
+            artifact(obfuscateJarTask) {
+                // we keep the classifier when building the jar, because we need to distinguish between the original and obfuscated jars, in the `lib` dir.
+                // but we remove the classifier when publishing, because we don't want the classifier in the published jar name.
+                classifier = null
+            }
             artifactId = project.name + "-obfuscated-original"
+
             pom {
                 packaging = "jar"
                 withXml {
