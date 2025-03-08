@@ -1,5 +1,5 @@
 plugins {
-    id("io.specmatic.gradle") version ("0.0.4-SNAPSHOT")
+    id("io.specmatic.gradle") version ("0.0.8-SNAPSHOT")
 }
 
 specmatic {
