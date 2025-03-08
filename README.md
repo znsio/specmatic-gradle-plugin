@@ -14,6 +14,7 @@ plugins {
 
 specmatic {
   // Provide license details for any libraries that don't have license information in their POM.
+  // if using groovy, you may need to prefix below lines with with `it.XXX` instead
   licenseData {
     name = "net.researchgate:gradle-release"
     version = "3.1.0"
