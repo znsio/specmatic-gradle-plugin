@@ -1,7 +1,6 @@
 package io.specmatic.gradle.exec
 
 import io.specmatic.gradle.pluginDebug
-import org.eclipse.jgit.util.io.NullOutputStream
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.tasks.AbstractExecTask
@@ -9,6 +8,7 @@ import org.gradle.api.tasks.JavaExec
 import org.gradle.process.BaseExecSpec
 
 class ConfigureExecTask(project: Project) {
+
     init {
         project.allprojects.forEach(::configure)
     }
@@ -36,17 +36,15 @@ class ConfigureExecTask(project: Project) {
     }
 
     private fun configureTask(task: Task) {
-        pluginDebug("Configuring exec task ${task.path}")
         if (task is BaseExecSpec) {
+            if (task.inputs.properties["specmatic.exec.configured"] == true) {
+                return
+            }
+            pluginDebug("Configuring exec task ${task.path}")
+            task.inputs.property("specmatic.exec.configured", true)
             task.apply {
-                if (project.logger.isInfoEnabled) {
-                    standardOutput = System.out
-                    errorOutput = System.err
-                } else {
-                    standardOutput = NullOutputStream.INSTANCE
-                    errorOutput = NullOutputStream.INSTANCE
-                }
-
+                standardOutput = System.out
+                errorOutput = System.err
                 doFirst {
                     val cliArgs = mutableListOf<String>()
                     if (task is JavaExec) {
@@ -61,7 +59,6 @@ class ConfigureExecTask(project: Project) {
                     } else {
                         cliArgs.addAll(task.commandLine)
                     }
-
 
                     pluginDebug("[${workingDir}]\$ ${shellEscapedArgs(cliArgs)}")
                 }
