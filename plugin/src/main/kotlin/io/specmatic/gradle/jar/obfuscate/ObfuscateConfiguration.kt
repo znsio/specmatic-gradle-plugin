@@ -23,23 +23,26 @@ open class ProguardTask : JavaExec() {
         mainClass.set("proguard.ProGuard")
         classpath = project.configurations.getByName("proguard")
 
+        val dir = javaLauncher.get().metadata.installationPath.dir("jmods")
+        val jmodFiles = dir.asFile.listFiles { _, name -> name.endsWith(".jmod") }?.toList() ?: emptyList()
+
+        jmodFiles.forEach {
+            args("-libraryjars", "${it.absolutePath}(!**.jar;!module-info.class)")
+        }
+
         args("-printseeds", "${getProguardOutputDir()}/seeds.txt")
         args("-printconfiguration", "${getProguardOutputDir()}/proguard.cfg")
         args("-dump", "${getProguardOutputDir()}/proguard.dump.txt")
-        args("-whyareyoukeeping", "class * { *; }")
-        args("-dontwarn")
+        args("-whyareyoukeeping class io.specmatic.** { *; }")
+//        args("-dontwarn")
         args("-dontoptimize")
-        args("-keepattributes", "!LocalVariableTable, !LocalVariableTypeTable")
-        // Obfuscate all non-public members in other packages
-        args(
-            "-keep", buildString {
-                append("class !**.internal.** {")
-                append("    public <fields>;")
-                append("    public <methods>;")
-                append("}")
-            })
-        // Obfuscate all classes in the.internal package
-        args("-keep,allowobfuscation class io.specmatic.**.internal.** { *; }")
+        args("-keepattributes !LocalVariableTable, !LocalVariableTypeTable")
+        // Keep all public members in the internal package
+        args("-keep class !**.internal.** { public <fields>; public <methods>;}")
+        // obfuscate everything in the internal package
+        args("-keep,allowobfuscation class **.internal.** { *; }")
+        // Keep kotlin metadata
+        args("-keep class kotlin.Metadata")
     }
 
     override fun exec() {
@@ -75,6 +78,7 @@ class ObfuscateConfiguration(project: Project, projectConfiguration: ProjectConf
                 val jarTask = project.tasks.named("jar", Jar::class.java).get()
                 val jarTaskFile = jarTask.archiveFile
                 dependsOn(jarTask)
+                args("-libraryjars", project.configurations.getByName("compileClasspath").asPath)
                 args("-injars", jarTaskFile.get().asFile)
                 args("-outjars", getOutputJar())
 
