@@ -56,9 +56,9 @@ class ProjectConfiguration {
         shadowAction = action
     }
 
-    fun obfuscate(proguardExtraArgs: List<String>? = emptyList()) {
+    fun obfuscate(vararg proguardExtraArgs: String?) {
         this.proguardEnabled = true
-        this.proguardExtraArgs.addAll(proguardExtraArgs.orEmpty())
+        this.proguardExtraArgs.addAll(proguardExtraArgs.filterNotNull())
     }
 
     fun publish(
