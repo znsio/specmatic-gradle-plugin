@@ -18,7 +18,7 @@ class SpecmaticGradlePluginPluginFunctionalTest {
     private val settingsFile by lazy { projectDir.resolve("settings.gradle.kts") }
 
     @Test
-    fun `it should emit exec task output when info is enabled`() {
+    fun `it should always emit exec task output`() {
         // Set up the test build
         settingsFile.writeText("")
         buildFile.writeText(
@@ -44,36 +44,7 @@ class SpecmaticGradlePluginPluginFunctionalTest {
         // Verify the result
         assertThat(result.output).contains("hello world")
     }
-
-    @Test
-    fun `it should not emit exec task output when info is not enabled`() {
-        // Set up the test build
-        settingsFile.writeText("")
-        buildFile.writeText(
-            """
-            plugins {
-                id("java")
-                id("io.specmatic.gradle")
-            }
-            
-            tasks.register("myExec", Exec::class.java) {
-                commandLine("echo", "hello", "world")
-            }
-        """.trimIndent()
-        )
-
-        // Run the build
-        val runner = GradleRunner.create()
-        runner.forwardOutput()
-        runner.withPluginClasspath()
-        runner.withProjectDir(projectDir)
-        val result = runner.withArguments("myExec").build()
-
-        // Verify the result
-        assertThat(result.output).doesNotContain("hello world")
-        assertThat(result.task(":myExec")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
-    }
-
+    
     @Test
     fun `it should create version properties file`() {
         // Set up the test build
@@ -105,8 +76,7 @@ class SpecmaticGradlePluginPluginFunctionalTest {
         assertThat(versionPropertiesFile).exists()
         assertThat(versionPropertiesFile.readText()).contains("version=unspecified")
 
-        val versinInfoKotlinFile =
-            projectDir.resolve("src/main/gen-kt/com/example/group/foobar/VersionInfo.kt")
+        val versinInfoKotlinFile = projectDir.resolve("src/main/gen-kt/com/example/group/foobar/VersionInfo.kt")
         assertThat(versinInfoKotlinFile).exists()
         assertThat(versinInfoKotlinFile.readText()).contains("val version = \"unspecified\"")
     }
@@ -147,8 +117,7 @@ class SpecmaticGradlePluginPluginFunctionalTest {
 
             assertThat(result.output).doesNotMatch(
                 Pattern.compile(
-                    ".*publish.*mavencentral.*",
-                    Pattern.CASE_INSENSITIVE
+                    ".*publish.*mavencentral.*", Pattern.CASE_INSENSITIVE
                 )
             )
         }
@@ -187,7 +156,9 @@ class SpecmaticGradlePluginPluginFunctionalTest {
 
             println(result.tasks.joinToString("\n") { it.path })
             assertThat(result.output).matches(
-                Pattern.compile(".*publish\\S*MavenCentral\\S*.*", Pattern.MULTILINE or Pattern.DOTALL or Pattern.CASE_INSENSITIVE)
+                Pattern.compile(
+                    ".*publish\\S*MavenCentral\\S*.*", Pattern.MULTILINE or Pattern.DOTALL or Pattern.CASE_INSENSITIVE
+                )
             )
         }
     }
