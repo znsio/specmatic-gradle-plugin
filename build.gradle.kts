@@ -34,19 +34,6 @@ specmatic {
     }
 
     licenseData {
-        name = "com.github.johnrengelman.shadow:com.github.johnrengelman.shadow.gradle.plugin"
-        version = "8.1.1"
-        projectUrl = "https://github.com/GradleUp/shadow"
-        license = "Apache-2.0"
-    }
-    licenseData {
-        name = "com.github.johnrengelman:shadow"
-        version = "8.1.1"
-        projectUrl = "https://github.com/GradleUp/shadow"
-        license = "Apache-2.0"
-    }
-
-    licenseData {
         name = "com.adarshr.test-logger:com.adarshr.test-logger.gradle.plugin"
         version = "4.0.0"
         projectUrl = "https://github.com/radarsh/gradle-test-logger-plugin"
