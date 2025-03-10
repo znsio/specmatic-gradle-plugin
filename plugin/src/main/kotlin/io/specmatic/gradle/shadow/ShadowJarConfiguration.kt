@@ -7,6 +7,7 @@ import io.specmatic.gradle.pluginDebug
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.jvm.tasks.Jar
+import java.io.File
 import java.util.jar.JarFile
 
 const val SHADOW_ORIGINAL_JAR = "shadowOriginalJar"
@@ -85,27 +86,9 @@ fun ShadowJar.configureShadowJar(jarTask: Jar, project: Project, shadowPrefix: S
 
     val runtimeClasspathFiles = runtimeClasspath?.files.orEmpty()
 
-    val packagesToRelocate = mutableSetOf<String>()
-
-
     excludePackages.forEach { this.exclude("${it}/**") }
 
-    runtimeClasspathFiles.forEach { eachFile ->
-        if (eachFile.name.lowercase().endsWith(".jar")) {
-            val jarInputStream = JarFile(eachFile)
-            jarInputStream.entries().asSequence().forEach { entry ->
-                val entryName = entry.name
-                if (entryName.endsWith(".class") &&
-                    entryName.contains("/") &&
-                    excludePackages.none { entryName.startsWith("${it}/") } &&
-                    !entryName.startsWith("META-INF/")
-                ) {
-                    val packageName = entryName.substring(0, entryName.lastIndexOf('/'))
-                    packagesToRelocate.add(packageName)
-                }
-            }
-        }
-    }
+    val packagesToRelocate = extractPackagesInJars(runtimeClasspathFiles, excludePackages)
 
     packagesToRelocate.forEach { eachPackage ->
         pluginDebug("Relocating package: $eachPackage to ${shadowPrefix}/$eachPackage")
@@ -130,3 +113,27 @@ fun ShadowJar.configureShadowJar(jarTask: Jar, project: Project, shadowPrefix: S
         exclude(dependency(project.dependencies.gradleApi()))
     }
 }
+
+private fun extractPackagesInJars(runtimeClasspathFiles: Set<File>, excludePackages: List<String>): MutableSet<String> {
+    val packagesToRelocate = mutableSetOf<String>()
+    runtimeClasspathFiles.forEach { eachFile ->
+        if (eachFile.name.lowercase().endsWith(".jar")) {
+            val jarInputStream = JarFile(eachFile)
+            jarInputStream.entries().asSequence().forEach { entry ->
+                val entryName = entry.name
+                if (shouldRelocatePackage(entryName, excludePackages)) {
+                    val packageName = entryName.substring(0, entryName.lastIndexOf('/'))
+                    packagesToRelocate.add(packageName)
+                }
+            }
+        }
+    }
+    return packagesToRelocate
+}
+
+private fun shouldRelocatePackage(entryName: String, excludePackages: List<String>): Boolean =
+    entryName.endsWith(".class") && entryName.contains("/") && excludePackages.none {
+        entryName.startsWith(
+            "${it}/"
+        )
+    } && !entryName.startsWith("META-INF/")
