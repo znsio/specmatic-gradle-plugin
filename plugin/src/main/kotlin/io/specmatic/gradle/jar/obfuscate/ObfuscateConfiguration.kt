@@ -78,7 +78,7 @@ class ObfuscateConfiguration(project: Project, projectConfiguration: ProjectConf
                 val jarTask = project.tasks.named("jar", Jar::class.java).get()
                 val jarTaskFile = jarTask.archiveFile
                 dependsOn(jarTask)
-                args("-libraryjars", project.configurations.getByName("compileClasspath").asPath)
+                args("-libraryjars", project.configurations.getByName("runtimeClasspath").asPath)
                 args("-injars", jarTaskFile.get().asFile)
                 args("-outjars", getOutputJar())
 
