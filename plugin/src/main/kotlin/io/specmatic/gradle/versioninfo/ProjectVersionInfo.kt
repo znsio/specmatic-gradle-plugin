@@ -31,7 +31,12 @@ data class ProjectVersionInfo(
     fun kotlinFilePath() = "${packageDir()}/VersionInfo.kt"
     fun propertiesFilePath() = "${packageDir()}/version.properties"
 
-    fun kotlinPackage() = "${group}.${name}".lowercase().replace("[^a-zA-Z0-9]".toRegex(), ".")
+    fun kotlinPackage(): String {
+        if (name.trim().isBlank()) {
+            return group.lowercase().replace("[^a-zA-Z0-9]".toRegex(), ".")
+        }
+        return "${group}.${name}".lowercase().replace("[^a-zA-Z0-9]".toRegex(), ".")
+    }
 
 
     fun toPropertiesFile(): String {
