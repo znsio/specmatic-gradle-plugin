@@ -5,8 +5,6 @@ plugins {
     id("com.gradle.plugin-publish") version "1.3.1"
 }
 
-apply(plugin = "org.jetbrains.kotlin.jvm")
-
 repositories {
     mavenCentral()
     gradlePluginPortal()
