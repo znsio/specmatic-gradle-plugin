@@ -15,18 +15,33 @@ const val SHADOW_OBFUSCATED_JAR = "shadowObfuscatedJar"
 
 class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConfiguration) {
     init {
-        configureShadowJar(project, projectConfiguration.shadowPrefix!!, projectConfiguration.shadowAction)
+        configureShadowJar(
+            project,
+            projectConfiguration.shadowPrefix!!,
+            projectConfiguration.shadowAction,
+            projectConfiguration.shadowApplication
+        )
     }
 
-    private fun configureShadowJar(project: Project, shadowPrefix: String, shadowAction: Action<ShadowJar>?) {
+    private fun configureShadowJar(
+        project: Project,
+        shadowPrefix: String,
+        shadowAction: Action<ShadowJar>?,
+        shadowApplication: Boolean
+    ) {
         project.pluginManager.withPlugin("java") {
             pluginDebug("Configuring shadow jar on $project")
-            shadowOriginalJar(project, shadowPrefix, shadowAction)
-            shadowObfuscatedJar(project, shadowPrefix, shadowAction)
+            shadowOriginalJar(project, shadowPrefix, shadowAction, shadowApplication)
+            shadowObfuscatedJar(project, shadowPrefix, shadowAction, shadowApplication)
         }
     }
 
-    private fun shadowObfuscatedJar(project: Project, shadowPrefix: String, shadowJarConfig: Action<ShadowJar>?) {
+    private fun shadowObfuscatedJar(
+        project: Project,
+        shadowPrefix: String,
+        shadowJarConfig: Action<ShadowJar>?,
+        shadowApplication: Boolean
+    ) {
         val obfuscateJarTask = project.tasks.findByName(OBFUSCATE_JAR_TASK) as Jar? ?: return
         val jarTask = project.jarTaskProvider().get()
         pluginDebug("Created task $SHADOW_OBFUSCATED_JAR on $project")
@@ -42,7 +57,7 @@ class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConf
 
             from(project.zipTree(obfuscateJarTask.archiveFile))
 
-            configureShadowJar(jarTask, project, shadowPrefix)
+            configureShadowJar(jarTask, project, shadowPrefix, shadowApplication)
         }
 
         // any extra config specified by the user
@@ -52,7 +67,12 @@ class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConf
         }
     }
 
-    private fun shadowOriginalJar(project: Project, shadowPrefix: String, shadowJarConfig: Action<ShadowJar>?) {
+    private fun shadowOriginalJar(
+        project: Project,
+        shadowPrefix: String,
+        shadowJarConfig: Action<ShadowJar>?,
+        shadowApplication: Boolean
+    ) {
         val jarTask = project.jarTaskProvider().get()
         pluginDebug("Created task $SHADOW_ORIGINAL_JAR on $project")
         val shadowOriginalJarTask = project.tasks.register(SHADOW_ORIGINAL_JAR, ShadowJar::class.java) {
@@ -67,7 +87,7 @@ class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConf
             from(project.zipTree(jarTask.archiveFile))
             manifest.inheritFrom(jarTask.manifest)
 
-            configureShadowJar(jarTask, project, shadowPrefix)
+            configureShadowJar(jarTask, project, shadowPrefix, shadowApplication)
         }
 
         // any extra config specified by the user
@@ -79,10 +99,12 @@ class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConf
 }
 
 fun Project.jarTaskProvider() = tasks.named("jar", Jar::class.java)
-fun ShadowJar.configureShadowJar(jarTask: Jar, project: Project, shadowPrefix: String) {
+fun ShadowJar.configureShadowJar(jarTask: Jar, project: Project, shadowPrefix: String, shadowApplication: Boolean) {
     val runtimeClasspath = project.configurations.findByName("runtimeClasspath")
-    val excludePackages = listOf("kotlin", "org/jetbrains", "org/intellij/lang/annotations", "java", "javax")
-
+    val excludePackages = if (shadowApplication)
+        listOf("java", "javax")
+    else
+        listOf("kotlin", "org/jetbrains", "org/intellij/lang/annotations", "java", "javax")
 
     val runtimeClasspathFiles = runtimeClasspath?.files.orEmpty()
 
