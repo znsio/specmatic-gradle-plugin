@@ -3,6 +3,7 @@ buildscript {
     repositories {
         mavenCentral()
         gradlePluginPortal()
+        mavenLocal()
     }
     dependencies {
         classpath("io.specmatic.gradle:plugin:+") {
