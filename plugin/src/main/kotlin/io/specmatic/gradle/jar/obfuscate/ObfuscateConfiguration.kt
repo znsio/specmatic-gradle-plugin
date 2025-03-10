@@ -40,7 +40,7 @@ open class ProguardTask : JavaExec() {
         // Keep all public members in the internal package
         args("-keep class !**.internal.** { public <fields>; public <methods>;}")
         // obfuscate everything in the internal package
-        args("-keep,allowobfuscation class **.internal.** { *; }")
+        args("-keep,allowobfuscation class io.specmatic.**.internal.** { *; }")
         // Keep kotlin metadata
         args("-keep class kotlin.Metadata")
     }

@@ -80,13 +80,13 @@ class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConf
 fun Project.jarTaskProvider() = tasks.named("jar", Jar::class.java)
 fun ShadowJar.configureShadowJar(jarTask: Jar, project: Project, shadowPrefix: String) {
     val runtimeClasspath = project.configurations.findByName("runtimeClasspath")
+    val excludePackages = listOf("kotlin", "org/jetbrains", "org/intellij/lang/annotations", "java", "javax")
 
 
     val runtimeClasspathFiles = runtimeClasspath?.files.orEmpty()
 
-    val eachPackage = mutableSetOf<String>()
+    val packagesToRelocate = mutableSetOf<String>()
 
-    val excludePackages = listOf("kotlin", "org/jetbrains", "org/intellij/lang/annotations", "java", "javax")
 
     excludePackages.forEach { this.exclude("${it}/**") }
 
@@ -95,22 +95,19 @@ fun ShadowJar.configureShadowJar(jarTask: Jar, project: Project, shadowPrefix: S
             val jarInputStream = JarFile(eachFile)
             jarInputStream.entries().asSequence().forEach { entry ->
                 val entryName = entry.name
-
                 if (entryName.endsWith(".class") &&
                     entryName.contains("/") &&
-                    excludePackages.none { entryName.startsWith("${it}/") }
+                    excludePackages.none { entryName.startsWith("${it}/") } &&
+                    !entryName.startsWith("META-INF/")
                 ) {
-                    val firstPart = entryName.split('/').first()
-                    if (!excludePackages.contains(firstPart)) {
-                        val packageName = entryName.substring(0, entryName.lastIndexOf('/'))
-                        eachPackage.add(packageName)
-                    }
+                    val packageName = entryName.substring(0, entryName.lastIndexOf('/'))
+                    packagesToRelocate.add(packageName)
                 }
             }
         }
     }
 
-    eachPackage.forEach { eachPackage ->
+    packagesToRelocate.forEach { eachPackage ->
         pluginDebug("Relocating package: $eachPackage to ${shadowPrefix}/$eachPackage")
         relocate(eachPackage, "${shadowPrefix}.$eachPackage")
     }
