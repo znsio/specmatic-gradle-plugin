@@ -3,8 +3,7 @@ plugins {
 }
 
 specmatic {
-    publishToMavenCentral = true
-
+    publishToMavenCentral()
     withProject(project(":plugin")) {
         // from com.gradle.publish.PublishPlugin#PUBLISH_TASK_NAME
         publish("pluginMaven") {

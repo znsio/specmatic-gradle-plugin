@@ -134,7 +134,7 @@ class SpecmaticGradlePluginPluginFunctionalTest {
                     }
                     
                     specmatic {
-                        publishToMavenCentral = true
+                        publishToMavenCentral()
                         
                         withProject(rootProject) {
                             // we asked it to be published, but also specified where

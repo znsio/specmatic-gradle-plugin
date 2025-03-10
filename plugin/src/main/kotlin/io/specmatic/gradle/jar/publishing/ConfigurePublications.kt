@@ -3,6 +3,8 @@ package io.specmatic.gradle.jar.publishing
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import com.vanniktech.maven.publish.MavenPublishPlugin
 import com.vanniktech.maven.publish.SonatypeHost
+import io.specmatic.gradle.extensions.MavenCentral
+import io.specmatic.gradle.extensions.MavenInternal
 import io.specmatic.gradle.extensions.ProjectConfiguration
 import io.specmatic.gradle.extensions.PublicationType
 import io.specmatic.gradle.findSpecmaticExtension
@@ -11,9 +13,11 @@ import io.specmatic.gradle.pluginDebug
 import io.specmatic.gradle.shadow.SHADOW_OBFUSCATED_JAR
 import io.specmatic.gradle.shadow.SHADOW_ORIGINAL_JAR
 import io.specmatic.gradle.shadow.jarTaskProvider
+import org.apache.commons.codec.binary.StringUtils
 import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.credentials.PasswordCredentials
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 import org.gradle.api.publish.PublishingExtension
@@ -25,6 +29,7 @@ import org.gradle.kotlin.dsl.get
 import org.gradle.plugins.signing.Sign
 import org.gradle.plugins.signing.SigningExtension
 import org.gradle.plugins.signing.SigningPlugin
+import org.jetbrains.kotlin.org.apache.commons.lang3.StringUtils.capitalize
 
 class ConfigurePublications(project: Project, projectConfiguration: ProjectConfiguration) {
     init {
@@ -73,16 +78,24 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
             configurePublishingToStagingRepo(publishing, project, stagingRepo)
 
             configureJarPublishing(publishing, project, projectConfiguration)
-            configureMavenCentralPublishing(project)
+            configureMavenCentralPublishing(publishing, project)
         }
     }
 
-    private fun configureMavenCentralPublishing(project: Project) {
+    private fun configureMavenCentralPublishing(publishing: PublishingExtension, project: Project) {
         project.extensions.getByType(MavenPublishBaseExtension::class.java).apply {
             val specmaticExtension = findSpecmaticExtension(project.rootProject)
                 ?: throw GradleException("SpecmaticGradleExtension not found")
-            if (specmaticExtension.publishToMavenCentral) {
+            if (specmaticExtension.publishTo is MavenCentral) {
                 publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL, false)
+            } else if (specmaticExtension.publishTo is MavenInternal) {
+                val repo = specmaticExtension.publishTo as MavenInternal
+                pluginDebug("Configuring publishing to ${repo.repoName}")
+                publishing.repositories.maven {
+                    name = repo.repoName
+                    url = repo.url
+                    credentials(PasswordCredentials::class.java)
+                }
             } else {
                 pluginDebug("publishToMavenCentral is not set. Not publishing to Maven Central")
             }
@@ -117,13 +130,28 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
     private fun removeTasksAndPublicationsWeDoNotWant(publishing: PublishingExtension, project: Project) {
         // this is added by vanniktech's publish plugin, we don't want it
 
+        val specmaticExtension =
+            findSpecmaticExtension(project.rootProject) ?: throw GradleException("SpecmaticGradleExtension not found")
+
+        val repoName = if (specmaticExtension.publishTo is MavenInternal) {
+            (specmaticExtension.publishTo as MavenInternal).repoName
+        } else {
+            null
+        }
+
         publishing.publications.removeIf {
-            pluginDebug("Removing publication ${it.name}")
-            it.name == "maven"
+            // this is the default publication
+            val toRemove = it.name == "maven" || (repoName != null && it.name == repoName)
+            if (toRemove) {
+                pluginDebug("Removing publication ${it.name}")
+            }
+            toRemove
         }
 
         // disable if already exists
+        project.disableTasks("signMavenPublication")
         project.disableTasks("publishMavenPublicationToStagingRepository")
+        project.disableTasks("publishMavenPublicationTo${capitalize(repoName)}Repository")
     }
 
     private fun Project.disableTasks(taskName: String) {

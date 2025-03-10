@@ -5,6 +5,7 @@ import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.jvm.toolchain.JavaLanguageVersion
+import java.net.URI
 
 
 enum class PublicationType {
@@ -18,8 +19,26 @@ enum class PublicationType {
     SHADOWED_OBFUSCATED
 }
 
+interface PublishTarget
+
+class MavenCentral : PublishTarget
+
+class MavenInternal(val repoName: String, val url: URI) : PublishTarget
+
 open class SpecmaticGradleExtension {
-    var publishToMavenCentral = false
+    internal var publishTo: PublishTarget? = null
+
+    fun publishToMavenCentral() {
+        publishTo = MavenCentral()
+    }
+
+    fun publishTo(repoName: String, url: URI) {
+        publishTo = MavenInternal(repoName, url)
+    }
+
+    fun publishTo(repoName: String, url: String) {
+        publishTo(repoName, URI.create(url))
+    }
 
     var jvmVersion: JavaLanguageVersion = JavaLanguageVersion.of(17)
         set(value) {
