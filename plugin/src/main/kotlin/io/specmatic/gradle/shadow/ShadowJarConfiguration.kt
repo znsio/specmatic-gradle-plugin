@@ -7,24 +7,25 @@ import io.specmatic.gradle.pluginDebug
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.jvm.tasks.Jar
+import java.util.jar.JarFile
 
 const val SHADOW_ORIGINAL_JAR = "shadowOriginalJar"
 const val SHADOW_OBFUSCATED_JAR = "shadowObfuscatedJar"
 
 class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConfiguration) {
     init {
-        configureShadowJar(project, projectConfiguration.shadowAction)
+        configureShadowJar(project, projectConfiguration.shadowPrefix!!, projectConfiguration.shadowAction)
     }
 
-    private fun configureShadowJar(project: Project, shadowAction: Action<ShadowJar>?) {
+    private fun configureShadowJar(project: Project, shadowPrefix: String, shadowAction: Action<ShadowJar>?) {
         project.pluginManager.withPlugin("java") {
             pluginDebug("Configuring shadow jar on $project")
-            shadowOriginalJar(project, shadowAction)
-            shadowObfuscatedJar(project, shadowAction)
+            shadowOriginalJar(project, shadowPrefix, shadowAction)
+            shadowObfuscatedJar(project, shadowPrefix, shadowAction)
         }
     }
 
-    private fun shadowObfuscatedJar(project: Project, shadowJarConfig: Action<ShadowJar>?) {
+    private fun shadowObfuscatedJar(project: Project, shadowPrefix: String, shadowJarConfig: Action<ShadowJar>?) {
         val obfuscateJarTask = project.tasks.findByName(OBFUSCATE_JAR_TASK) as Jar? ?: return
         val jarTask = project.jarTaskProvider().get()
         pluginDebug("Created task $SHADOW_OBFUSCATED_JAR on $project")
@@ -40,7 +41,7 @@ class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConf
 
             from(project.zipTree(obfuscateJarTask.archiveFile))
 
-            configureShadowJar(jarTask, project)
+            configureShadowJar(jarTask, project, shadowPrefix)
         }
 
         // any extra config specified by the user
@@ -50,7 +51,7 @@ class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConf
         }
     }
 
-    private fun shadowOriginalJar(project: Project, shadowJarConfig: Action<ShadowJar>?) {
+    private fun shadowOriginalJar(project: Project, shadowPrefix: String, shadowJarConfig: Action<ShadowJar>?) {
         val jarTask = project.jarTaskProvider().get()
         pluginDebug("Created task $SHADOW_ORIGINAL_JAR on $project")
         val shadowOriginalJarTask = project.tasks.register(SHADOW_ORIGINAL_JAR, ShadowJar::class.java) {
@@ -65,7 +66,7 @@ class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConf
             from(project.zipTree(jarTask.archiveFile))
             manifest.inheritFrom(jarTask.manifest)
 
-            configureShadowJar(jarTask, project)
+            configureShadowJar(jarTask, project, shadowPrefix)
         }
 
         // any extra config specified by the user
@@ -77,16 +78,56 @@ class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConf
 }
 
 fun Project.jarTaskProvider() = tasks.named("jar", Jar::class.java)
-fun ShadowJar.configureShadowJar(jarTask: Jar, project: Project) {
+fun ShadowJar.configureShadowJar(jarTask: Jar, project: Project, shadowPrefix: String) {
+    val runtimeClasspath = project.configurations.findByName("runtimeClasspath")
+
+
+    val runtimeClasspathFiles = runtimeClasspath?.files.orEmpty()
+
+    val eachPackage = mutableSetOf<String>()
+
+    val excludePackages = listOf("kotlin", "org/jetbrains", "org/intellij/lang/annotations", "java", "javax")
+
+    excludePackages.forEach { this.exclude("${it}/**") }
+
+    runtimeClasspathFiles.forEach { eachFile ->
+        if (eachFile.name.lowercase().endsWith(".jar")) {
+            val jarInputStream = JarFile(eachFile)
+            jarInputStream.entries().asSequence().forEach { entry ->
+                val entryName = entry.name
+
+                if (entryName.endsWith(".class") &&
+                    entryName.contains("/") &&
+                    excludePackages.none { entryName.startsWith("${it}/") }
+                ) {
+                    val firstPart = entryName.split('/').first()
+                    if (!excludePackages.contains(firstPart)) {
+                        val packageName = entryName.substring(0, entryName.lastIndexOf('/'))
+                        eachPackage.add(packageName)
+                    }
+                }
+            }
+        }
+    }
+
+    eachPackage.forEach { eachPackage ->
+        pluginDebug("Relocating package: $eachPackage to ${shadowPrefix}/$eachPackage")
+        relocate(eachPackage, "${shadowPrefix}.$eachPackage")
+    }
+
     manifest.inheritFrom(jarTask.manifest)
-    configurations.set(
-        listOf(
-            project.configurations.findByName("runtimeClasspath") ?: project.configurations.findByName("runtime")
-        )
-    )
+
+    configurations.set(listOf(runtimeClasspath))
     mergeServiceFiles()
 
-    exclude("META-INF/INDEX.LIST", "META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "module-info.class")
+    exclude(
+        "META-INF/INDEX.LIST",
+        "META-INF/*.SF",
+        "META-INF/*.DSA",
+        "META-INF/*.RSA",
+        "META-INF/versions/**/module-info.class",
+        "module-info.class"
+    )
 
     dependencies {
         exclude(dependency(project.dependencies.gradleApi()))

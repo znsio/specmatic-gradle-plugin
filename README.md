@@ -29,7 +29,7 @@ specmatic {
 
     // enable shadow, if there is any shadowing configuration, apply it here. 
     // Check shadowjar plugin documentation for more details
-    shadow {
+    shadow(prefix = "specmatic_foo") {
       relocationPrefix = "..."
     }
 

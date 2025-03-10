@@ -51,8 +51,10 @@ class ProjectConfiguration {
     internal var proguardEnabled = false
     internal var proguardExtraArgs = mutableListOf<String>()
     internal var shadowAction: Action<ShadowJar>? = null
+    internal var shadowPrefix: String? = null
 
-    fun shadow(action: Action<ShadowJar> = Action {}) {
+    fun shadow(prefix: String, action: Action<ShadowJar> = Action {}) {
+        shadowPrefix = prefix
         shadowAction = action
     }
 
