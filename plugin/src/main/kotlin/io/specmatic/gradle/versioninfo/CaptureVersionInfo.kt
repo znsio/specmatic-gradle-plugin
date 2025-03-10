@@ -21,24 +21,15 @@ class CaptureVersionInfo(project: Project) {
         fun fetchVersionInfoForProject(project: Project): ProjectVersionInfo {
             val timestamp =
                 project.rootProject.extra.properties.getOrElse("specmaticPluginBuildTime") { null } as String?
-
-            if (project === project.rootProject) {
-                return ProjectVersionInfo(
-                    project.version.toString(),
-                    project.rootProject.extra["specmaticPluginGitSha"] as String,
-                    project.group.toString(),
-                    "",
-                    timestamp
-                )
-            } else {
-                return ProjectVersionInfo(
-                    project.version.toString(),
-                    project.rootProject.extra["specmaticPluginGitSha"] as String,
-                    project.group.toString(),
-                    project.name,
-                    timestamp
-                )
-            }
+            
+            return ProjectVersionInfo(
+                project.version.toString(),
+                project.rootProject.extra["specmaticPluginGitSha"] as String,
+                project.group.toString(),
+                project.name,
+                project == project.rootProject,
+                timestamp
+            )
         }
 
         private fun hasTimestamp(project: Project) = project.hasProperty("specmatic.jar.timestamp")

@@ -72,11 +72,11 @@ class SpecmaticGradlePluginPluginFunctionalTest {
         assertThat(result.task(":createVersionPropertiesFile")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
         assertThat(result.task(":createVersionInfoKotlin")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
         val versionPropertiesFile =
-            projectDir.resolve("src/main/gen-resources/com/example/group/foobar/version.properties")
+            projectDir.resolve("src/main/gen-resources/com/example/group/version.properties")
         assertThat(versionPropertiesFile).exists()
         assertThat(versionPropertiesFile.readText()).contains("version=unspecified")
 
-        val versinInfoKotlinFile = projectDir.resolve("src/main/gen-kt/com/example/group/foobar/VersionInfo.kt")
+        val versinInfoKotlinFile = projectDir.resolve("src/main/gen-kt/com/example/group/VersionInfo.kt")
         assertThat(versinInfoKotlinFile).exists()
         assertThat(versinInfoKotlinFile.readText()).contains("val version = \"unspecified\"")
     }
