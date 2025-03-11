@@ -49,7 +49,7 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
             }
 
             project.tasks.withType(Sign::class.java).configureEach {
-                isRequired = System.getenv("SPECMATIC_GPG_KEY_ID") != null
+                isRequired = System.getenv("ORG_GRADLE_PROJECT_signingInMemoryKeyId") != null
             }
         }
 
