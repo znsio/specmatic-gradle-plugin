@@ -21,8 +21,10 @@ jobs:
           echo "export ORG_GRADLE_PROJECT_signingInMemoryKey='${{ secrets.SPECMATIC_GPG_PRIVATE_KEY }}'" >> ~/.specmatic-secrets
           echo "export ORG_GRADLE_PROJECT_signingInMemoryKeyId='${{ secrets.SPECMATIC_GPG_KEY_ID }}'" >> ~/.specmatic-secrets
           echo "export ORG_GRADLE_PROJECT_signingInMemoryKeyPassword='${{ secrets.SPECMATIC_GPG_PRIVATE_KEY_PASSPHRASE }}'" >> ~/.specmatic-secrets
+          echo "export ORG_GRADLE_PROJECT_specmaticPrivateUsername='${{ secrets.SPECMATIC_GITHUB_USER }}'" >> ~/.specmatic-secrets
+          echo "export ORG_GRADLE_PROJECT_specmaticPrivatePassword='${{ secrets.SPECMATIC_GITHUB_TOKEN }}'" >> ~/.specmatic-secrets
 
       - uses: znsio/specmatic-github-workflows/action-gradle-post-build@main
         with:
           gradle-extra-env-file: ~/.specmatic-secrets
-          gradle-extra-args: publishAllPublicationsToMavenCentralRepository
+          gradle-extra-args: publishAllPublicationsToMavenCentralRepository publishPluginMavenPublicationToSpecmaticPrivateRepository
