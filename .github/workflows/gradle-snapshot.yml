@@ -14,7 +14,7 @@ jobs:
       contents: read
     steps:
       - name: Create secrets file
-        run: .github/populate-env-vars > ~/.specmatic-secrets
+        run: ruby ./.github/populate-env-vars > ~/.specmatic-secrets
         env:
           SPECMATIC_MAVEN_CENTRAL_USERNAME: "${{ secrets.SPECMATIC_MAVEN_CENTRAL_USERNAME }}"
           SPECMATIC_MAVEN_CENTRAL_PASSWORD: "${{ secrets.SPECMATIC_MAVEN_CENTRAL_PASSWORD }}"
