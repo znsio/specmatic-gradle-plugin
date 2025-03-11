@@ -73,12 +73,12 @@ class ProjectConfiguration {
     internal var shadowPrefix: String? = null
     internal var shadowApplication = false
 
-    fun shadow(prefix: String, action: Action<ShadowJar> = Action {}) {
+    fun shadow(prefix: String?, action: Action<ShadowJar> = Action {}) {
         shadowPrefix = prefix
         shadowAction = action
     }
 
-    fun shadowApplication(prefix: String, action: Action<ShadowJar> = Action {}) {
+    fun shadowApplication(prefix: String?, action: Action<ShadowJar> = Action {}) {
         shadowApplication = true
         shadowPrefix = prefix
         shadowAction = action

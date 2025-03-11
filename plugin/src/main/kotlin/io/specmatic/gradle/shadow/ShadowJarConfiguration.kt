@@ -17,7 +17,7 @@ class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConf
     init {
         configureShadowJar(
             project,
-            projectConfiguration.shadowPrefix!!,
+            projectConfiguration.shadowPrefix,
             projectConfiguration.shadowAction,
             projectConfiguration.shadowApplication
         )
@@ -25,7 +25,7 @@ class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConf
 
     private fun configureShadowJar(
         project: Project,
-        shadowPrefix: String,
+        shadowPrefix: String?,
         shadowAction: Action<ShadowJar>?,
         shadowApplication: Boolean
     ) {
@@ -38,7 +38,7 @@ class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConf
 
     private fun shadowObfuscatedJar(
         project: Project,
-        shadowPrefix: String,
+        shadowPrefix: String?,
         shadowJarConfig: Action<ShadowJar>?,
         shadowApplication: Boolean
     ) {
@@ -69,7 +69,7 @@ class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConf
 
     private fun shadowOriginalJar(
         project: Project,
-        shadowPrefix: String,
+        shadowPrefix: String?,
         shadowJarConfig: Action<ShadowJar>?,
         shadowApplication: Boolean
     ) {
@@ -99,27 +99,29 @@ class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConf
 }
 
 fun Project.jarTaskProvider() = tasks.named("jar", Jar::class.java)
-fun ShadowJar.configureShadowJar(jarTask: Jar, project: Project, shadowPrefix: String, shadowApplication: Boolean) {
+fun ShadowJar.configureShadowJar(jarTask: Jar, project: Project, shadowPrefix: String?, shadowApplication: Boolean) {
     val runtimeClasspath = project.configurations.findByName("runtimeClasspath")
     val excludePackages = if (shadowApplication)
         listOf("java", "javax")
     else
         listOf("kotlin", "org/jetbrains", "org/intellij/lang/annotations", "java", "javax")
 
-    val runtimeClasspathFiles = runtimeClasspath?.files.orEmpty()
+    if (shadowPrefix != null) {
+        val runtimeClasspathFiles = runtimeClasspath?.files.orEmpty()
 
-    excludePackages.forEach { this.exclude("${it}/**") }
+        excludePackages.forEach { this.exclude("${it}/**") }
 
-    val packagesToRelocate = extractPackagesInJars(runtimeClasspathFiles, excludePackages)
+        val packagesToRelocate = extractPackagesInJars(runtimeClasspathFiles, excludePackages)
 
-    packagesToRelocate.forEach { eachPackage ->
-        pluginDebug("Relocating package: $eachPackage to ${shadowPrefix}/$eachPackage")
-        relocate(eachPackage, "${shadowPrefix}.$eachPackage")
+        packagesToRelocate.forEach { eachPackage ->
+            pluginDebug("Relocating package: $eachPackage to ${shadowPrefix}/$eachPackage")
+            relocate(eachPackage, "${shadowPrefix}.$eachPackage")
+        }
     }
 
     manifest.inheritFrom(jarTask.manifest)
-
     configurations.set(listOf(runtimeClasspath))
+
     mergeServiceFiles()
 
     exclude(
