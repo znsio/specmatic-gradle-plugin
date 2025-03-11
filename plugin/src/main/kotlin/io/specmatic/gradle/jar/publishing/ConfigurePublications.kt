@@ -13,7 +13,8 @@ import io.specmatic.gradle.pluginDebug
 import io.specmatic.gradle.shadow.SHADOW_OBFUSCATED_JAR
 import io.specmatic.gradle.shadow.SHADOW_ORIGINAL_JAR
 import io.specmatic.gradle.shadow.jarTaskProvider
-import org.apache.commons.codec.binary.StringUtils
+import org.eclipse.jgit.util.StringUtils
+import org.eclipse.jgit.util.StringUtils.capitalize
 import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.Project
@@ -29,7 +30,6 @@ import org.gradle.kotlin.dsl.get
 import org.gradle.plugins.signing.Sign
 import org.gradle.plugins.signing.SigningExtension
 import org.gradle.plugins.signing.SigningPlugin
-import org.jetbrains.kotlin.org.apache.commons.lang3.StringUtils.capitalize
 
 class ConfigurePublications(project: Project, projectConfiguration: ProjectConfiguration) {
     init {
