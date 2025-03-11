@@ -30,6 +30,7 @@ jobs:
       - uses: znsio/specmatic-github-workflows/action-gradle-post-build@main
         with:
           gradle-extra-env-file: ~/.specmatic-secrets
+          download-artifact-github-token: ${{ secrets.GITHUB_TOKEN }}
           gradle-extra-args: >
             release 
             -Prelease.useAutomaticVersion=true 
