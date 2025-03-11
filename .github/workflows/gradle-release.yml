@@ -17,15 +17,15 @@ jobs:
       contents: write
     steps:
       - name: Create secrets file
-        run: .github/populate-env-vars > ~/.specmatic-secrets
-        env:
-          SPECMATIC_MAVEN_CENTRAL_USERNAME: "${{ secrets.SPECMATIC_MAVEN_CENTRAL_USERNAME }}"
-          SPECMATIC_MAVEN_CENTRAL_PASSWORD: "${{ secrets.SPECMATIC_MAVEN_CENTRAL_PASSWORD }}"
-          SPECMATIC_GPG_PRIVATE_KEY: "${{ secrets.SPECMATIC_GPG_PRIVATE_KEY }}"
-          SPECMATIC_GPG_KEY_ID: "${{ secrets.SPECMATIC_GPG_KEY_ID }}"
-          SPECMATIC_GPG_PRIVATE_KEY_PASSPHRASE: "${{ secrets.SPECMATIC_GPG_PRIVATE_KEY_PASSPHRASE }}"
-          SPECMATIC_GITHUB_USER: "${{ secrets.SPECMATIC_GITHUB_USER }}"
-          SPECMATIC_GITHUB_TOKEN: "${{ secrets.SPECMATIC_GITHUB_TOKEN }}"
+        run: |
+          echo "" > ~/.specmatic-secrets
+          echo "export ORG_GRADLE_PROJECT_mavenCentralUsername='${{ secrets.SPECMATIC_MAVEN_CENTRAL_USERNAME }}'" >> ~/.specmatic-secrets
+          echo "export ORG_GRADLE_PROJECT_mavenCentralPassword='${{ secrets.SPECMATIC_MAVEN_CENTRAL_PASSWORD }}'" >> ~/.specmatic-secrets
+          echo "export ORG_GRADLE_PROJECT_signingInMemoryKey='${{ secrets.SPECMATIC_GPG_PRIVATE_KEY }}'" >> ~/.specmatic-secrets
+          echo "export ORG_GRADLE_PROJECT_signingInMemoryKeyId='${{ secrets.SPECMATIC_GPG_KEY_ID }}'" >> ~/.specmatic-secrets
+          echo "export ORG_GRADLE_PROJECT_signingInMemoryKeyPassword='${{ secrets.SPECMATIC_GPG_PRIVATE_KEY_PASSPHRASE }}'" >> ~/.specmatic-secrets
+          echo "export ORG_GRADLE_PROJECT_specmaticPrivateUsername='${{ secrets.SPECMATIC_GITHUB_USER }}'" >> ~/.specmatic-secrets
+          echo "export ORG_GRADLE_PROJECT_specmaticPrivatePassword='${{ secrets.SPECMATIC_GITHUB_TOKEN }}'" >> ~/.specmatic-secrets
 
       - uses: znsio/specmatic-github-workflows/action-gradle-post-build@main
         with:
