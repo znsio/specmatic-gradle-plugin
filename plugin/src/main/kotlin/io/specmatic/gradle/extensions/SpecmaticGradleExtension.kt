@@ -26,14 +26,14 @@ class MavenCentral : PublishTarget
 class MavenInternal(val repoName: String, val url: URI) : PublishTarget
 
 open class SpecmaticGradleExtension {
-    internal var publishTo: PublishTarget? = null
+    internal var publishTo = mutableListOf<PublishTarget>()
 
     fun publishToMavenCentral() {
-        publishTo = MavenCentral()
+        publishTo.add(MavenCentral())
     }
 
     fun publishTo(repoName: String, url: URI) {
-        publishTo = MavenInternal(repoName, url)
+        publishTo.add(MavenInternal(repoName, url))
     }
 
     fun publishTo(repoName: String, url: String) {

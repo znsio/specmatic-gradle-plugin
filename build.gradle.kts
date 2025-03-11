@@ -4,6 +4,7 @@ plugins {
 
 specmatic {
     publishToMavenCentral()
+    publishTo("specmaticPrivate", "https://maven.pkg.github.com/znsio/specmatic-private-maven-repo")
     withProject(project(":plugin")) {
         // from com.gradle.publish.PublishPlugin#PUBLISH_TASK_NAME
         publish("pluginMaven") {

@@ -86,19 +86,24 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
         project.extensions.getByType(MavenPublishBaseExtension::class.java).apply {
             val specmaticExtension = findSpecmaticExtension(project.rootProject)
                 ?: throw GradleException("SpecmaticGradleExtension not found")
-            if (specmaticExtension.publishTo is MavenCentral) {
-                publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL, false)
-            } else if (specmaticExtension.publishTo is MavenInternal) {
-                val repo = specmaticExtension.publishTo as MavenInternal
-                pluginDebug("Configuring publishing to ${repo.repoName}")
-                publishing.repositories.maven {
-                    name = repo.repoName
-                    url = repo.url
-                    credentials(PasswordCredentials::class.java)
+
+
+            specmaticExtension.publishTo.forEach { publishTarget ->
+                if (publishTarget is MavenCentral) {
+                    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL, false)
+                } else if (publishTarget is MavenInternal) {
+                    val repo = publishTarget
+                    pluginDebug("Configuring publishing to ${repo.repoName}")
+                    publishing.repositories.maven {
+                        name = repo.repoName
+                        url = repo.url
+                        credentials(PasswordCredentials::class.java)
+                    }
+                } else {
+                    pluginDebug("publishToMavenCentral is not set. Not publishing to Maven Central")
                 }
-            } else {
-                pluginDebug("publishToMavenCentral is not set. Not publishing to Maven Central")
             }
+
             signAllPublications()
         }
     }
@@ -133,15 +138,11 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
         val specmaticExtension =
             findSpecmaticExtension(project.rootProject) ?: throw GradleException("SpecmaticGradleExtension not found")
 
-        val repoName = if (specmaticExtension.publishTo is MavenInternal) {
-            (specmaticExtension.publishTo as MavenInternal).repoName
-        } else {
-            null
-        }
+        val repoNames = specmaticExtension.publishTo.filterIsInstance<MavenInternal>().map { it.repoName }
 
         publishing.publications.removeIf {
             // this is the default publication
-            val toRemove = it.name == "maven" || (repoName != null && it.name == repoName)
+            val toRemove = it.name == "maven" || repoNames.contains(it.name)
             if (toRemove) {
                 pluginDebug("Removing publication ${it.name}")
             }
@@ -151,7 +152,9 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
         // disable if already exists
         project.disableTasks("signMavenPublication")
         project.disableTasks("publishMavenPublicationToStagingRepository")
-        project.disableTasks("publishMavenPublicationTo${capitalize(repoName)}Repository")
+        repoNames.forEach { repoName ->
+            project.disableTasks("publishMavenPublicationTo${capitalize(repoName)}Repository")
+        }
     }
 
     private fun Project.disableTasks(taskName: String) {
