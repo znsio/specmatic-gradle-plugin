@@ -1,8 +1,10 @@
 package io.specmatic.gradle
 
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatCode
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
+import org.gradle.testkit.runner.UnexpectedBuildFailure
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
@@ -16,6 +18,37 @@ class SpecmaticGradlePluginPluginFunctionalTest {
 
     private val buildFile by lazy { projectDir.resolve("build.gradle.kts") }
     private val settingsFile by lazy { projectDir.resolve("settings.gradle.kts") }
+
+    @Test
+    fun `throws error when shadow prefix is not valid package name`() {
+        // Set up the test build
+        settingsFile.writeText("")
+        buildFile.writeText(
+            """
+            plugins {
+                id("java")
+                id("io.specmatic.gradle")
+            }
+            
+            specmatic {
+                withProject(rootProject) {
+                    // we asked it to be published, but not specified where
+                    shadow("bad-package") 
+                }
+            }
+        """.trimIndent()
+        )
+
+        // Run the build
+        val runner = GradleRunner.create()
+        runner.forwardOutput()
+        runner.withPluginClasspath()
+        runner.withProjectDir(projectDir)
+        assertThatCode { runner.withArguments("tasks").build() }
+            .isInstanceOf(UnexpectedBuildFailure::class.java)
+            .hasMessageContaining("Unexpected build execution failure")
+            .hasMessageContaining("Invalid Java package name: bad-package")
+    }
 
     @Test
     fun `it should always emit exec task output`() {
@@ -44,7 +77,7 @@ class SpecmaticGradlePluginPluginFunctionalTest {
         // Verify the result
         assertThat(result.output).contains("hello world")
     }
-    
+
     @Test
     fun `it should create version properties file`() {
         // Set up the test build

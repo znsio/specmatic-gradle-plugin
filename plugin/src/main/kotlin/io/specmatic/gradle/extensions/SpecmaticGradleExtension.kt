@@ -78,14 +78,17 @@ class ProjectConfiguration {
     var iAmABigFatLibrary = false
 
     fun shadow(prefix: String?, action: Action<ShadowJar> = Action {}) {
+        if (prefix != null) {
+            // check that prefix is a valid java package name
+            require(prefix.matches(Regex("^[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)*$"))) { "Invalid Java package name: $prefix" }
+        }
         shadowPrefix = prefix
         shadowAction = action
     }
 
     fun shadowApplication(prefix: String?, action: Action<ShadowJar> = Action {}) {
         shadowApplication = true
-        shadowPrefix = prefix
-        shadowAction = action
+        shadow(prefix, action)
     }
 
     fun obfuscate(vararg proguardExtraArgs: String?) {
