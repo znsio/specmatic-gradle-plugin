@@ -293,6 +293,7 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
     }
 
     private fun Project.createConfigurationAndAddArtifacts(configurationName: String, artifactTask: TaskProvider<Jar>) {
+        pluginDebug("Creating configuration $configurationName")
         val obfuscatedJarConfig = configurations.create(configurationName) {
             extendsFrom(configurations["runtimeClasspath"])
             isTransitive = configurations["runtimeClasspath"].isTransitive
