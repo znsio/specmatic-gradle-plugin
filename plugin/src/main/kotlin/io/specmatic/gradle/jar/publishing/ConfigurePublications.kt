@@ -192,7 +192,7 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
                 // but we remove the classifier when publishing, because we don't want the classifier in the published jar name.
                 classifier = null
             }
-            artifactId = project.name + "-shadow-obfuscated"
+            artifactId = project.name
             pom.packaging = "jar"
 
             configuration?.execute(this)
@@ -212,7 +212,7 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
                 // but we remove the classifier when publishing, because we don't want the classifier in the published jar name.
                 classifier = null
             }
-            artifactId = project.name + "-shadow-original"
+            artifactId = project.name + "-debug"
             pom.packaging = "jar"
             configuration?.execute(this)
         }
@@ -226,7 +226,7 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
     ) {
         publishing.publications.register("originalJar", MavenPublication::class.java) {
             from(project.components["java"])
-            artifactId = project.name + "-original"
+            artifactId = project.name + "-dont-use-this-unless-you-know-what-you-are-doing"
             pom.packaging = "jar"
             configuration?.execute(this)
         }
@@ -244,7 +244,7 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
                 // but we remove the classifier when publishing, because we don't want the classifier in the published jar name.
                 classifier = null
             }
-            artifactId = project.name + "-obfuscated-original"
+            artifactId = project.name + "-min-with-transitive-deps"
 
             pom {
                 packaging = "jar"
