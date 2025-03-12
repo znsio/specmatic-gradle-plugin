@@ -24,7 +24,7 @@ jobs:
           echo "export ORG_GRADLE_PROJECT_specmaticPrivateUsername='${{ secrets.SPECMATIC_GITHUB_USER }}'" >> ~/.specmatic-secrets
           echo "export ORG_GRADLE_PROJECT_specmaticPrivatePassword='${{ secrets.SPECMATIC_GITHUB_TOKEN }}'" >> ~/.specmatic-secrets
           export GPG_TTY=$(tty)
-          gpg -c --batch --passphrase '${{ secrets.SPECMATIC_GPG_PRIVATE_KEY_PASSPHRASE }}' --armour 
+          cat  ~/.specmatic-secrets | gpg -c --batch --passphrase '${{ secrets.SPECMATIC_GPG_PRIVATE_KEY_PASSPHRASE }}' --armour 
 
       - uses: znsio/specmatic-github-workflows/action-gradle-post-build@main
         with:
