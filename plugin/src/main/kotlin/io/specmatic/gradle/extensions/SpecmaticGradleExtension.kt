@@ -75,6 +75,8 @@ class ProjectConfiguration {
     internal var shadowPrefix: String? = null
     internal var shadowApplication = false
 
+    var iAmABigFatLibrary = false
+
     fun shadow(prefix: String?, action: Action<ShadowJar> = Action {}) {
         shadowPrefix = prefix
         shadowAction = action

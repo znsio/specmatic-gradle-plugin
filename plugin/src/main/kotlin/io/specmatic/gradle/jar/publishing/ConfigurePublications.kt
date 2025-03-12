@@ -13,8 +13,6 @@ import io.specmatic.gradle.pluginDebug
 import io.specmatic.gradle.shadow.SHADOW_OBFUSCATED_JAR
 import io.specmatic.gradle.shadow.SHADOW_ORIGINAL_JAR
 import io.specmatic.gradle.shadow.jarTaskProvider
-import org.apache.commons.codec.binary.StringUtils
-import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.credentials.PasswordCredentials
@@ -30,6 +28,8 @@ import org.gradle.plugins.signing.Sign
 import org.gradle.plugins.signing.SigningExtension
 import org.gradle.plugins.signing.SigningPlugin
 import org.jetbrains.kotlin.org.apache.commons.lang3.StringUtils.capitalize
+
+private const val ORIGINAL_JAR = "originalJar"
 
 class ConfigurePublications(project: Project, projectConfiguration: ProjectConfiguration) {
     init {
@@ -113,22 +113,22 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
     ) {
         if (configuration.publicationTypes.isNotEmpty()) {
             configureOriginalJarPublicationWhenObfuscationOrShadowPresent(
-                publishing, project, configuration.publicationConfigurations
+                publishing, project, configuration
             )
 
             removeTasksAndPublicationsWeDoNotWant(publishing, project)
         }
 
         if (configuration.publicationTypes.contains(PublicationType.OBFUSCATED_ORIGINAL)) {
-            configureObfuscatedOriginalJarPublication(publishing, project, configuration.publicationConfigurations)
+            configureObfuscatedOriginalJarPublication(publishing, project, configuration)
         }
 
         if (configuration.publicationTypes.contains(PublicationType.SHADOWED_ORIGINAL)) {
-            configureShadowOriginalJarPublication(publishing, project, configuration.publicationConfigurations)
+            configureShadowOriginalJarPublication(publishing, project, configuration)
         }
 
         if (configuration.publicationTypes.contains(PublicationType.SHADOWED_OBFUSCATED)) {
-            configureShadowObfuscatedJarPublication(publishing, project, configuration.publicationConfigurations)
+            configureShadowObfuscatedJarPublication(publishing, project, configuration)
         }
     }
 
@@ -183,7 +183,7 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
     }
 
     private fun configureShadowObfuscatedJarPublication(
-        publishing: PublishingExtension, project: Project, configuration: Action<MavenPublication>?
+        publishing: PublishingExtension, project: Project, configuration: ProjectConfiguration
     ) {
         val shadowObfuscatedJarTask = project.tasks.named(SHADOW_OBFUSCATED_JAR, Jar::class.java)
         publishing.publications.register(SHADOW_OBFUSCATED_JAR, MavenPublication::class.java) {
@@ -192,17 +192,18 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
                 // but we remove the classifier when publishing, because we don't want the classifier in the published jar name.
                 classifier = null
             }
-            artifactId = project.name
+//            artifactId = project.name
+            artifactId = createArtifactIdFor(project.name, configuration, this)
             pom.packaging = "jar"
 
-            configuration?.execute(this)
+            configuration.publicationConfigurations?.execute(this)
         }
 
         project.createConfigurationAndAddArtifacts(shadowObfuscatedJarTask)
     }
 
     private fun configureShadowOriginalJarPublication(
-        publishing: PublishingExtension, project: Project, configuration: Action<MavenPublication>?
+        publishing: PublishingExtension, project: Project, configuration: ProjectConfiguration
     ) {
         val shadowOriginalJarTask = project.tasks.named(SHADOW_ORIGINAL_JAR, Jar::class.java)
 
@@ -212,9 +213,10 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
                 // but we remove the classifier when publishing, because we don't want the classifier in the published jar name.
                 classifier = null
             }
-            artifactId = project.name + "-debug"
+//            artifactId = project.name + "-debug"
+            artifactId = createArtifactIdFor(project.name, configuration, this)
             pom.packaging = "jar"
-            configuration?.execute(this)
+            configuration.publicationConfigurations?.execute(this)
         }
 
         project.createConfigurationAndAddArtifacts(shadowOriginalJarTask)
@@ -222,20 +224,21 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
 
 
     private fun configureOriginalJarPublicationWhenObfuscationOrShadowPresent(
-        publishing: PublishingExtension, project: Project, configuration: Action<MavenPublication>?
+        publishing: PublishingExtension, project: Project, configuration: ProjectConfiguration
     ) {
-        publishing.publications.register("originalJar", MavenPublication::class.java) {
+        publishing.publications.register(ORIGINAL_JAR, MavenPublication::class.java) {
             from(project.components["java"])
-            artifactId = project.name + "-dont-use-this-unless-you-know-what-you-are-doing"
+//            artifactId = project.name + "-dont-use-this-unless-you-know-what-you-are-doing"
+            artifactId = createArtifactIdFor(project.name, configuration, this)
             pom.packaging = "jar"
-            configuration?.execute(this)
+            configuration.publicationConfigurations?.execute(this)
         }
 
-        project.createConfigurationAndAddArtifacts("originalJar", project.jarTaskProvider())
+        project.createConfigurationAndAddArtifacts(ORIGINAL_JAR, project.jarTaskProvider())
     }
 
     private fun configureObfuscatedOriginalJarPublication(
-        publishing: PublishingExtension, project: Project, configuration: Action<MavenPublication>?
+        publishing: PublishingExtension, project: Project, configuration: ProjectConfiguration
     ) {
         val obfuscateJarTask = project.tasks.named(OBFUSCATE_JAR_TASK, Jar::class.java)
         publishing.publications.register(OBFUSCATE_JAR_TASK, MavenPublication::class.java) {
@@ -244,7 +247,8 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
                 // but we remove the classifier when publishing, because we don't want the classifier in the published jar name.
                 classifier = null
             }
-            artifactId = project.name + "-min-with-transitive-deps"
+//            artifactId = project.name + "-min-with-transitive-deps"
+            artifactId = createArtifactIdFor(project.name, configuration, this)
 
             pom {
                 packaging = "jar"
@@ -261,10 +265,30 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
                 }
             }
 
-            configuration?.execute(this)
+            configuration.publicationConfigurations?.execute(this)
         }
 
         project.createConfigurationAndAddArtifacts(OBFUSCATE_JAR_TASK, obfuscateJarTask)
+    }
+
+    private fun createArtifactIdFor(
+        name: String, configuration: ProjectConfiguration, publication: MavenPublication
+    ): String {
+        if (configuration.iAmABigFatLibrary) {
+            when (publication.name) {
+                ORIGINAL_JAR -> return "$name-dont-use-this-unless-you-know-what-you-are-doing"
+                OBFUSCATE_JAR_TASK -> return name
+                SHADOW_ORIGINAL_JAR -> return "$name-all-debug"
+                SHADOW_OBFUSCATED_JAR -> return "$name-all-min"
+            }
+        } else when (publication.name) {
+            ORIGINAL_JAR -> return "$name-dont-use-this-unless-you-know-what-you-are-doing"
+            OBFUSCATE_JAR_TASK -> return "$name-min-with-transitive-deps"
+            SHADOW_ORIGINAL_JAR -> return "$name-debug"
+            SHADOW_OBFUSCATED_JAR -> return name
+        }
+
+        throw GradleException("Unable to determine artifactId for ${publication.name}")
     }
 
     private fun Project.createConfigurationAndAddArtifacts(shadowOriginalJarTask: TaskProvider<Jar>) {

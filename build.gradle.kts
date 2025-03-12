@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
-    id("io.specmatic.gradle") version ("0.0.13-SNAPSHOT")
+    id("io.specmatic.gradle") version ("0.0.14-SNAPSHOT")
 }
 
 specmatic {
