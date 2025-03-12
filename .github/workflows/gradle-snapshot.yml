@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      actions: read
     steps:
       - name: Create secrets file
         run: |
@@ -29,5 +30,5 @@ jobs:
       - uses: znsio/specmatic-github-workflows/action-gradle-post-build@main
         with:
           gradle-extra-env-file: ~/.specmatic-secrets
-          gradle-extra-args: publishAllPublicationsToMavenCentralRepository publishPluginMavenPublicationToSpecmaticPrivateRepository
+          gradle-extra-args: publishAllPublicationsToMavenCentralRepository publishPluginMavenPublicationToSpecmaticPrivateRepository -d
           download-artifact-github-token: ${{ secrets.GITHUB_TOKEN }}
