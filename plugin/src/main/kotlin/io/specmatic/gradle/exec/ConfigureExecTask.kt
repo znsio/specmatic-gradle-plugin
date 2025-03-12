@@ -54,7 +54,9 @@ class ConfigureExecTask(project: Project) {
                         }
                         cliArgs.add("-cp")
                         cliArgs.add(task.classpath.joinToString(":"))
-                        cliArgs.add(task.mainClass.get())
+                        if (task.mainClass.isPresent) {
+                            cliArgs.add(task.mainClass.get())
+                        }
                         cliArgs.addAll(task.args)
                     } else {
                         cliArgs.addAll(task.commandLine)
@@ -66,36 +68,37 @@ class ConfigureExecTask(project: Project) {
         }
     }
 
-    private fun shellEscapedArgs(args: List<String>): String {
-        val escapedArgs = args.map { shellEscape(it) }
-        return buildString {
-            escapedArgs.forEachIndexed { index, arg ->
-                if (index > 0) {
-                    append(" \\\n   ")
-                }
-                append(arg)
+}
+
+fun shellEscapedArgs(args: List<String>): String {
+    val escapedArgs = args.map { shellEscape(it) }
+    return buildString {
+        escapedArgs.forEachIndexed { index, arg ->
+            if (index > 0) {
+                append(" \\\n   ")
             }
+            append(arg)
         }
     }
+}
 
-    val SAFE_PUNCTUATION: String = "@%-_+:,./"
+val SAFE_PUNCTUATION: String = "@%-_+:,./"
 
-    fun shellEscape(word: String): String {
-        val len = word.length
-        if (len == 0) {
-            // Empty string is a special case: needs to be quoted to ensure that it gets
-            // treated as a separate argument.
-            return "''"
-        }
-        for (ii in 0 until len) {
-            val c = word[ii]
-            // We do this positively so as to be sure we don't inadvertently forget
-            // any unsafe characters.
-            if (!Character.isLetterOrDigit(c) && SAFE_PUNCTUATION.indexOf(c) == -1) {
-                // replace() actually means "replace all".
-                return "'" + word.replace("'", "'\\''") + "'"
-            }
-        }
-        return word
+fun shellEscape(word: String): String {
+    val len = word.length
+    if (len == 0) {
+        // Empty string is a special case: needs to be quoted to ensure that it gets
+        // treated as a separate argument.
+        return "''"
     }
+    for (ii in 0 until len) {
+        val c = word[ii]
+        // We do this positively so as to be sure we don't inadvertently forget
+        // any unsafe characters.
+        if (!Character.isLetterOrDigit(c) && SAFE_PUNCTUATION.indexOf(c) == -1) {
+            // replace() actually means "replace all".
+            return "'" + word.replace("'", "'\\''") + "'"
+        }
+    }
+    return word
 }
