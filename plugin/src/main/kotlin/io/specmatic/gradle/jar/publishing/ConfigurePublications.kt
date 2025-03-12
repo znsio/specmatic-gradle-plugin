@@ -192,7 +192,6 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
                 // but we remove the classifier when publishing, because we don't want the classifier in the published jar name.
                 classifier = null
             }
-//            artifactId = project.name
             artifactId = createArtifactIdFor(project.name, configuration, this)
             pom.packaging = "jar"
 
@@ -213,7 +212,6 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
                 // but we remove the classifier when publishing, because we don't want the classifier in the published jar name.
                 classifier = null
             }
-//            artifactId = project.name + "-debug"
             artifactId = createArtifactIdFor(project.name, configuration, this)
             pom.packaging = "jar"
             configuration.publicationConfigurations?.execute(this)
@@ -228,7 +226,6 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
     ) {
         publishing.publications.register(ORIGINAL_JAR, MavenPublication::class.java) {
             from(project.components["java"])
-//            artifactId = project.name + "-dont-use-this-unless-you-know-what-you-are-doing"
             artifactId = createArtifactIdFor(project.name, configuration, this)
             pom.packaging = "jar"
             configuration.publicationConfigurations?.execute(this)
@@ -247,7 +244,6 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
                 // but we remove the classifier when publishing, because we don't want the classifier in the published jar name.
                 classifier = null
             }
-//            artifactId = project.name + "-min-with-transitive-deps"
             artifactId = createArtifactIdFor(project.name, configuration, this)
 
             pom {
