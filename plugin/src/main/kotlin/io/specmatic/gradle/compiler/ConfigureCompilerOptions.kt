@@ -6,7 +6,8 @@ import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.compile.JavaCompile
-import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
 class ConfigureCompilerOptions(project: Project) {
     init {
@@ -20,6 +21,7 @@ class ConfigureCompilerOptions(project: Project) {
             findSpecmaticExtension(project) ?: throw GradleException("SpecmaticGradleExtension not found")
 
         val jvmVersion = specmaticGradleExtension.jvmVersion
+        val kotlinApiVersion = specmaticGradleExtension.kotlinApiVersion
 
         project.pluginManager.withPlugin("java") {
             pluginDebug("Configuring compiler options on $project")
@@ -38,9 +40,14 @@ class ConfigureCompilerOptions(project: Project) {
 
         project.pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
             pluginDebug("Configuring Kotlin compiler options on $project")
-            project.extensions.configure(KotlinProjectExtension::class.java) {
+            project.extensions.configure(KotlinJvmProjectExtension::class.java) {
                 jvmToolchain {
                     languageVersion.set(jvmVersion)
+                }
+                compilerOptions {
+                    jvmTarget.set(JvmTarget.fromTarget(jvmVersion.asInt().toString()))
+                    apiVersion.set(kotlinApiVersion)
+                    languageVersion.set(kotlinApiVersion)
                 }
             }
         }

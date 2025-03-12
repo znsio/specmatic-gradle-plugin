@@ -5,6 +5,7 @@ import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import java.net.URI
 
 
@@ -26,6 +27,7 @@ class MavenCentral : PublishTarget
 class MavenInternal(val repoName: String, val url: URI) : PublishTarget
 
 open class SpecmaticGradleExtension {
+    var kotlinApiVersion: KotlinVersion = KotlinVersion.KOTLIN_1_9
     internal var publishTo = mutableListOf<PublishTarget>()
 
     fun publishToMavenCentral() {
