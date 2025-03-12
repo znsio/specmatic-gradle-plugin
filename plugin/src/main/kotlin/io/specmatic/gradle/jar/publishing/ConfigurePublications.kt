@@ -195,10 +195,10 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
             artifactId = createArtifactIdFor(project.name, configuration, this)
             pom.packaging = "jar"
 
+            project.createConfigurationAndAddArtifacts(shadowObfuscatedJarTask)
             configuration.publicationConfigurations?.execute(this)
         }
 
-        project.createConfigurationAndAddArtifacts(shadowObfuscatedJarTask)
     }
 
     private fun configureShadowOriginalJarPublication(
@@ -214,10 +214,11 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
             }
             artifactId = createArtifactIdFor(project.name, configuration, this)
             pom.packaging = "jar"
+
+            project.createConfigurationAndAddArtifacts(shadowOriginalJarTask)
             configuration.publicationConfigurations?.execute(this)
         }
 
-        project.createConfigurationAndAddArtifacts(shadowOriginalJarTask)
     }
 
 
@@ -228,10 +229,11 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
             from(project.components["java"])
             artifactId = createArtifactIdFor(project.name, configuration, this)
             pom.packaging = "jar"
+
+            project.createConfigurationAndAddArtifacts(ORIGINAL_JAR, project.jarTaskProvider())
             configuration.publicationConfigurations?.execute(this)
         }
 
-        project.createConfigurationAndAddArtifacts(ORIGINAL_JAR, project.jarTaskProvider())
     }
 
     private fun configureObfuscatedOriginalJarPublication(
@@ -261,10 +263,10 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
                 }
             }
 
+            project.createConfigurationAndAddArtifacts(OBFUSCATE_JAR_TASK, obfuscateJarTask)
             configuration.publicationConfigurations?.execute(this)
         }
 
-        project.createConfigurationAndAddArtifacts(OBFUSCATE_JAR_TASK, obfuscateJarTask)
     }
 
     private fun createArtifactIdFor(
