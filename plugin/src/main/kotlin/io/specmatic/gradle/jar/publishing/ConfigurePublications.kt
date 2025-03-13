@@ -8,11 +8,12 @@ import io.specmatic.gradle.extensions.MavenInternal
 import io.specmatic.gradle.extensions.ProjectConfiguration
 import io.specmatic.gradle.extensions.PublicationType
 import io.specmatic.gradle.findSpecmaticExtension
+import io.specmatic.gradle.jar.massage.jar
+import io.specmatic.gradle.jar.massage.shadow
 import io.specmatic.gradle.jar.obfuscate.OBFUSCATE_JAR_TASK
 import io.specmatic.gradle.pluginDebug
 import io.specmatic.gradle.shadow.SHADOW_OBFUSCATED_JAR
 import io.specmatic.gradle.shadow.SHADOW_ORIGINAL_JAR
-import io.specmatic.gradle.shadow.jarTaskProvider
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.credentials.PasswordCredentials
@@ -193,7 +194,11 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
                 classifier = null
             }
             artifactId = createArtifactIdFor(project.name, configuration, this)
-            pom.packaging = "jar"
+
+            pom {
+                packaging = "jar"
+            }
+
 
             project.createConfigurationAndAddArtifacts(shadowObfuscatedJarTask)
             configuration.publicationConfigurations?.execute(this)
@@ -213,7 +218,10 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
                 classifier = null
             }
             artifactId = createArtifactIdFor(project.name, configuration, this)
-            pom.packaging = "jar"
+
+            pom {
+                packaging = "jar"
+            }
 
             project.createConfigurationAndAddArtifacts(shadowOriginalJarTask)
             configuration.publicationConfigurations?.execute(this)
@@ -228,9 +236,12 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
         publishing.publications.register(ORIGINAL_JAR, MavenPublication::class.java) {
             from(project.components["java"])
             artifactId = createArtifactIdFor(project.name, configuration, this)
-            pom.packaging = "jar"
 
-            project.createConfigurationAndAddArtifacts(ORIGINAL_JAR, project.jarTaskProvider())
+            pom {
+                packaging = "jar"
+            }
+
+            project.createConfigurationAndAddArtifacts(ORIGINAL_JAR, project.tasks.jar)
             configuration.publicationConfigurations?.execute(this)
         }
 
@@ -253,7 +264,7 @@ class ConfigurePublications(project: Project, projectConfiguration: ProjectConfi
                 withXml {
                     val topLevel = asNode()
                     val dependencies = topLevel.appendNode("dependencies")
-                    project.configurations.getByName("compileClasspath").allDependencies.forEach {
+                    (project.configurations.getByName("compileClasspath").allDependencies - project.configurations.shadow.get().allDependencies).forEach {
                         val dependency = dependencies.appendNode("dependency")
                         dependency.appendNode("groupId", it.group)
                         dependency.appendNode("artifactId", it.name)

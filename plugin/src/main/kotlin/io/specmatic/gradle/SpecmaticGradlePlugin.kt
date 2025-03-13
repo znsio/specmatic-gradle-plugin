@@ -1,5 +1,7 @@
 package io.specmatic.gradle
 
+import com.github.jengelman.gradle.plugins.shadow.ShadowBasePlugin
+import com.github.jengelman.gradle.plugins.shadow.ShadowJavaPlugin.Companion.SHADOW_RUNTIME_ELEMENTS_CONFIGURATION_NAME
 import io.specmatic.gradle.artifacts.EnsureJarsAreStamped
 import io.specmatic.gradle.artifacts.EnsureReproducibleArtifacts
 import io.specmatic.gradle.compiler.ConfigureCompilerOptions
@@ -7,6 +9,8 @@ import io.specmatic.gradle.exec.ConfigureExecTask
 import io.specmatic.gradle.extensions.ProjectConfiguration
 import io.specmatic.gradle.extensions.SpecmaticGradleExtension
 import io.specmatic.gradle.jar.massage.ObfuscateShadowAndPublish
+import io.specmatic.gradle.jar.massage.jar
+import io.specmatic.gradle.jar.massage.shadow
 import io.specmatic.gradle.license.LicenseReportingConfiguration
 import io.specmatic.gradle.plugin.VersionInfo
 import io.specmatic.gradle.releases.ConfigureReleases
@@ -27,6 +31,15 @@ class SpecmaticGradlePlugin : Plugin<Project> {
         val specmaticGradleExtension = project.extensions.create("specmatic", SpecmaticGradleExtension::class.java)
 
         pluginDebug("Specmatic Gradle Plugin ${VersionInfo.describe()}")
+
+        if (project.subprojects.isEmpty()) {
+            project.applyShadowConfigs()
+        } else {
+            project.subprojects {
+                applyShadowConfigs()
+            }
+        }
+
 
         project.afterEvaluate {
 
@@ -146,6 +159,7 @@ private fun Project.applyShadowConfigs() {
             from(configurations.shadow.get().files.map { zipTree(it) })
         }
     }
+
 }
 
 fun findSpecmaticExtension(project: Project): SpecmaticGradleExtension? {

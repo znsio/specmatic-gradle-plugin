@@ -2,6 +2,7 @@ package io.specmatic.gradle.shadow
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.specmatic.gradle.extensions.ProjectConfiguration
+import io.specmatic.gradle.jar.massage.jar
 import io.specmatic.gradle.jar.obfuscate.OBFUSCATE_JAR_TASK
 import io.specmatic.gradle.pluginDebug
 import org.gradle.api.Action
@@ -43,7 +44,7 @@ class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConf
         shadowApplication: Boolean
     ) {
         val obfuscateJarTask = project.tasks.findByName(OBFUSCATE_JAR_TASK) as Jar? ?: return
-        val jarTask = project.jarTaskProvider().get()
+        val jarTask = project.tasks.jar.get()
         pluginDebug("Created task $SHADOW_OBFUSCATED_JAR on $project")
         val shadowObfuscatedJarTask = project.tasks.register(SHADOW_OBFUSCATED_JAR, ShadowJar::class.java) {
             group = "build"
@@ -73,7 +74,7 @@ class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConf
         shadowJarConfig: Action<ShadowJar>?,
         shadowApplication: Boolean
     ) {
-        val jarTask = project.jarTaskProvider().get()
+        val jarTask = project.tasks.jar.get()
         pluginDebug("Created task $SHADOW_ORIGINAL_JAR on $project")
         val shadowOriginalJarTask = project.tasks.register(SHADOW_ORIGINAL_JAR, ShadowJar::class.java) {
             group = "build"
@@ -98,7 +99,6 @@ class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConf
     }
 }
 
-fun Project.jarTaskProvider() = tasks.named("jar", Jar::class.java)
 fun ShadowJar.configureShadowJar(jarTask: Jar, project: Project, shadowPrefix: String?, shadowApplication: Boolean) {
     val runtimeClasspath = project.configurations.findByName("runtimeClasspath")
     val excludePackages = if (shadowApplication)

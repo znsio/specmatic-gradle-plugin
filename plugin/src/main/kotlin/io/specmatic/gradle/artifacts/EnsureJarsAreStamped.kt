@@ -1,6 +1,6 @@
 package io.specmatic.gradle.artifacts
 
-import io.specmatic.gradle.extensions.SpecmaticGradleExtension
+import io.specmatic.gradle.findSpecmaticExtension
 import io.specmatic.gradle.pluginDebug
 import io.specmatic.gradle.versioninfo.CaptureVersionInfo
 import org.gradle.api.GradleException
@@ -28,8 +28,9 @@ class EnsureJarsAreStamped(val project: Project) {
 
     private fun Jar.configureJar() {
         pluginDebug("Ensuring that ${this.path} is stamped")
-        val extension = project.extensions.findByType(SpecmaticGradleExtension::class.java)
-            ?: throw GradleException("SpecmaticGradleExtension not found")
+
+        val extension = findSpecmaticExtension(project)
+            ?: throw GradleException("SpecmaticGradleExtension not found in project $project")
 
         if (extension.projectConfigurations[project]?.applicationMainClass?.isBlank() == false) {
             pluginDebug("Adding main class to ${this.archiveFile.get().asFile}")
