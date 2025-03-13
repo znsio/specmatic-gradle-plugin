@@ -88,7 +88,7 @@ private fun Project.applyShadowConfigs() {
             extendsFrom(shadowConfiguration)
         }
 
-        configurations.named("testRuntime") {
+        configurations.named("testRuntimeOnly") {
             extendsFrom(shadowConfiguration)
         }
 
