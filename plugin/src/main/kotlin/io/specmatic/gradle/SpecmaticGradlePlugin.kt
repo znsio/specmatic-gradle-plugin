@@ -88,6 +88,10 @@ private fun Project.applyShadowConfigs() {
             extendsFrom(shadowConfiguration)
         }
 
+        configurations.named("testRuntime") {
+            extendsFrom(shadowConfiguration)
+        }
+
         val softwareComponentFactory =
             (project as ProjectInternal).services.get(SoftwareComponentFactory::class.java)
         val shadowComponent = softwareComponentFactory.adhoc(ShadowBasePlugin.COMPONENT_NAME)
