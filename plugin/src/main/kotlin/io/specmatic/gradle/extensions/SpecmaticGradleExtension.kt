@@ -76,6 +76,9 @@ class ProjectConfiguration {
     internal var shadowPrefix: String? = null
     internal var shadowApplication = false
 
+    internal var dockerBuild = false
+    internal var dockerBuildExtraArgs = mutableListOf<String?>()
+
     var iAmABigFatLibrary = false
 
     fun shadow(prefix: String? = null, action: Action<ShadowJar> = Action {}) {
@@ -95,6 +98,11 @@ class ProjectConfiguration {
     fun obfuscate(vararg proguardExtraArgs: String?) {
         this.proguardEnabled = true
         this.proguardExtraArgs.addAll(proguardExtraArgs)
+    }
+
+    fun dockerBuild(vararg proguardExtraArgs: String?) {
+        this.dockerBuild = true
+        this.dockerBuildExtraArgs.addAll(proguardExtraArgs)
     }
 
     fun publish(
