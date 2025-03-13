@@ -82,7 +82,7 @@ fun shellEscapedArgs(args: List<String?>): String {
     }
 }
 
-val SAFE_PUNCTUATION: String = "@%-_+:,./"
+const val SAFE_PUNCTUATION: String = "@%-_+:,./"
 
 fun shellEscape(word: String): String {
     val len = word.length

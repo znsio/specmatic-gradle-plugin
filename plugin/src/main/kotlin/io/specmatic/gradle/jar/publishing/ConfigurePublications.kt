@@ -8,7 +8,7 @@ import io.specmatic.gradle.extensions.MavenInternal
 import io.specmatic.gradle.extensions.ProjectConfiguration
 import io.specmatic.gradle.extensions.PublicationType
 import io.specmatic.gradle.findSpecmaticExtension
-import io.specmatic.gradle.obfuscate.OBFUSCATE_JAR_TASK
+import io.specmatic.gradle.jar.obfuscate.OBFUSCATE_JAR_TASK
 import io.specmatic.gradle.pluginDebug
 import io.specmatic.gradle.shadow.SHADOW_OBFUSCATED_JAR
 import io.specmatic.gradle.shadow.SHADOW_ORIGINAL_JAR

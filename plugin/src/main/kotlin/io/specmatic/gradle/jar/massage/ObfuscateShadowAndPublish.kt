@@ -3,7 +3,7 @@ package io.specmatic.gradle.jar.massage
 import io.specmatic.gradle.extensions.ProjectConfiguration
 import io.specmatic.gradle.findSpecmaticExtension
 import io.specmatic.gradle.jar.publishing.ConfigurePublications
-import io.specmatic.gradle.obfuscate.ObfuscateConfiguration
+import io.specmatic.gradle.jar.obfuscate.ObfuscateConfiguration
 import io.specmatic.gradle.shadow.ShadowJarConfiguration
 import org.gradle.api.GradleException
 import org.gradle.api.Project

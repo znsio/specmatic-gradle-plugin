@@ -2,7 +2,7 @@ package io.specmatic.gradle.shadow
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.specmatic.gradle.extensions.ProjectConfiguration
-import io.specmatic.gradle.obfuscate.OBFUSCATE_JAR_TASK
+import io.specmatic.gradle.jar.obfuscate.OBFUSCATE_JAR_TASK
 import io.specmatic.gradle.pluginDebug
 import org.gradle.api.Action
 import org.gradle.api.Project

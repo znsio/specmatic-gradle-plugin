@@ -1,55 +1,99 @@
-package io.specmatic.gradle.obfuscate
+package io.specmatic.gradle.jar.obfuscate
 
 import io.specmatic.gradle.exec.shellEscape
+import io.specmatic.gradle.exec.shellEscapedArgs
 import io.specmatic.gradle.extensions.ProjectConfiguration
 import io.specmatic.gradle.pluginDebug
+import org.gradle.api.DefaultTask
 import org.gradle.api.Project
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Exec
-import org.gradle.api.tasks.Nested
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.*
 import org.gradle.jvm.tasks.Jar
 import org.gradle.jvm.toolchain.JavaLauncher
 import org.gradle.jvm.toolchain.JavaToolchainService
+import org.gradle.process.ExecOperations
+import org.gradle.process.internal.ExecException
 import java.io.File
 import javax.inject.Inject
 
 const val OBFUSCATE_JAR_TASK = "obfuscateJar"
 
-abstract class ProguardTask : Exec() {
-    @get:Inject
-    protected abstract val javaToolchainService: JavaToolchainService
+abstract class ProguardTask @Inject constructor(
+    private val execOperations: ExecOperations
+) : DefaultTask() {
 
     @get:Nested
-    abstract val javaLauncher: Property<JavaLauncher>
+    abstract val launcher: Property<JavaLauncher>
 
+    @get:Nested
+    abstract val execLauncher: Property<ExecOperations>
+
+    @get:Inject
+    abstract val javaToolchainService: JavaToolchainService
+
+    @get:Input
+    private val args = mutableListOf<String>()
+
+    @get:InputFile
+    var inputJar: File? = null
+
+    @get:OutputFile
+    var outputJar: File? = null
 
     init {
         val toolchain = project.extensions.getByType(JavaPluginExtension::class.java).toolchain
         val defaultLauncher = javaToolchainService.launcherFor(toolchain)
-        javaLauncher.convention(defaultLauncher)
+        launcher.convention(defaultLauncher)
+        execLauncher.set(execOperations)
     }
 
-    override fun exec() {
-        super.exec()
+    @TaskAction
+    fun exec() {
+        createArgs()
+
+        val argsFile = project.file("$temporaryDir/proguard-task-args-${this.name}.txt")
+        argsFile.writeText(args.joinToString("\n", transform = ::shellEscape))
+        val completeCLI = listOf(getJavaExecutable().path, "@$argsFile")
+        val outputFile = project.file("${getProguardOutputDir()}/proguard-task-output-${this.name}.log")
+        val outputFileStream = outputFile.outputStream()
+        pluginDebug("$ ${shellEscapedArgs(completeCLI)}")
+
+        try {
+            execOperations.exec {
+                commandLine = completeCLI
+
+                standardOutput = outputFileStream
+                errorOutput = outputFileStream
+            }
+        } catch (e: ExecException) {
+            pluginDebug(e.message!!)
+            pluginDebug("Check the proguard output in $outputFile")
+            throw e
+        }
+
         project.configurations.remove(project.configurations.getByName("proguard"))
     }
 
-    @OutputFile
-    fun getOutputJar(): File {
-        return project.file("${project.layout.buildDirectory.get().asFile}/tmp/obfuscated-internal.jar")
+    @InputFile
+    fun getJavaExecutable(): File = launcher.get().executablePath.asFile
+
+    @InputFiles
+    fun getJVMLibraryFiles(): List<File> {
+        val dir = launcher.get().metadata.installationPath.dir("jmods")
+        return dir.asFile.listFiles { _, name -> name.endsWith(".jmod") }?.toList() ?: emptyList<File>()
     }
+
+    @InputFiles
+    fun getRuntimeConfiguration(): Configuration = this.project.configurations.getByName("runtimeClasspath")
 
     @OutputDirectory
     fun getProguardOutputDir(): File {
         return File("${project.layout.buildDirectory.get().asFile}/proguard")
     }
 
-
-    fun createArgs(): MutableList<String> {
-
+    private fun createArgs() {
         // since proguard is GPL, we avoid compile time dependencies on it
         val proguard = project.configurations.create("proguard") {
             extendsFrom(project.configurations.getByName("runtimeOnly"))
@@ -57,78 +101,71 @@ abstract class ProguardTask : Exec() {
 
         proguard.dependencies.add(project.dependencies.create("com.guardsquare:proguard-base:7.6.1"))
 
+        args("-cp")
+        args(project.configurations.getByName("proguard").asPath)
+        args("proguard.ProGuard") // main class
 
-        val dir = javaLauncher.get().metadata.installationPath.dir("jmods")
-        val jmodFiles = dir.asFile.listFiles { _, name -> name.endsWith(".jmod") }?.toList() ?: emptyList()
+        addLibraryArgs()
 
-        val cliArgs = mutableListOf<String>()
-        executable(javaLauncher.get().executablePath.asFile.path)
-        cliArgs.add("-cp")
-        cliArgs.add(project.configurations.getByName("proguard").asPath)
-        cliArgs.add("proguard.ProGuard") // main class
-        jmodFiles.forEach {
-            cliArgs.add("-libraryjars")
-            cliArgs.add("${it.absolutePath}(!**.jar;!module-info.class)")
-        }
+        args("-injars", inputJar!!.absolutePath)
+        args("-outjars", outputJar!!.absolutePath)
 
-        cliArgs.add("-printseeds")
-        cliArgs.add("${getProguardOutputDir()}/seeds.txt")
-        cliArgs.add("-printconfiguration")
-        cliArgs.add("${getProguardOutputDir()}/proguard.cfg")
-        cliArgs.add("-dump")
-        cliArgs.add("${getProguardOutputDir()}/proguard.dump.txt")
-        cliArgs.add("-whyareyoukeeping class io.specmatic.** { *; }")
-//        cliArgs.add("-dontwarn")
-        cliArgs.add("-dontoptimize")
-        cliArgs.add("-keepattributes !LocalVariableTable, !LocalVariableTypeTable")
+        args("-printseeds", "${getProguardOutputDir()}/seeds.txt")
+        args("-printconfiguration", "${getProguardOutputDir()}/proguard.cfg")
+        args("-dump", "${getProguardOutputDir()}/proguard.dump.txt")
+        args("-whyareyoukeeping", "class io.specmatic.** { *; }")
+        args("-dontoptimize")
+        args("-keepattributes", "!LocalVariableTable, !LocalVariableTypeTable")
+
         // Keep all public members in the internal package
-        cliArgs.add("-keep class !**.internal.** { public <fields>; public <methods>;}")
+        args("-keep", "class !**.internal.** { public <fields>; public <methods>;}")
         // obfuscate everything in the internal package
-        cliArgs.add("-keep,allowobfuscation class io.specmatic.**.internal.** { *; }")
+        args("-keep,allowobfuscation", "class io.specmatic.**.internal.** { *; }")
         // Keep kotlin metadata
-        cliArgs.add("-keep class kotlin.Metadata")
-        return cliArgs
+        args("-keep", "class kotlin.Metadata")
+
     }
+
+    private fun addLibraryArgs() {
+        libraryJars(getRuntimeConfiguration())
+        libraryJars(getJVMLibraryFiles().map { "${it.absolutePath}(!**.jar;!module-info.class)" })
+    }
+
+    fun args(vararg toAdd: String?) {
+        args.addAll(toAdd.filterNotNull())
+    }
+
+    private fun libraryJars(configuration: Configuration) {
+        libraryJars(configuration.files.map { it.absolutePath })
+    }
+
+    private fun libraryJars(libJar: Collection<String?>) {
+        libJar.filterNotNull().forEach {
+            args("-libraryjars", it)
+        }
+    }
+
+
 }
 
 private const val OBFUSCATE_JAR_INTERNAL = "obfuscateJarInternal"
 
-class ObfuscateConfiguration(project: Project, projectConfiguration: ProjectConfiguration) {
+class ObfuscateConfiguration(val project: Project, val projectConfiguration: ProjectConfiguration) {
     init {
-        configureProguard(project, projectConfiguration.proguardExtraArgs)
+        configureProguard()
     }
 
-    private fun configureProguard(project: Project, proguardExtraArgs: List<String>?) {
+    private fun configureProguard() {
         pluginDebug("Installing obfuscation hook on $project")
         project.pluginManager.withPlugin("java") {
             pluginDebug("Configuring obfuscation for on $project")
             val obfuscateJarInternalTask = project.tasks.register(OBFUSCATE_JAR_INTERNAL, ProguardTask::class.java) {
-
                 val jarTask = project.tasks.named("jar", Jar::class.java).get()
-                val jarTaskFile = jarTask.archiveFile
                 dependsOn(jarTask)
+                inputJar = jarTask.archiveFile.get().asFile
+                outputJar = project.file("${project.layout.buildDirectory.get().asFile}/tmp/obfuscated-internal.jar")
 
-                val runtimeClasspath = project.configurations.getByName("runtimeClasspath")
-                val cliArgs = createArgs()
-                runtimeClasspath.files.forEach {
-                    cliArgs.add("-libraryjars")
-                    cliArgs.add(it.absolutePath)
-                }
-                cliArgs.add("-injars")
-                cliArgs.add(jarTaskFile.get().asFile.path)
-                cliArgs.add("-outjars")
-                cliArgs.add(getOutputJar().path)
-                cliArgs.addAll(proguardExtraArgs.orEmpty())
-
-                val argsFile = project.file("${temporaryDir}/java-args")
-                argsFile.writeText(cliArgs.joinToString("\n", transform = ::shellEscape))
-                args("@$argsFile")
-                inputs.property("proguardArgs", cliArgs)
-
-                inputs.files(jarTaskFile.get().asFile)
-                inputs.files(runtimeClasspath)
-
-                outputs.file(getOutputJar())
+                args(*projectConfiguration.proguardExtraArgs.filterNotNull().toTypedArray())
             }
 
             // Jar tasks automatically register as maven publication, so we "copy" the proguard jar into another one
@@ -137,7 +174,11 @@ class ObfuscateConfiguration(project: Project, projectConfiguration: ProjectConf
                 description = "Run obfuscation on the output of the `jar` task"
 
                 dependsOn(obfuscateJarInternalTask)
-                from(project.zipTree(obfuscateJarInternalTask.get().getOutputJar()))
+                val obfuscatedTempJar = obfuscateJarInternalTask.get().outputJar!!
+
+                inputs.file(obfuscatedTempJar)
+
+                from(project.zipTree(obfuscatedTempJar))
                 archiveClassifier.set("obfuscated")
             }
             obfuscateJarInternalTask.get().finalizedBy(obfuscateJarTask)
