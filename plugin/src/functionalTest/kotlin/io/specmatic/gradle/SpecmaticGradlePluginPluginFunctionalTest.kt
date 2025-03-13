@@ -8,6 +8,7 @@ import org.gradle.testkit.runner.UnexpectedBuildFailure
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
+import java.util.jar.JarFile
 import java.util.regex.Pattern
 import kotlin.test.Test
 
@@ -194,6 +195,102 @@ class SpecmaticGradlePluginPluginFunctionalTest {
                 )
             )
         }
+    }
+
+    @Test
+    fun `adds main class to jars if specified in project`() {
+        // Set up the test build
+        settingsFile.writeText("rootProject.name = \"fooBar\"")
+        buildFile.writeText(
+            """
+                    plugins {
+                        id("java")
+                        id("io.specmatic.gradle")
+                    }
+                    
+                    specmatic {
+                        publishToMavenCentral()
+                        
+                        withProject(rootProject) {
+                            applicationMainClass = "org.example.Main"
+                            
+                            // we asked it to be published, but also specified where
+                            publish {}
+                        }
+                    }
+                    
+                    tasks.register("customJar", Jar::class.java) {
+                        archiveBaseName.set("customJar")
+                        archiveVersion.set("1.0")
+                        from("src/main/resources")
+                    }
+                    
+                    version="1.0"
+                    group="com.example.group"
+                """.trimIndent()
+        )
+
+        val runner = GradleRunner.create()
+        runner.forwardOutput()
+        runner.withPluginClasspath()
+        runner.withProjectDir(projectDir)
+        val result = runner.withArguments("jar", "customJar").build()
+        assertThat(result.task(":jar")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+        val jarFile = projectDir.resolve("build/libs/fooBar-1.0.jar")
+        assertThat(jarFile).exists()
+
+        assertThat(JarFile(jarFile).manifest.mainAttributes.getValue("Main-Class")).isEqualTo("org.example.Main")
+
+        val customJar = projectDir.resolve("build/libs/customJar-1.0.jar")
+        assertThat(customJar).exists()
+        assertThat(JarFile(customJar).manifest.mainAttributes.getValue("Main-Class")).isEqualTo("org.example.Main")
+    }
+
+    @Test
+    fun `should not add main class to jar if not specified in project`() {
+        // Set up the test build
+        settingsFile.writeText("rootProject.name = \"fooBar\"")
+        buildFile.writeText(
+            """
+                    plugins {
+                        id("java")
+                        id("io.specmatic.gradle")
+                    }
+                    
+                    specmatic {
+                        publishToMavenCentral()
+                        
+                        withProject(rootProject) {
+                            // we asked it to be published, but also specified where
+                            publish {}
+                        }
+                    }
+                    
+                    tasks.register("customJar", Jar::class.java) {
+                        archiveBaseName.set("customJar")
+                        archiveVersion.set("1.0")
+                        from("src/main/resources")
+                    }
+                    
+                    version="1.0"
+                    group="com.example.group"
+                """.trimIndent()
+        )
+
+        val runner = GradleRunner.create()
+        runner.forwardOutput()
+        runner.withPluginClasspath()
+        runner.withProjectDir(projectDir)
+        val result = runner.withArguments("jar", "customJar").build()
+        assertThat(result.task(":jar")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+        val jarFile = projectDir.resolve("build/libs/fooBar-1.0.jar")
+        assertThat(jarFile).exists()
+
+        assertThat(JarFile(jarFile).manifest.mainAttributes.containsValue("Main-Class")).isFalse()
+
+        val customJar = projectDir.resolve("build/libs/customJar-1.0.jar")
+        assertThat(customJar).exists()
+        assertThat(JarFile(customJar).manifest.mainAttributes.containsValue("Main-Class")).isFalse()
     }
 
 }

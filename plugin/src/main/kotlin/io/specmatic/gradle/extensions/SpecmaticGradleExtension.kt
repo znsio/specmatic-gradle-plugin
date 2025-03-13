@@ -64,6 +64,7 @@ open class SpecmaticGradleExtension {
 private const val DEFAULT_PUBLICATION_NAME = "mavenJava"
 
 class ProjectConfiguration {
+    var applicationMainClass: String? = null
     internal var publicationName: String = DEFAULT_PUBLICATION_NAME
     internal var publicationEnabled = false
     internal var publicationTypes = mutableListOf<PublicationType>()
