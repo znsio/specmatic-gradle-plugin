@@ -70,8 +70,8 @@ class ConfigureExecTask(project: Project) {
 
 }
 
-fun shellEscapedArgs(args: List<String>): String {
-    val escapedArgs = args.map { shellEscape(it) }
+fun shellEscapedArgs(args: List<String?>): String {
+    val escapedArgs = args.filterNotNull().map { shellEscape(it) }
     return buildString {
         escapedArgs.forEachIndexed { index, arg ->
             if (index > 0) {

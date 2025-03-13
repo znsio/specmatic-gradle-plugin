@@ -70,7 +70,7 @@ class ProjectConfiguration {
     internal var publicationConfigurations: Action<MavenPublication>? = null
 
     internal var proguardEnabled = false
-    internal var proguardExtraArgs = mutableListOf<String>()
+    internal var proguardExtraArgs = mutableListOf<String?>()
     internal var shadowAction: Action<ShadowJar>? = null
     internal var shadowPrefix: String? = null
     internal var shadowApplication = false
@@ -93,7 +93,7 @@ class ProjectConfiguration {
 
     fun obfuscate(vararg proguardExtraArgs: String?) {
         this.proguardEnabled = true
-        this.proguardExtraArgs.addAll(proguardExtraArgs.filterNotNull())
+        this.proguardExtraArgs.addAll(proguardExtraArgs)
     }
 
     fun publish(
