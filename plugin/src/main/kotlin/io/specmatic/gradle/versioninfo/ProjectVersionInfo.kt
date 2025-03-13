@@ -53,8 +53,6 @@ data class ProjectVersionInfo(
             group=$group
             name=$name
             ${maybePropertyTimestamp()}
-            
-            
         """.trimIndent()
     }
 
