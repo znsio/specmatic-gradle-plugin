@@ -47,6 +47,17 @@ abstract class ProguardTask @Inject constructor(
         val defaultLauncher = javaToolchainService.launcherFor(toolchain)
         launcher.convention(defaultLauncher)
         execLauncher.set(execOperations)
+
+        val proguard = project.configurations.create("proguard") {
+            extendsFrom(project.configurations.getByName("runtimeOnly"))
+        }
+
+        proguard.dependencies.add(project.dependencies.create("com.guardsquare:proguard-base:7.6.1"))
+
+        // add these args first!
+        args("-cp")
+        args(project.configurations.getByName("proguard").asPath)
+        args("proguard.ProGuard") // main class
     }
 
     @TaskAction
@@ -95,15 +106,7 @@ abstract class ProguardTask @Inject constructor(
 
     private fun createArgs() {
         // since proguard is GPL, we avoid compile time dependencies on it
-        val proguard = project.configurations.create("proguard") {
-            extendsFrom(project.configurations.getByName("runtimeOnly"))
-        }
 
-        proguard.dependencies.add(project.dependencies.create("com.guardsquare:proguard-base:7.6.1"))
-
-        args("-cp")
-        args(project.configurations.getByName("proguard").asPath)
-        args("proguard.ProGuard") // main class
 
         addLibraryArgs()
 
@@ -144,7 +147,6 @@ abstract class ProguardTask @Inject constructor(
             args("-libraryjars", it)
         }
     }
-
 
 }
 
