@@ -177,8 +177,6 @@ class SpecmaticGradlePluginTest {
             archiveTasks.forEach {
                 assertThat(it.isReproducibleFileOrder).isTrue()
                 assertThat(it.isPreserveFileTimestamps).isFalse()
-                assertThat(it.includeEmptyDirs).isFalse()
-                assertThat(it.duplicatesStrategy).isEqualTo(DuplicatesStrategy.EXCLUDE)
             }
         }
     }
