@@ -5,6 +5,7 @@ import org.assertj.core.api.Assertions.assertThatCode
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.gradle.testkit.runner.UnexpectedBuildFailure
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
@@ -19,6 +20,17 @@ class SpecmaticGradlePluginPluginFunctionalTest {
 
     private val buildFile by lazy { projectDir.resolve("build.gradle.kts") }
     private val settingsFile by lazy { projectDir.resolve("settings.gradle.kts") }
+    private val gradleProperties by lazy { projectDir.resolve("gradle.properties") }
+
+    @BeforeEach
+    fun setup() {
+        gradleProperties.writeText(
+            """
+                version=1.2.3
+                group=com.example.group
+            """.trimIndent()
+        )
+    }
 
     @Test
     fun `throws error when shadow prefix is not valid package name`() {
@@ -79,40 +91,87 @@ class SpecmaticGradlePluginPluginFunctionalTest {
         assertThat(result.output).contains("hello world")
     }
 
-    @Test
-    fun `it should create version properties file`() {
-        // Set up the test build
-        settingsFile.writeText("rootProject.name = \"fooBar\"")
-        buildFile.writeText(
-            """
+    @Nested
+    inner class VersionPropertiesFile {
+        @Test
+        fun `it should create version properties file for non-multi-module-project`() {
+            // Set up the test build
+            settingsFile.writeText("rootProject.name = \"fooBar\"")
+            buildFile.writeText(
+                """
+                    plugins {
+                        id("java")
+                        id("io.specmatic.gradle")
+                    }
+                    
+                """.trimIndent()
+            )
+
+            // Run the build
+            val runner = GradleRunner.create()
+            runner.forwardOutput()
+            runner.withPluginClasspath()
+            runner.withProjectDir(projectDir)
+            val result = runner.withArguments("assemble").build()
+
+            // Verify the result
+            assertThat(result.task(":createVersionPropertiesFile")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            assertThat(result.task(":createVersionInfoKotlin")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            val versionPropertiesFile =
+                projectDir.resolve("src/main/gen-resources/com/example/group/version.properties")
+            assertThat(versionPropertiesFile).exists()
+            assertThat(versionPropertiesFile.readText()).contains("version=1.2.3")
+
+            val versinInfoKotlinFile = projectDir.resolve("src/main/gen-kt/com/example/group/VersionInfo.kt")
+            assertThat(versinInfoKotlinFile).exists()
+            assertThat(versinInfoKotlinFile.readText()).contains("val version = \"1.2.3\"")
+        }
+
+        @Test
+        fun `it should create version properties file for multi-module-project`() {
+            // Set up the test build
+            settingsFile.writeText(
+                """
+                rootProject.name = "fooBar"
+                include("project-a")
+                include("project-b")
+            """.trimIndent()
+            )
+
+            buildFile.writeText(
+                """
             plugins {
                 id("java")
                 id("io.specmatic.gradle")
             }
-            
-            version="unspecified"
-            group="com.example.group"
-        """.trimIndent()
-        )
+                        
+            project(":project-a") {
+               apply(plugin = "java")
+            }
+            // nothing applied to project-b
+            """.trimIndent()
+            )
+            // Run the build
+            val runner = GradleRunner.create()
+            runner.forwardOutput()
+            runner.withPluginClasspath()
+            runner.withProjectDir(projectDir)
+            val result = runner.withArguments("assemble").build()
 
-        // Run the build
-        val runner = GradleRunner.create()
-        runner.forwardOutput()
-        runner.withPluginClasspath()
-        runner.withProjectDir(projectDir)
-        val result = runner.withArguments("assemble").build()
+            // Verify the result
+            assertThat(result.task(":project-a:createVersionPropertiesFile")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            assertThat(result.task(":project-a:createVersionInfoKotlin")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
 
-        // Verify the result
-        assertThat(result.task(":createVersionPropertiesFile")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
-        assertThat(result.task(":createVersionInfoKotlin")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
-        val versionPropertiesFile =
-            projectDir.resolve("src/main/gen-resources/com/example/group/version.properties")
-        assertThat(versionPropertiesFile).exists()
-        assertThat(versionPropertiesFile.readText()).contains("version=unspecified")
+            assertThat(projectDir.resolve("src/main/gen-resources/com/example/group/version.properties")).doesNotExist()
+            assertThat(projectDir.resolve("src/main/gen-kt/com/example/group/VersionInfo.kt")).doesNotExist()
 
-        val versinInfoKotlinFile = projectDir.resolve("src/main/gen-kt/com/example/group/VersionInfo.kt")
-        assertThat(versinInfoKotlinFile).exists()
-        assertThat(versinInfoKotlinFile.readText()).contains("val version = \"unspecified\"")
+            assertThat(projectDir.resolve("project-a/src/main/gen-resources/com/example/group/project/a/version.properties")).exists()
+            assertThat(projectDir.resolve("project-a/src/main/gen-kt/com/example/group/project/a/VersionInfo.kt")).exists()
+
+            // no generated resources dir itself
+            assertThat(projectDir.resolve("project-b/src/main/gen-resources")).doesNotExist()
+            assertThat(projectDir.resolve("project-b/src/main/gen-kt")).doesNotExist()
+        }
     }
 
     @Nested
@@ -136,8 +195,6 @@ class SpecmaticGradlePluginPluginFunctionalTest {
                             }
                         }
                     }
-                    version="unspecified"
-                    group="com.example.group"
                 """.trimIndent()
             )
 
@@ -175,8 +232,6 @@ class SpecmaticGradlePluginPluginFunctionalTest {
                             publish {}
                         }
                     }
-                    version="unspecified"
-                    group="com.example.group"
                 """.trimIndent()
             )
 
@@ -197,12 +252,15 @@ class SpecmaticGradlePluginPluginFunctionalTest {
         }
     }
 
-    @Test
-    fun `adds main class to jars if specified in project`() {
-        // Set up the test build
-        settingsFile.writeText("rootProject.name = \"fooBar\"")
-        buildFile.writeText(
-            """
+    @Nested
+    inner class MainClassAttribute {
+
+        @Test
+        fun `adds main class to jars if specified in project`() {
+            // Set up the test build
+            settingsFile.writeText("rootProject.name = \"fooBar\"")
+            buildFile.writeText(
+                """
                     plugins {
                         id("java")
                         id("io.specmatic.gradle")
@@ -221,37 +279,34 @@ class SpecmaticGradlePluginPluginFunctionalTest {
                     
                     tasks.register("customJar", Jar::class.java) {
                         archiveBaseName.set("customJar")
-                        archiveVersion.set("1.0")
                         from("src/main/resources")
                     }
                     
-                    version="1.0"
-                    group="com.example.group"
                 """.trimIndent()
-        )
+            )
 
-        val runner = GradleRunner.create()
-        runner.forwardOutput()
-        runner.withPluginClasspath()
-        runner.withProjectDir(projectDir)
-        val result = runner.withArguments("jar", "customJar").build()
-        assertThat(result.task(":jar")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
-        val jarFile = projectDir.resolve("build/libs/fooBar-1.0.jar")
-        assertThat(jarFile).exists()
+            val runner = GradleRunner.create()
+            runner.forwardOutput()
+            runner.withPluginClasspath()
+            runner.withProjectDir(projectDir)
+            val result = runner.withArguments("jar", "customJar", "-i").build()
+            assertThat(result.task(":jar")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            val jarFile = projectDir.resolve("build/libs/fooBar-1.2.3.jar")
+            assertThat(jarFile).exists()
 
-        assertThat(JarFile(jarFile).manifest.mainAttributes.getValue("Main-Class")).isEqualTo("org.example.Main")
+            assertThat(JarFile(jarFile).manifest.mainAttributes.getValue("Main-Class")).isEqualTo("org.example.Main")
 
-        val customJar = projectDir.resolve("build/libs/customJar-1.0.jar")
-        assertThat(customJar).exists()
-        assertThat(JarFile(customJar).manifest.mainAttributes.getValue("Main-Class")).isEqualTo("org.example.Main")
-    }
+            val customJar = projectDir.resolve("build/libs/customJar-1.2.3.jar")
+            assertThat(customJar).exists()
+            assertThat(JarFile(customJar).manifest.mainAttributes.getValue("Main-Class")).isEqualTo("org.example.Main")
+        }
 
-    @Test
-    fun `should not add main class to jar if not specified in project`() {
-        // Set up the test build
-        settingsFile.writeText("rootProject.name = \"fooBar\"")
-        buildFile.writeText(
-            """
+        @Test
+        fun `should not add main class to jar if not specified in project`() {
+            // Set up the test build
+            settingsFile.writeText("rootProject.name = \"fooBar\"")
+            buildFile.writeText(
+                """
                     plugins {
                         id("java")
                         id("io.specmatic.gradle")
@@ -268,29 +323,27 @@ class SpecmaticGradlePluginPluginFunctionalTest {
                     
                     tasks.register("customJar", Jar::class.java) {
                         archiveBaseName.set("customJar")
-                        archiveVersion.set("1.0")
                         from("src/main/resources")
                     }
                     
-                    version="1.0"
-                    group="com.example.group"
                 """.trimIndent()
-        )
+            )
 
-        val runner = GradleRunner.create()
-        runner.forwardOutput()
-        runner.withPluginClasspath()
-        runner.withProjectDir(projectDir)
-        val result = runner.withArguments("jar", "customJar").build()
-        assertThat(result.task(":jar")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
-        val jarFile = projectDir.resolve("build/libs/fooBar-1.0.jar")
-        assertThat(jarFile).exists()
+            val runner = GradleRunner.create()
+            runner.forwardOutput()
+            runner.withPluginClasspath()
+            runner.withProjectDir(projectDir)
+            val result = runner.withArguments("jar", "customJar").build()
+            assertThat(result.task(":jar")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            val jarFile = projectDir.resolve("build/libs/fooBar-1.2.3.jar")
+            assertThat(jarFile).exists()
 
-        assertThat(JarFile(jarFile).manifest.mainAttributes.containsValue("Main-Class")).isFalse()
+            assertThat(JarFile(jarFile).manifest.mainAttributes.containsValue("Main-Class")).isFalse()
 
-        val customJar = projectDir.resolve("build/libs/customJar-1.0.jar")
-        assertThat(customJar).exists()
-        assertThat(JarFile(customJar).manifest.mainAttributes.containsValue("Main-Class")).isFalse()
+            val customJar = projectDir.resolve("build/libs/customJar-1.2.3.jar")
+            assertThat(customJar).exists()
+            assertThat(JarFile(customJar).manifest.mainAttributes.containsValue("Main-Class")).isFalse()
+        }
     }
 
 }

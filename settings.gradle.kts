@@ -1,10 +1,7 @@
 pluginManagement {
     repositories {
         gradlePluginPortal()
-
         mavenCentral()
-
-
         mavenLocal {
             mavenContent {
                 snapshotsOnly()

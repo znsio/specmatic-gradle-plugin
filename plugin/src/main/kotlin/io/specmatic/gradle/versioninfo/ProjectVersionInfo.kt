@@ -60,6 +60,7 @@ data class ProjectVersionInfo(
         if (timestamp != null) {
             manifest.attributes["x-specmatic-compile-timestamp"] = timestamp
         }
+
         manifest.attributes["x-specmatic-version"] = version
         manifest.attributes["x-specmatic-group"] = group
         manifest.attributes["x-specmatic-name"] = name

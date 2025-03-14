@@ -3,6 +3,7 @@ package io.specmatic.gradle.license
 import com.github.jk1.license.ImportedModuleBundle
 import com.github.jk1.license.ImportedModuleData
 import com.github.jk1.license.LicenseReportExtension
+import com.github.jk1.license.LicenseReportPlugin
 import com.github.jk1.license.filter.LicenseBundleNormalizer
 import com.github.jk1.license.filter.SpdxLicenseBundleNormalizer
 import com.github.jk1.license.importer.DependencyDataImporter
@@ -11,12 +12,12 @@ import com.github.jk1.license.render.ReportRenderer
 import com.github.jk1.license.render.SimpleHtmlReportRenderer
 import io.specmatic.gradle.SpecmaticGradlePlugin
 import io.specmatic.gradle.extensions.ModuleLicenseData
-import io.specmatic.gradle.extensions.SpecmaticGradleExtension
-import io.specmatic.gradle.pluginDebug
+import io.specmatic.gradle.specmaticExtension
 import io.specmatic.gradle.tasks.CreateAllowedLicensesFileTask
 import io.specmatic.gradle.tasks.PrettyPrintLicenseCheckFailures
 import io.specmatic.gradle.tasks.createDefaultAllowedLicensesFile
 import org.gradle.api.GradleException
+import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.tasks.Jar
@@ -37,22 +38,17 @@ internal class CustomLicenseImporter(private val allowedLicenses: MutableList<Mo
     }
 }
 
-internal class LicenseReportingConfiguration(project: Project) {
-    init {
-        configureLicenseReporting(project)
-    }
-
-    private fun configureLicenseReporting(project: Project) {
-        pluginDebug("Configuring license reporting on $project")
-        project.pluginManager.apply("com.github.jk1.dependency-license-report")
-        project.pluginManager.withPlugin("com.github.jk1.dependency-license-report") {
-            val specmaticExtension = project.extensions.getByType(SpecmaticGradleExtension::class.java)
-
+class SpecmaticLicenseReportingPlugin : Plugin<Project> {
+    override fun apply(project: Project) {
+        project.pluginInfo("Configuring license reporting on $project")
+        project.plugins.apply(LicenseReportPlugin::class.java)
+        project.plugins.withType(LicenseReportPlugin::class.java) {
             val prettyPrintLicenseCheckFailuresTask = createPrettyPrintLicenseCheckFailuresTask(project)
             val createAllowedLicensesFileTask = createCreateAllowedLicensesFileTask(project)
 
             // because we applied LicenseReportPlugin, we have to install a callback to configure the rest of the stuff
-            project.afterEvaluate({
+            project.afterEvaluate {
+                val specmaticExtension = project.specmaticExtension()
                 val reportExtension = licenseReportExtension(project)
 
                 val buildDir = project.layout.buildDirectory.get().asFile
@@ -66,10 +62,8 @@ internal class LicenseReportingConfiguration(project: Project) {
                 reportExtension.allowedLicensesFile = createDefaultAllowedLicensesFile(project)
                 reportExtension.excludeGroups = arrayOf("io.specmatic.*")
 
-                configureTaskDependencies(
-                    project, prettyPrintLicenseCheckFailuresTask, createAllowedLicensesFileTask
-                )
-            })
+                configureTaskDependencies(project, prettyPrintLicenseCheckFailuresTask, createAllowedLicensesFileTask)
+            }
         }
     }
 
@@ -134,3 +128,6 @@ internal class LicenseReportingConfiguration(project: Project) {
     }
 }
 
+fun Project.pluginInfo(string: String) {
+    println("[Specmatic Gradle Plugin]: $string")
+}

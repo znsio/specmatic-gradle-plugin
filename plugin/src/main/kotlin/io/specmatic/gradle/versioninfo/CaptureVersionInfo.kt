@@ -1,46 +1,40 @@
 package io.specmatic.gradle.versioninfo
 
-import org.eclipse.jgit.api.Git
+import io.specmatic.gradle.utils.gitSha
 import org.gradle.api.Project
 import org.gradle.internal.extensions.core.extra
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
-class CaptureVersionInfo(project: Project) {
-    init {
+fun Project.versionInfo(): ProjectVersionInfo {
+    return ProjectVersionInfo(
+        this.version.toString(),
+        project.gitSha(),
+        this.group.toString(),
+        this.name,
+        this == this.rootProject,
+        project.maybeBuildTimestampIfEnabled()
+    )
+}
 
-        project.rootProject.extra.set("specmaticPluginGitSha", gitSha(project))
-        if (hasTimestamp(project)) {
-            val now = ZonedDateTime.now()
-            val timestamp = now.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-            project.rootProject.extra.set("specmaticPluginBuildTime", timestamp)
-        }
-    }
+private fun Project.maybeBuildTimestampIfEnabled(): String? {
+    val shouldTimestampJars = project.hasProperty("specmatic.jar.timestamp")
 
-    companion object {
-        fun fetchVersionInfoForProject(project: Project): ProjectVersionInfo {
-            val timestamp =
-                project.rootProject.extra.properties.getOrElse("specmaticPluginBuildTime") { null } as String?
-            
-            return ProjectVersionInfo(
-                project.version.toString(),
-                project.rootProject.extra["specmaticPluginGitSha"] as String,
-                project.group.toString(),
-                project.name,
-                project == project.rootProject,
-                timestamp
-            )
-        }
-
-        private fun hasTimestamp(project: Project) = project.hasProperty("specmatic.jar.timestamp")
+    if (shouldTimestampJars) {
+        val now = ZonedDateTime.now()
+        val timestamp = now.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+        this.rootProject.extra.set("specmaticPluginBuildTime", timestamp)
+        return timestamp
+    } else {
+        return null
     }
 }
 
-fun gitSha(project: Project): String {
-    return runCatching {
-        val rootProject = project.rootProject
-        Git.open(rootProject.rootDir).use {
-            Git.open(rootProject.rootDir).repository.resolve("HEAD").name
-        }
-    }.getOrElse { "unknown - no git repo found" }
+private fun Project.gitSha(): String {
+    if (!rootProject.extra.has("specmaticPluginGitSha")) {
+        rootProject.extra.set("specmaticPluginGitSha", gitSha(this))
+    }
+    return rootProject.extra["specmaticPluginGitSha"] as String
 }
+
+//private fun hasTimestamp(project: Project) = project.hasProperty("specmatic.jar.timestamp")

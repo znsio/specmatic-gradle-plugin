@@ -34,7 +34,14 @@ class ProjectVersionInfoTest {
         @Test
         fun `generates kotlin file path when name is empty`() {
             val projectVersionInfo =
-                ProjectVersionInfo("1.0.0", "123456", "io.specmatic", "Specmatic-License-Generator", true, "2021-09-01T12:00:00Z")
+                ProjectVersionInfo(
+                    "1.0.0",
+                    "123456",
+                    "io.specmatic",
+                    "Specmatic-License-Generator",
+                    true,
+                    "2021-09-01T12:00:00Z"
+                )
 
             assertThat(projectVersionInfo.kotlinPackage()).isEqualTo("io.specmatic")
             assertThat(projectVersionInfo.packageDir()).isEqualTo("io/specmatic")
@@ -45,7 +52,14 @@ class ProjectVersionInfoTest {
         @Test
         fun `generates properties file path when name is empty`() {
             val projectVersionInfo =
-                ProjectVersionInfo("1.0.0", "123456", "io.specmatic", "Specmatic-License-Generator", true, "2021-09-01T12:00:00Z")
+                ProjectVersionInfo(
+                    "1.0.0",
+                    "123456",
+                    "io.specmatic",
+                    "Specmatic-License-Generator",
+                    true,
+                    "2021-09-01T12:00:00Z"
+                )
 
             assertThat(projectVersionInfo.propertiesFilePath()).isEqualTo("io/specmatic/version.properties")
             assertThat(projectVersionInfo.toPropertiesFile()).contains("version=1.0.0")
@@ -79,7 +93,14 @@ class ProjectVersionInfoTest {
         @Test
         fun `generates kotlin file path when name is empty`() {
             val projectVersionInfo =
-                ProjectVersionInfo("1.0.0", "123456", "io.specmatic", "Specmatic-License-Generator", false, "2021-09-01T12:00:00Z")
+                ProjectVersionInfo(
+                    "1.0.0",
+                    "123456",
+                    "io.specmatic",
+                    "Specmatic-License-Generator",
+                    false,
+                    "2021-09-01T12:00:00Z"
+                )
 
             assertThat(projectVersionInfo.kotlinPackage()).isEqualTo("io.specmatic.specmatic.license.generator")
             assertThat(projectVersionInfo.packageDir()).isEqualTo("io/specmatic/specmatic/license/generator")
@@ -90,7 +111,14 @@ class ProjectVersionInfoTest {
         @Test
         fun `generates properties file path when name is empty`() {
             val projectVersionInfo =
-                ProjectVersionInfo("1.0.0", "123456", "io.specmatic", "Specmatic-License-Generator", false, "2021-09-01T12:00:00Z")
+                ProjectVersionInfo(
+                    "1.0.0",
+                    "123456",
+                    "io.specmatic",
+                    "Specmatic-License-Generator",
+                    false,
+                    "2021-09-01T12:00:00Z"
+                )
 
             assertThat(projectVersionInfo.propertiesFilePath()).isEqualTo("io/specmatic/specmatic/license/generator/version.properties")
             assertThat(projectVersionInfo.toPropertiesFile()).contains("version=1.0.0")

@@ -4,9 +4,11 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.specmatic.gradle.extensions.ProjectConfiguration
 import io.specmatic.gradle.jar.massage.jar
 import io.specmatic.gradle.jar.obfuscate.OBFUSCATE_JAR_TASK
-import io.specmatic.gradle.pluginDebug
-import org.gradle.api.Action
+import io.specmatic.gradle.license.pluginInfo
+import io.specmatic.gradle.specmaticExtension
+import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.plugins.JavaPlugin
 import org.gradle.jvm.tasks.Jar
 import java.io.File
 import java.util.jar.JarFile
@@ -14,38 +16,29 @@ import java.util.jar.JarFile
 const val SHADOW_ORIGINAL_JAR = "shadowOriginalJar"
 const val SHADOW_OBFUSCATED_JAR = "shadowObfuscatedJar"
 
-class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConfiguration) {
-    init {
-        configureShadowJar(
-            project,
-            projectConfiguration.shadowPrefix,
-            projectConfiguration.shadowAction,
-            projectConfiguration.shadowApplication
-        )
-    }
-
-    private fun configureShadowJar(
-        project: Project,
-        shadowPrefix: String?,
-        shadowAction: Action<ShadowJar>?,
-        shadowApplication: Boolean
-    ) {
-        project.pluginManager.withPlugin("java") {
-            pluginDebug("Configuring shadow jar on $project")
-            shadowOriginalJar(project, shadowPrefix, shadowAction, shadowApplication)
-            shadowObfuscatedJar(project, shadowPrefix, shadowAction, shadowApplication)
+class ShadowJarsPlugin : Plugin<Project> {
+    override fun apply(target: Project) {
+        target.afterEvaluate {
+            val specmaticExtension = target.specmaticExtension()
+            val projectConfiguration = specmaticExtension.projectConfigurations[target]
+            if (projectConfiguration?.shadowEnabled == true) {
+                configureShadowJars(target, projectConfiguration)
+            }
         }
     }
 
-    private fun shadowObfuscatedJar(
-        project: Project,
-        shadowPrefix: String?,
-        shadowJarConfig: Action<ShadowJar>?,
-        shadowApplication: Boolean
-    ) {
+    private fun configureShadowJars(project: Project, projectConfiguration: ProjectConfiguration) {
+        project.plugins.withType(JavaPlugin::class.java) {
+            project.pluginInfo("Configuring shadow jar on $project")
+            shadowOriginalJar(project, projectConfiguration)
+            shadowObfuscatedJar(project, projectConfiguration)
+        }
+    }
+
+    private fun shadowObfuscatedJar(project: Project, projectConfiguration: ProjectConfiguration) {
         val obfuscateJarTask = project.tasks.findByName(OBFUSCATE_JAR_TASK) as Jar? ?: return
         val jarTask = project.tasks.jar.get()
-        pluginDebug("Created task $SHADOW_OBFUSCATED_JAR on $project")
+        project.pluginInfo("Created task $SHADOW_OBFUSCATED_JAR on $project")
         val shadowObfuscatedJarTask = project.tasks.register(SHADOW_OBFUSCATED_JAR, ShadowJar::class.java) {
             group = "build"
             description = "Shadow the obfuscated jar"
@@ -56,26 +49,21 @@ class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConf
 
             archiveClassifier.set("all-obfuscated")
 
-            from(project.zipTree(obfuscateJarTask.archiveFile))
+            from(project.provider { project.zipTree(obfuscateJarTask.archiveFile) })
 
-            configureShadowJar(jarTask, project, shadowPrefix, shadowApplication)
+            configureCommonShadowConfigs(jarTask, project, projectConfiguration)
         }
 
         // any extra config specified by the user
-        shadowJarConfig?.let {
-            pluginDebug("Applying custom shadow jar configuration on $project")
+        projectConfiguration.shadowAction?.let {
+            project.pluginInfo("Applying custom shadow jar configuration on $project")
             shadowObfuscatedJarTask.configure(it)
         }
     }
 
-    private fun shadowOriginalJar(
-        project: Project,
-        shadowPrefix: String?,
-        shadowJarConfig: Action<ShadowJar>?,
-        shadowApplication: Boolean
-    ) {
+    private fun shadowOriginalJar(project: Project, projectConfiguration: ProjectConfiguration) {
         val jarTask = project.tasks.jar.get()
-        pluginDebug("Created task $SHADOW_ORIGINAL_JAR on $project")
+        project.pluginInfo("Created task $SHADOW_ORIGINAL_JAR on $project")
         val shadowOriginalJarTask = project.tasks.register(SHADOW_ORIGINAL_JAR, ShadowJar::class.java) {
             group = "build"
             description = "Shadow the original jar"
@@ -85,39 +73,23 @@ class ShadowJarConfiguration(project: Project, projectConfiguration: ProjectConf
 
             archiveClassifier.set("all-original")
 
-            from(project.zipTree(jarTask.archiveFile))
-            manifest.inheritFrom(jarTask.manifest)
+            from(project.provider { project.zipTree(jarTask.archiveFile) })
 
-            configureShadowJar(jarTask, project, shadowPrefix, shadowApplication)
+            configureCommonShadowConfigs(jarTask, project, projectConfiguration)
         }
 
         // any extra config specified by the user
-        shadowJarConfig?.let {
-            pluginDebug("Applying custom shadow jar configuration on $project")
+        projectConfiguration.shadowAction?.let {
+            project.pluginInfo("Applying custom shadow jar configuration on $project")
             shadowOriginalJarTask.configure(it)
         }
     }
 }
 
-fun ShadowJar.configureShadowJar(jarTask: Jar, project: Project, shadowPrefix: String?, shadowApplication: Boolean) {
+fun ShadowJar.configureCommonShadowConfigs(jarTask: Jar, project: Project, projectConfiguration: ProjectConfiguration) {
     val runtimeClasspath = project.configurations.findByName("runtimeClasspath")
-    val excludePackages = if (shadowApplication)
-        listOf("java", "javax")
-    else
-        listOf("kotlin", "org/jetbrains", "org/intellij/lang/annotations", "java", "javax")
 
-    if (shadowPrefix != null) {
-        val runtimeClasspathFiles = runtimeClasspath?.files.orEmpty()
-
-        excludePackages.forEach { this.exclude("${it}/**") }
-
-        val packagesToRelocate = extractPackagesInJars(runtimeClasspathFiles, excludePackages)
-
-        packagesToRelocate.forEach { eachPackage ->
-            pluginDebug("Relocating package: $eachPackage to ${shadowPrefix}/$eachPackage")
-            relocate(eachPackage, "${shadowPrefix}.$eachPackage")
-        }
-    }
+    maybeRelocateIfConfigured(project, projectConfiguration)
 
     manifest.inheritFrom(jarTask.manifest)
     configurations.set(listOf(runtimeClasspath))
@@ -135,6 +107,26 @@ fun ShadowJar.configureShadowJar(jarTask: Jar, project: Project, shadowPrefix: S
 
     dependencies {
         exclude(dependency(project.dependencies.gradleApi()))
+    }
+}
+
+private fun ShadowJar.maybeRelocateIfConfigured(project: Project, projectConfiguration: ProjectConfiguration) {
+    val shadowPrefix = projectConfiguration.shadowPrefix
+    val runtimeClasspath = project.configurations.findByName("runtimeClasspath")
+
+    if (!shadowPrefix.isNullOrBlank()) {
+        val excludePackages = if (projectConfiguration.shadowApplication) listOf("java", "javax")
+        else listOf("kotlin", "org/jetbrains", "org/intellij/lang/annotations", "java", "javax")
+        val runtimeClasspathFiles = runtimeClasspath?.files.orEmpty()
+
+        excludePackages.forEach { this.exclude("${it}/**") }
+
+        val packagesToRelocate = extractPackagesInJars(runtimeClasspathFiles, excludePackages)
+
+        packagesToRelocate.forEach { eachPackage ->
+            project.pluginInfo("Relocating package: $eachPackage to $shadowPrefix/$eachPackage")
+            relocate(eachPackage, "$shadowPrefix.$eachPackage")
+        }
     }
 }
 

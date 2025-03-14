@@ -72,6 +72,8 @@ class ProjectConfiguration {
 
     internal var proguardEnabled = false
     internal var proguardExtraArgs = mutableListOf<String?>()
+
+    internal var shadowEnabled = false
     internal var shadowAction: Action<ShadowJar>? = null
     internal var shadowPrefix: String? = null
     internal var shadowApplication = false
@@ -81,16 +83,17 @@ class ProjectConfiguration {
 
     var iAmABigFatLibrary = false
 
-    fun shadow(prefix: String? = null, action: Action<ShadowJar> = Action {}) {
+    fun shadow(prefix: String? = null, action: Action<ShadowJar>? = Action {}) {
         if (prefix != null) {
             // check that prefix is a valid java package name
             require(prefix.matches(Regex("^[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)*$"))) { "Invalid Java package name: $prefix" }
         }
+        shadowEnabled = true
         shadowPrefix = prefix
         shadowAction = action
     }
 
-    fun shadowApplication(prefix: String? = null, action: Action<ShadowJar> = Action {}) {
+    fun shadowApplication(prefix: String? = null, action: Action<ShadowJar>? = Action {}) {
         shadowApplication = true
         shadow(prefix, action)
     }
@@ -108,7 +111,7 @@ class ProjectConfiguration {
     fun publish(
         name: String = DEFAULT_PUBLICATION_NAME,
         vararg publicationTypes: PublicationType,
-        configuration: Action<MavenPublication>?
+        configuration: Action<MavenPublication>? = Action {}
     ) {
         this.publicationName = name
         this.publicationEnabled = true

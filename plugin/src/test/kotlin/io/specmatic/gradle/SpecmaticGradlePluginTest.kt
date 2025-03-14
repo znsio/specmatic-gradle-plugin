@@ -12,10 +12,8 @@ import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestFramework
 import org.gradle.api.plugins.JavaPluginExtension
-import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.bundling.AbstractArchiveTask
-import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.the
 import org.gradle.testfixtures.ProjectBuilder
@@ -33,6 +31,9 @@ class SpecmaticGradlePluginTest {
         @Test
         fun `jar, build, assemble tasks will invoke checkLicense task`() {
             val project = ProjectBuilder.builder().build()
+            project.group = "org.example"
+            project.version = "1.2.3"
+
             project.plugins.apply("java")
             project.plugins.apply("io.specmatic.gradle")
             project.evaluationDependsOn(":") // force execution of `afterEvaluate` block
@@ -51,6 +52,8 @@ class SpecmaticGradlePluginTest {
         @Test
         fun `checkLicense task should invoke createAllowedLicensesFileTask and be finalized by prettyPrintLicenseCheckFailuresTask`() {
             val project = ProjectBuilder.builder().build()
+            project.group = "org.example"
+            project.version = "1.2.3"
             project.plugins.apply("java")
             project.plugins.apply("io.specmatic.gradle")
             project.evaluationDependsOn(":") // force execution of `afterEvaluate` block
@@ -67,23 +70,19 @@ class SpecmaticGradlePluginTest {
     @Nested
     inner class Testing {
         @Test
-        fun `should add jacoco plugin if java plugin is already applied`() {
+        fun `should add jacoco plugin`() {
             val project = ProjectBuilder.builder().build()
-            project.plugins.apply("java")
+            project.group = "org.example"
+            project.version = "1.2.3"
             project.plugins.apply("io.specmatic.gradle")
             assertThat(project.plugins.hasPlugin("jacoco")).isTrue()
         }
 
         @Test
-        fun `should not add jacoco plugin if java plugin is not applied`() {
-            val project = ProjectBuilder.builder().build()
-            project.plugins.apply("io.specmatic.gradle")
-            assertThat(project.plugins.hasPlugin("jacoco")).isFalse()
-        }
-
-        @Test
         fun `test tasks should be finalized by jacocoTestReport task`() {
             val project = ProjectBuilder.builder().build()
+            project.group = "org.example"
+            project.version = "1.2.3"
             project.plugins.apply("java")
             project.plugins.apply("io.specmatic.gradle")
             project.evaluationDependsOn(":") // force execution of `afterEvaluate` block
@@ -97,6 +96,8 @@ class SpecmaticGradlePluginTest {
         @Test
         fun `configures junit platform extension`() {
             val project = ProjectBuilder.builder().build()
+            project.group = "org.example"
+            project.version = "1.2.3"
             project.plugins.apply("java")
             project.plugins.apply("io.specmatic.gradle")
             project.evaluationDependsOn(":") // force execution of `afterEvaluate` block
@@ -139,6 +140,8 @@ class SpecmaticGradlePluginTest {
         @Test
         fun `it should apply jvm options to java plugin if java plugin is applied`() {
             val project = ProjectBuilder.builder().build()
+            project.group = "org.example"
+            project.version = "1.2.3"
             project.plugins.apply("java")
             project.plugins.apply("io.specmatic.gradle")
             project.evaluationDependsOn(":") // force execution of `afterEvaluate` block
@@ -153,6 +156,8 @@ class SpecmaticGradlePluginTest {
         @Test
         fun `it should apply jvm options to kotlin and java if kotlin plugin is applied`() {
             val project = ProjectBuilder.builder().build()
+            project.group = "org.example"
+            project.version = "1.2.3"
             project.plugins.apply("kotlin")
             project.plugins.apply("io.specmatic.gradle")
             project.evaluationDependsOn(":") // force execution of `afterEvaluate` block
@@ -167,6 +172,8 @@ class SpecmaticGradlePluginTest {
         @Test
         fun `should configure reproducible artifacts plugin`() {
             val project = ProjectBuilder.builder().build()
+            project.group = "org.example"
+            project.version = "1.2.3"
             project.plugins.apply("java")
             project.plugins.apply("io.specmatic.gradle")
             project.evaluationDependsOn(":") // force execution of `afterEvaluate` block
@@ -236,6 +243,9 @@ class SpecmaticGradlePluginTest {
         @Test
         fun `should add generated resources dir to main resources if project is root project, and no subprojects exist`() {
             val project = ProjectBuilder.builder().build()
+            project.group = "org.example"
+            project.version = "1.2.3"
+
             project.plugins.apply("java")
             project.plugins.apply("io.specmatic.gradle")
             project.evaluationDependsOn(":") // force execution of `afterEvaluate` block
@@ -246,7 +256,8 @@ class SpecmaticGradlePluginTest {
         @Test
         fun `should add generated resources dir to main resources on java subprojects`() {
             val rootProject = ProjectBuilder.builder().withName("root").build()
-            rootProject.plugins.apply("io.specmatic.gradle")
+            rootProject.group = "org.example"
+            rootProject.version = "1.2.3"
 
             val subProjectWithJava =
                 ProjectBuilder.builder().withName("java-subproject").withParent(rootProject).build()
@@ -255,6 +266,7 @@ class SpecmaticGradlePluginTest {
             val subProjectWithoutJava =
                 ProjectBuilder.builder().withName("non-java-subproject").withParent(rootProject).build()
 
+            rootProject.plugins.apply("io.specmatic.gradle")
             rootProject.evaluationDependsOn(":") // force execution of `afterEvaluate` block
 
             assertGeneratedResourcesSourceExists(subProjectWithJava)

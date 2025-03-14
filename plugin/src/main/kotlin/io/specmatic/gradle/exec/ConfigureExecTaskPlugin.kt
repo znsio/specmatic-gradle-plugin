@@ -1,47 +1,37 @@
 package io.specmatic.gradle.exec
 
-import io.specmatic.gradle.pluginDebug
+import io.specmatic.gradle.license.pluginInfo
+import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.tasks.AbstractExecTask
 import org.gradle.api.tasks.JavaExec
 import org.gradle.process.BaseExecSpec
 
-class ConfigureExecTask(project: Project) {
+class ConfigureExecTaskPlugin : Plugin<Project> {
 
-    init {
-        project.allprojects.forEach(::configure)
-    }
+    private val configuredTasks = mutableSetOf<Task>()
 
-    fun configure(project: Project) {
-        project.afterEvaluate {
-            project.tasks.whenObjectAdded {
-                if (this is AbstractExecTask<*>) {
-                    configureTask(this)
-                }
+    override fun apply(target: Project) {
+        target.tasks.withType(AbstractExecTask::class.java) {
+            configureTask(target, this)
+        }
 
-                if (this is JavaExec) {
-                    configureTask(this)
-                }
-            }
-
-            project.tasks.withType(AbstractExecTask::class.java) {
-                configureTask(this)
-            }
-
-            project.tasks.withType(JavaExec::class.java) {
-                configureTask(this)
-            }
+        target.tasks.withType(JavaExec::class.java) {
+            configureTask(target, this)
         }
     }
 
-    private fun configureTask(task: Task) {
+    private fun configureTask(target: Project, task: Task) {
         if (task is BaseExecSpec) {
-            if (task.inputs.properties["specmatic.exec.configured"] == true) {
+            if (configuredTasks.contains(task)) {
                 return
+            } else {
+                configuredTasks.add(task)
             }
-            pluginDebug("Configuring exec task ${task.path}")
-            task.inputs.property("specmatic.exec.configured", true)
+
+            target.pluginInfo("Configuring exec task ${task.path}")
+
             task.apply {
                 standardOutput = System.out
                 errorOutput = System.err
@@ -52,8 +42,10 @@ class ConfigureExecTask(project: Project) {
                         if (task.jvmArgs.isNotEmpty()) {
                             cliArgs.addAll(task.jvmArgs)
                         }
-                        cliArgs.add("-cp")
-                        cliArgs.add(task.classpath.joinToString(":"))
+                        if (!task.classpath.isEmpty) {
+                            cliArgs.add("-cp")
+                            cliArgs.add(task.classpath.joinToString(":"))
+                        }
                         if (task.mainClass.isPresent) {
                             cliArgs.add(task.mainClass.get())
                         }
@@ -62,7 +54,7 @@ class ConfigureExecTask(project: Project) {
                         cliArgs.addAll(task.commandLine)
                     }
 
-                    pluginDebug("[${workingDir}]\$ ${shellEscapedArgs(cliArgs)}")
+                    target.pluginInfo("[${workingDir}]\$ ${shellEscapedArgs(cliArgs)}")
                 }
             }
         }
