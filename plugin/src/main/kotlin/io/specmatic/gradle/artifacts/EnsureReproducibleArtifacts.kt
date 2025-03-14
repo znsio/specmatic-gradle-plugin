@@ -22,8 +22,6 @@ class EnsureReproducibleArtifacts(project: Project) {
 
     private fun configureTask(archiveTask: AbstractArchiveTask) {
         pluginDebug("Ensuring that ${archiveTask.path} generates reproducible artifacts")
-        archiveTask.includeEmptyDirs = false
-        archiveTask.duplicatesStrategy = DuplicatesStrategy.EXCLUDE
         archiveTask.isPreserveFileTimestamps = false
         archiveTask.isReproducibleFileOrder = true
     }
