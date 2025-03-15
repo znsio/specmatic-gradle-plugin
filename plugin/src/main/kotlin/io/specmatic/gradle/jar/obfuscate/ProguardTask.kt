@@ -15,6 +15,7 @@ import org.gradle.process.internal.ExecException
 import java.io.File
 import javax.inject.Inject
 
+@CacheableTask
 abstract class ProguardTask @Inject constructor(
     private val execLauncher: ExecOperations, javaToolchainService: JavaToolchainService, objectFactory: ObjectFactory
 ) : DefaultTask() {
@@ -31,6 +32,7 @@ abstract class ProguardTask @Inject constructor(
     private val argsInFile = mutableListOf<String>()
 
     @get:InputFile
+    @PathSensitive(PathSensitivity.RELATIVE)
     var inputJar: File? = null
 
     @get:OutputFile
@@ -85,6 +87,7 @@ abstract class ProguardTask @Inject constructor(
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.ABSOLUTE)
     fun getRuntimeConfiguration(): Configuration = this.project.configurations.getByName("runtimeClasspath")
 
     @OutputDirectory
