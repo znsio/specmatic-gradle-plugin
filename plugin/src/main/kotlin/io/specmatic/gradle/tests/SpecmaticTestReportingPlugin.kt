@@ -24,7 +24,7 @@ internal class SpecmaticTestReportingPlugin : Plugin<Project> {
     }
 
     private fun configureJunit(eachProject: Project) {
-        eachProject.tasks.withType(Test::class.java).configureEach {
+        eachProject.tasks.withType(Test::class.java) {
             eachProject.pluginInfo("Configuring junitPlatform on ${this.path}")
             useJUnitPlatform()
             defaultCharacterEncoding = "UTF-8"
@@ -33,12 +33,12 @@ internal class SpecmaticTestReportingPlugin : Plugin<Project> {
     }
 
     private fun configureJacoco(eachProject: Project) {
-        eachProject.tasks.withType(Test::class.java).configureEach {
+        eachProject.tasks.withType(Test::class.java) {
             eachProject.pluginInfo("Ensure that ${this.path} is finalized by jacocoTestReport")
             finalizedBy(eachProject.tasks.named("jacocoTestReport"))
         }
 
-        eachProject.tasks.withType(JacocoReport::class.java).configureEach {
+        eachProject.tasks.withType(JacocoReport::class.java) {
             eachProject.pluginInfo("Configuring jacocoTestReport on ${this.path}")
             reports {
                 xml.required.set(true)
