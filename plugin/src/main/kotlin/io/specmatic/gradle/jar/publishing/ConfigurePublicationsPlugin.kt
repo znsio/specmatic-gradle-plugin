@@ -1,7 +1,7 @@
 package io.specmatic.gradle.jar.publishing
 
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
-import com.vanniktech.maven.publish.MavenPublishPlugin
+import com.vanniktech.maven.publish.MavenPublishBasePlugin
 import com.vanniktech.maven.publish.SonatypeHost
 import io.specmatic.gradle.extensions.MavenCentral
 import io.specmatic.gradle.extensions.MavenInternal
@@ -22,6 +22,7 @@ import org.gradle.plugins.signing.SigningPlugin
 
 const val ORIGINAL_JAR = "originalJar"
 
+
 class ConfigurePublicationsPlugin() : Plugin<Project> {
 
     override fun apply(target: Project) {
@@ -35,7 +36,7 @@ class ConfigurePublicationsPlugin() : Plugin<Project> {
     }
 
     private fun configure(project: Project, projectConfiguration: ProjectConfiguration) {
-        project.plugins.apply(MavenPublishPlugin::class.java)
+        project.plugins.apply(MavenPublishBasePlugin::class.java)
         project.plugins.apply(SigningPlugin::class.java)
 
         configureSigning(project)
@@ -58,19 +59,13 @@ class ConfigurePublicationsPlugin() : Plugin<Project> {
     }
 
     private fun configuerPublishing(project: Project, projectConfiguration: ProjectConfiguration) {
-        project.plugins.withType(MavenPublishPlugin::class.java) {
+        project.plugins.withType(MavenPublishBasePlugin::class.java) {
             project.pluginInfo("Configuring maven publishing on $project")
             val stagingRepo = project.rootProject.layout.buildDirectory.dir("mvn-repo")
             val publishing = project.extensions.getByType(PublishingExtension::class.java)
-            publishing.publications.whenObjectAdded({
-                if (this is MavenPublication) {
-                    projectConfiguration.publicationConfigurations?.execute(this)
-                }
-            })
-            publishing.publications.all {
-                if (this is MavenPublication) {
-                    projectConfiguration.publicationConfigurations?.execute(this)
-                }
+
+            publishing.publications.withType(MavenPublication::class.java) {
+                projectConfiguration.publicationConfigurations?.execute(this)
             }
 
             publishing.configurePublishingToStagingRepo(project, stagingRepo)
@@ -104,16 +99,13 @@ class ConfigurePublicationsPlugin() : Plugin<Project> {
     }
 
     private fun configureJarPublishing(
-        publishing: PublishingExtension,
-        project: Project,
-        configuration: ProjectConfiguration
+        publishing: PublishingExtension, project: Project, configuration: ProjectConfiguration
     ) {
         if (configuration.publicationTypes.isNotEmpty()) {
             project.configureOriginalJarPublicationWhenObfuscationOrShadowPresent(
                 publishing, configuration
             )
 
-            project.removeTasksAndPublicationsWeDoNotWant()
         }
 
         if (configuration.publicationTypes.contains(PublicationType.OBFUSCATED_ORIGINAL)) {

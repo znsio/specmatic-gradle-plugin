@@ -1,6 +1,5 @@
 package io.specmatic.gradle.jar.publishing
 
-import io.specmatic.gradle.extensions.MavenInternal
 import io.specmatic.gradle.extensions.ProjectConfiguration
 import io.specmatic.gradle.jar.massage.jar
 import io.specmatic.gradle.jar.massage.shadow
@@ -8,7 +7,6 @@ import io.specmatic.gradle.jar.obfuscate.OBFUSCATE_JAR_TASK
 import io.specmatic.gradle.license.pluginInfo
 import io.specmatic.gradle.shadow.SHADOW_OBFUSCATED_JAR
 import io.specmatic.gradle.shadow.SHADOW_ORIGINAL_JAR
-import io.specmatic.gradle.specmaticExtension
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.publish.PublishingExtension
@@ -16,55 +14,13 @@ import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.get
-import org.jetbrains.kotlin.org.apache.commons.lang3.StringUtils
 
-
-internal fun Project.disableTasks(taskName: String) {
-    val findByName = tasks.findByName(taskName)
-    if (findByName != null) {
-        pluginInfo("Disabling task $taskName")
-        findByName.enabled = false
-    }
-
-    // disable if created/added in the future
-    tasks.whenObjectAdded {
-        if (name == taskName) {
-            pluginInfo("Disabling task $taskName")
-            enabled = false
-        }
-    }
-}
-
-internal fun Project.removeTasksAndPublicationsWeDoNotWant() {
-    val publishing = extensions.getByType(PublishingExtension::class.java)
-
-    // this is added by vanniktech's publish plugin, we don't want it
-
-    val specmaticExtension = this.rootProject.specmaticExtension()
-
-    val repoNames = specmaticExtension.publishTo.filterIsInstance<MavenInternal>().map { it.repoName }
-
-    publishing.publications.removeIf {
-        // this is the default publication
-        val toRemove = it.name == "maven" || repoNames.contains(it.name)
-        if (toRemove) {
-            pluginInfo("Removing publication ${it.name}")
-        }
-        toRemove
-    }
-
-    // disable if already exists
-    disableTasks("signMavenPublication")
-    disableTasks("publishMavenPublicationToStagingRepository")
-    repoNames.forEach { repoName ->
-        disableTasks("publishMavenPublicationTo${StringUtils.capitalize(repoName)}Repository")
-    }
-}
 
 internal fun Project.createObfuscatedOriginalJarPublicationTask(
     publishing: PublishingExtension, configuration: ProjectConfiguration
 ) {
     val obfuscateJarTask = this.tasks.named(OBFUSCATE_JAR_TASK, Jar::class.java)
+    pluginInfo("Configuring publication named $OBFUSCATE_JAR_TASK on $this")
     publishing.publications.register(OBFUSCATE_JAR_TASK, MavenPublication::class.java) {
         artifact(obfuscateJarTask) {
             // we keep the classifier when building the jar, because we need to distinguish between the original and obfuscated jars, in the `lib` dir.
@@ -124,6 +80,7 @@ internal fun Project.createShadowOriginalJarPublicationTask(
 ) {
     val shadowOriginalJarTask = this.tasks.named(SHADOW_ORIGINAL_JAR, Jar::class.java)
 
+    pluginInfo("Configuring publication named $SHADOW_ORIGINAL_JAR on $this")
     publishing.publications.register(SHADOW_ORIGINAL_JAR, MavenPublication::class.java) {
         artifact(shadowOriginalJarTask) {
             // we keep the classifier when building the jar, because we need to distinguish between the original and obfuscated jars, in the `lib` dir.
@@ -146,6 +103,7 @@ internal fun Project.createShadowOriginalJarPublicationTask(
 internal fun Project.configureOriginalJarPublicationWhenObfuscationOrShadowPresent(
     publishing: PublishingExtension, configuration: ProjectConfiguration
 ) {
+    pluginInfo("Configuring publication named $ORIGINAL_JAR on $this")
     publishing.publications.register(ORIGINAL_JAR, MavenPublication::class.java) {
         from(components["java"])
         artifactId = createArtifactIdFor(
@@ -161,7 +119,6 @@ internal fun Project.configureOriginalJarPublicationWhenObfuscationOrShadowPrese
         )
         configuration.publicationConfigurations?.execute(this)
     }
-
 }
 
 
@@ -185,6 +142,7 @@ private fun Project.createArtifactIdFor(configuration: ProjectConfiguration, pub
 
 private fun Project.createConfigurationAndAddArtifacts(shadowOriginalJarTask: TaskProvider<Jar>) {
     val shadowOriginalJarConfig = configurations.create(shadowOriginalJarTask.name)
+    pluginInfo("Adding output of ${shadowOriginalJarTask.get().path} to artifact named ${shadowOriginalJarConfig.name}")
     artifacts.add(shadowOriginalJarConfig.name, shadowOriginalJarTask)
 }
 
