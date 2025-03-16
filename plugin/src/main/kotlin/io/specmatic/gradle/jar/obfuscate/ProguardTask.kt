@@ -23,11 +23,6 @@ abstract class ProguardTask @Inject constructor(
     private var javaLauncher: Property<JavaLauncher> = objectFactory.property<JavaLauncher?>(JavaLauncher::class.java)
         .convention(javaToolchainService.launcherFor({}))
 
-    init {
-        println("ProguardTask initialized")
-    }
-
-
     @get:Input
     private val argsInFile = mutableListOf<String>()
 
