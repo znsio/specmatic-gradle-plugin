@@ -92,9 +92,9 @@ class SpecmaticLicenseReportingPlugin : Plugin<Project> {
             createAllowedLicensesFileTask: TaskProvider<CreateAllowedLicensesFileTask>
         ) {
 
-            project.allprojects.forEach {
+            project.allprojects {
                 // Configure all Jar tasks in subprojects to be finalized by the checkLicense task
-                it.tasks.withType(Jar::class.java) {
+                tasks.withType(Jar::class.java) {
                     finalizedBy(project.tasks.named("checkLicense"))
                 }
             }
