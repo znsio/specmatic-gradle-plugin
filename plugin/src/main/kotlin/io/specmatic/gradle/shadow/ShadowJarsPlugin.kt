@@ -108,24 +108,33 @@ fun ShadowJar.configureCommonShadowConfigs(jarTask: Jar, project: Project, proje
     dependencies {
         exclude(dependency(project.dependencies.gradleApi()))
     }
+
+
 }
 
 private fun ShadowJar.maybeRelocateIfConfigured(project: Project, projectConfiguration: ProjectConfiguration) {
     val shadowPrefix = projectConfiguration.shadowPrefix
+
     val runtimeClasspath = project.configurations.findByName("runtimeClasspath")
 
     if (!shadowPrefix.isNullOrBlank()) {
         val excludePackages = if (projectConfiguration.shadowApplication) listOf("java", "javax")
         else listOf("kotlin", "org/jetbrains", "org/intellij/lang/annotations", "java", "javax")
-        val runtimeClasspathFiles = runtimeClasspath?.files.orEmpty()
+        var thisShadowJarTask = this
 
-        excludePackages.forEach { this.exclude("${it}/**") }
+        // we do this in doFirst so that we can lazily evaluate the runtimeClasspath
+        doFirst {
 
-        val packagesToRelocate = extractPackagesInJars(runtimeClasspathFiles, excludePackages)
+            val runtimeClasspathFiles = runtimeClasspath?.files.orEmpty()
 
-        packagesToRelocate.forEach { eachPackage ->
-            project.pluginInfo("Relocating package: $eachPackage to $shadowPrefix/$eachPackage")
-            relocate(eachPackage, "$shadowPrefix.$eachPackage")
+            excludePackages.forEach { thisShadowJarTask.exclude("${it}/**") }
+
+            val packagesToRelocate = extractPackagesInJars(runtimeClasspathFiles, excludePackages)
+
+            packagesToRelocate.forEach { eachPackage ->
+                project.pluginInfo("Relocating package: $eachPackage to $shadowPrefix/$eachPackage")
+                relocate(eachPackage, "$shadowPrefix.$eachPackage")
+            }
         }
     }
 }
