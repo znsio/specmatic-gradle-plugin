@@ -27,6 +27,7 @@ import org.gradle.api.Project
 import org.gradle.api.component.SoftwareComponentFactory
 import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.plugins.JavaPlugin
+import org.kohsuke.github.GitHubBuilder
 
 @Suppress("unused")
 class SpecmaticGradlePlugin : Plugin<Project> {
@@ -46,7 +47,8 @@ class SpecmaticGradlePlugin : Plugin<Project> {
         target.allprojects {
             plugins.apply(SpecmaticTestReportingPlugin::class.java)
         }
-        target.plugins.apply(ReleasePlugin::class.java)
+        target.plugins.apply(SpecmaticReleasePlugin::class.java)
+
         target.plugins.apply(GradleTaskInfoPlugin::class.java)
 
         target.applyToRootProjectOrSubprojects {
@@ -71,6 +73,7 @@ class SpecmaticGradlePlugin : Plugin<Project> {
         }
     }
 
+
     private fun Project.applyToRootProjectOrSubprojects(block: Project.() -> Unit) {
         if (subprojects.isEmpty()) {
             // apply on self
@@ -82,6 +85,7 @@ class SpecmaticGradlePlugin : Plugin<Project> {
             }
         }
     }
+
 }
 
 private fun Project.applyShadowConfigs() {

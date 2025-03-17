@@ -3,7 +3,9 @@ package io.specmatic.gradle.extensions
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.gradle.api.Action
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import java.net.URI
@@ -63,6 +65,15 @@ open class SpecmaticGradleExtension {
 
 private const val DEFAULT_PUBLICATION_NAME = "mavenJava"
 
+class GithubRelease {
+    internal val files = mutableMapOf<String, String>()
+
+    fun addFile(task: String, filename: String) {
+        files.put(task, filename)
+    }
+}
+
+
 class ProjectConfiguration {
     var applicationMainClass: String? = null
     internal var publicationName: String = DEFAULT_PUBLICATION_NAME
@@ -81,6 +92,9 @@ class ProjectConfiguration {
     internal var dockerBuild = false
     internal var dockerBuildExtraArgs = mutableListOf<String?>()
 
+    internal var githubReleaseEnabled = false
+    internal var githubRelease: GithubRelease = GithubRelease()
+
     var iAmABigFatLibrary = false
 
     fun shadow(prefix: String? = null, action: Action<ShadowJar>? = Action {}) {
@@ -91,6 +105,11 @@ class ProjectConfiguration {
         shadowEnabled = true
         shadowPrefix = prefix
         shadowAction = action
+    }
+
+    fun githubRelease(block: GithubRelease.() -> Unit = {}) {
+        this.githubReleaseEnabled = true
+        githubRelease = GithubRelease().apply(block)
     }
 
     fun shadowApplication(prefix: String? = null, action: Action<ShadowJar>? = Action {}) {
