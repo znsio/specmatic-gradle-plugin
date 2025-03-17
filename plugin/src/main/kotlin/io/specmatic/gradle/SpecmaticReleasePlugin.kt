@@ -25,7 +25,7 @@ private fun Project.configureGithubRelease() {
                         publish(eachProject, eachProjectConfig.githubRelease)
                     }
 
-                    project.tasks.named("preTagCommit") {
+                    project.tasks.named("createReleaseTag") {
                         finalizedBy(createGithubReleaseTask)
                     }
                 }
