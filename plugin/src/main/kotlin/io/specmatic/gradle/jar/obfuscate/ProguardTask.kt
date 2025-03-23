@@ -24,7 +24,7 @@ abstract class ProguardTask @Inject constructor(
         .convention(javaToolchainService.launcherFor({}))
 
     @get:Input
-    private val argsInFile = mutableListOf<String>()
+    val argsInFile = mutableListOf<String>()
 
     @get:InputFile
     @PathSensitive(PathSensitivity.RELATIVE)

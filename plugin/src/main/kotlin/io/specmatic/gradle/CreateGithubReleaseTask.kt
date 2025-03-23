@@ -21,7 +21,7 @@ open class CreateGithubReleaseTask() : DefaultTask() {
     private val files = mutableMapOf<Project, MutableMap<String, String>>()
 
     fun publish(target: Project, release: GithubRelease) {
-        release.files.forEach { (task, releaseFileName) ->
+        release.files.keys.forEach { task ->
             dependsOn(target.tasks.getByName(task))
         }
         files.put(target, release.files)

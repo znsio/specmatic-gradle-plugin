@@ -32,7 +32,7 @@ import org.kohsuke.github.GitHubBuilder
 @Suppress("unused")
 class SpecmaticGradlePlugin : Plugin<Project> {
     override fun apply(target: Project) {
-        val specmaticGradleExtension = target.extensions.create("specmatic", SpecmaticGradleExtension::class.java)
+        target.extensions.create("specmatic", SpecmaticGradleExtension::class.java)
 
         target.pluginInfo("Specmatic Gradle Plugin ${VersionInfo.describe()}")
 
