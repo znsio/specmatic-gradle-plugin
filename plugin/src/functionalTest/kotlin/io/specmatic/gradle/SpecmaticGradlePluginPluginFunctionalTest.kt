@@ -68,7 +68,17 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
                 """
                     plugins {
                         id("java")
+                        kotlin("jvm") version "1.9.25"
                         id("io.specmatic.gradle")
+                    }
+                    
+                    repositories {
+                        mavenCentral()
+                    }
+                    
+                    dependencies {
+                        // workaround for https://github.com/google/osv-scanner/issues/1744
+                        implementation("org.junit.jupiter:junit-jupiter-api:5.12.1")
                     }
                     
                 """.trimIndent()
@@ -95,10 +105,10 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
             // Set up the test build
             settingsFile.writeText(
                 """
-                    rootProject.name = "fooBar"
-                    include("project-a")
-                    include("project-b")
-                """.trimIndent()
+                rootProject.name = "fooBar"
+                include("project-a")
+                include("project-b")
+            """.trimIndent()
             )
 
             buildFile.writeText(
@@ -217,6 +227,15 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
                         id("io.specmatic.gradle")
                     }
                     
+                    repositories {
+                        mavenCentral()
+                    }
+                    
+                    dependencies {
+                        // workaround for https://github.com/google/osv-scanner/issues/1744
+                        implementation("org.junit.jupiter:junit-jupiter-api:5.12.1")
+                    }
+                    
                     specmatic {
                         publishToMavenCentral()
                         
@@ -258,6 +277,15 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
                         id("java")
                         id("io.specmatic.gradle")
                     }
+
+                    repositories {
+                        mavenCentral()
+                    }
+                    
+                    dependencies {
+                        // workaround for https://github.com/google/osv-scanner/issues/1744
+                        implementation("org.junit.jupiter:junit-jupiter-api:5.12.1")
+                    }
                     
                     specmatic {
                         publishToMavenCentral()
@@ -285,4 +313,43 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
             assertThat(JarFile(customJar).manifest.mainAttributes.containsValue("Main-Class")).isFalse()
         }
     }
+
+    @Nested
+    inner class JarOsvScan {
+        @Test
+        fun `should flag vulnerable dependencies in jars`() {
+            // Set up the test build
+            settingsFile.writeText("rootProject.name = \"fooBar\"")
+            buildFile.writeText(
+                """
+                    plugins {
+                        id("java")
+                        id("io.specmatic.gradle")
+                    }
+                    
+                    repositories {
+                        mavenCentral()
+                    }
+                    
+                    dependencies {
+                        // add a dependency with some vulnerabilities
+                        implementation("com.google.code.gson:gson:2.8.8")
+                    }
+                    
+                """.trimIndent()
+            )
+
+            val result = runWithSuccess("jar")
+            assertThat(result.output).matches(
+                Pattern.compile(
+                    ".* com.google.code.gson:gson .* 2.8.8 .* https://osv.dev/GHSA-4jrv-ppp4-jm57 .*",
+                    Pattern.MULTILINE or Pattern.DOTALL or Pattern.CASE_INSENSITIVE
+                )
+            )
+            assertThat(result.task(":cyclonedxBom")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            assertThat(result.task(":jar")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            assertThat(result.task(":vulnScanJar")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+        }
+    }
+
 }

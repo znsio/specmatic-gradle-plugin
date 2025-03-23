@@ -3,7 +3,6 @@ package io.specmatic.gradle
 import io.specmatic.gradle.artifacts.EnsureJarsAreStampedPlugin
 import io.specmatic.gradle.artifacts.EnsureReproducibleArtifactsPlugin
 import io.specmatic.gradle.compiler.ConfigureCompilerOptionsPlugin
-import io.specmatic.gradle.dock.DockerPlugin
 import io.specmatic.gradle.exec.ConfigureExecTaskPlugin
 import io.specmatic.gradle.extensions.SpecmaticGradleExtension
 import io.specmatic.gradle.jar.massage.applyToRootProjectOrSubprojects
@@ -14,6 +13,7 @@ import io.specmatic.gradle.plugin.VersionInfo
 import io.specmatic.gradle.tests.SpecmaticTestReportingPlugin
 import io.specmatic.gradle.versioninfo.VersionInfoPlugin
 import io.specmatic.gradle.versioninfo.versionInfo
+import io.specmatic.gradle.vuln.SpecmaticVulnScanPlugin
 import org.barfuin.gradle.taskinfo.GradleTaskInfoPlugin
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
@@ -40,6 +40,8 @@ class SpecmaticGradlePlugin : Plugin<Project> {
 
         target.plugins.apply(GradleTaskInfoPlugin::class.java)
 
+        target.plugins.apply(SpecmaticVulnScanPlugin::class.java)
+
         target.applyToRootProjectOrSubprojects {
             plugins.apply(VersionInfoPlugin::class.java)
         }
@@ -49,10 +51,6 @@ class SpecmaticGradlePlugin : Plugin<Project> {
             plugins.apply(EnsureReproducibleArtifactsPlugin::class.java)
             plugins.apply(EnsureJarsAreStampedPlugin::class.java)
             plugins.apply(ConfigureExecTaskPlugin::class.java)
-        }
-
-        target.allprojects {
-            plugins.apply(DockerPlugin::class.java)
         }
     }
 
@@ -76,7 +74,3 @@ fun Project.specmaticExtension(): SpecmaticGradleExtension {
     }
     throw GradleException("SpecmaticGradleExtension not found in project ${this}, or any of its parents")
 }
-
-//fun pluginDebug(message: String = "") {
-//    println("[Specmatic Gradle Plugin]: $message")
-//}

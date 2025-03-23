@@ -20,7 +20,8 @@ dependencies {
     implementation("com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:9.0.0-beta10")
     implementation("com.vanniktech.maven.publish:com.vanniktech.maven.publish.gradle.plugin:0.31.0")
     implementation("org.kohsuke:github-api:1.327")
-
+    implementation("org.cyclonedx.bom:org.cyclonedx.bom.gradle.plugin:2.2.0")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.3")
     testImplementation("org.apache.maven:maven-model:3.9.9")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.assertj:assertj-core:3.27.3")
