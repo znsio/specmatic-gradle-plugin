@@ -2,6 +2,8 @@ package io.specmatic.gradle.dock
 
 import io.specmatic.gradle.license.pluginInfo
 import io.specmatic.gradle.specmaticExtension
+import io.specmatic.gradle.vuln.ImageVulnScanTask
+import io.specmatic.gradle.vuln.createDockerVulnScanTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.Exec
@@ -37,7 +39,11 @@ class DockerPlugin : Plugin<Project> {
             "org.opencontainers.image.vendor=specmatic.io",
         )
 
+
+        val scanLocalDockerImageTask = target.createDockerVulnScanTask("znsio/${target.name}:${target.version}")
+        
         target.tasks.register("dockerBuild", Exec::class.java) {
+            finalizedBy(scanLocalDockerImageTask)
             group = "docker"
             description = "Builds the docker image"
             commandLine(
@@ -46,7 +52,6 @@ class DockerPlugin : Plugin<Project> {
                 *annotations.toTypedArray(),
                 "--build-arg",
                 "VERSION=${target.version}",
-                "--no-cache",
                 "-t",
                 "znsio/${target.name}:${target.version}",
                 "-t",

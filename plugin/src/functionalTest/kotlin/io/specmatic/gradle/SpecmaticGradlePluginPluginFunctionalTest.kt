@@ -2,6 +2,7 @@ package io.specmatic.gradle
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
+import org.eclipse.jgit.api.Git
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.gradle.testkit.runner.UnexpectedBuildFailure
@@ -24,6 +25,9 @@ class SpecmaticGradlePluginPluginFunctionalTest {
 
     @BeforeEach
     fun setup() {
+        Git.init().setDirectory(projectDir).call()
+        projectDir.resolve(".gitignore").writeText("")
+
         gradleProperties.writeText(
             """
                 version=1.2.3
@@ -112,7 +116,7 @@ class SpecmaticGradlePluginPluginFunctionalTest {
             runner.forwardOutput()
             runner.withPluginClasspath()
             runner.withProjectDir(projectDir)
-            val result = runner.withArguments("assemble").build()
+            val result = runner.withArguments("assemble").buildAndFail()
 
             // Verify the result
             assertThat(result.task(":createVersionPropertiesFile")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
@@ -266,6 +270,15 @@ class SpecmaticGradlePluginPluginFunctionalTest {
                         id("io.specmatic.gradle")
                     }
                     
+                    repositories {
+                        mavenCentral()
+                    }
+                    
+                    dependencies {
+                        // workaround for https://github.com/google/osv-scanner/issues/1744
+                        implementation("org.junit.jupiter:junit-jupiter-api:5.12.1")
+                    }
+                    
                     specmatic {
                         publishToMavenCentral()
                         
@@ -312,6 +325,15 @@ class SpecmaticGradlePluginPluginFunctionalTest {
                         id("io.specmatic.gradle")
                     }
                     
+                    repositories {
+                        mavenCentral()
+                    }
+                    
+                    dependencies {
+                        // workaround for https://github.com/google/osv-scanner/issues/1744
+                        implementation("org.junit.jupiter:junit-jupiter-api:5.12.1")
+                    }
+                    
                     specmatic {
                         publishToMavenCentral()
                         
@@ -343,6 +365,48 @@ class SpecmaticGradlePluginPluginFunctionalTest {
             val customJar = projectDir.resolve("build/libs/customJar-1.2.3.jar")
             assertThat(customJar).exists()
             assertThat(JarFile(customJar).manifest.mainAttributes.containsValue("Main-Class")).isFalse()
+        }
+    }
+
+    @Nested
+    inner class JarOsvScan {
+        @Test
+        fun `should flag vulnerable dependencies in jars`() {
+            // Set up the test build
+            settingsFile.writeText("rootProject.name = \"fooBar\"")
+            buildFile.writeText(
+                """
+                    plugins {
+                        id("java")
+                        id("io.specmatic.gradle")
+                    }
+                    
+                    repositories {
+                        mavenCentral()
+                    }
+                    
+                    dependencies {
+                        // add a dependency with some vulnerabilities
+                        implementation("com.google.code.gson:gson:2.8.8")
+                    }
+                    
+                """.trimIndent()
+            )
+
+            val runner = GradleRunner.create()
+            runner.forwardOutput()
+            runner.withPluginClasspath()
+            runner.withProjectDir(projectDir)
+            val result = runner.withArguments("jar").buildAndFail()
+            assertThat(result.output).matches(
+                Pattern.compile(
+                    ".* https://osv.dev/GHSA-4jrv-ppp4-jm57 .* com.google.code.gson:gson .* 2.8.8 .*",
+                    Pattern.MULTILINE or Pattern.DOTALL or Pattern.CASE_INSENSITIVE
+                )
+            )
+            assertThat(result.task(":cyclonedxBom")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            assertThat(result.task(":jar")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            assertThat(result.task(":vulnScanJar")?.outcome).isEqualTo(TaskOutcome.FAILED)
         }
     }
 

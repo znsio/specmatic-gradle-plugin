@@ -74,6 +74,12 @@ specmatic {
         projectUrl = "https://gitlab.com/barfuin/gradle-taskinfo"
         license = "Apache-2.0"
     }
+    licenseData {
+        name = "org.cyclonedx.bom:org.cyclonedx.bom.gradle.plugin"
+        version = "2.2.0"
+        projectUrl = "https://github.com/CycloneDX/cyclonedx-gradle-plugin"
+        license = "Apache-2.0"
+    }
 }
 
 tasks.getByName("beforeReleaseBuild") {
