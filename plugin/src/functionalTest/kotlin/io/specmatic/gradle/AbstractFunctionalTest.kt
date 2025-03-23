@@ -1,6 +1,7 @@
 package io.specmatic.gradle
 
 import org.assertj.core.api.Assertions.assertThat
+import org.eclipse.jgit.api.Git
 import org.gradle.internal.impldep.org.apache.maven.model.io.xpp3.MavenXpp3Reader
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
@@ -20,6 +21,8 @@ open class AbstractFunctionalTest {
 
     @BeforeEach
     fun baseSetup() {
+        Git.init().setDirectory(projectDir).call()
+        projectDir.resolve(".gitignore").writeText("")
         gradleProperties.writeText(
             """
                 version=1.2.3

@@ -43,32 +43,32 @@ open class SpecmaticGradleExtension {
     }
 
     fun withOSSApplication(project: Project, block: OSSApplicationConfig.() -> Unit) {
-        val projectConfig = OSSApplicationConfig().apply(block)
-        projectConfig.applyToProject(project)
+        val projectConfig = OSSApplicationConfig(project).apply(block)
+        projectConfig.applyToProject()
         projectConfigurations[project] = projectConfig
     }
 
     fun withOSSLibrary(project: Project, block: OSSLibraryConfig.() -> Unit) {
-        val projectConfig = OSSLibraryConfig().apply(block)
-        projectConfig.applyToProject(project)
+        val projectConfig = OSSLibraryConfig(project).apply(block)
+        projectConfig.applyToProject()
         projectConfigurations[project] = projectConfig
     }
 
     fun withCommercialApplication(project: Project, block: CommercialApplicationConfig.() -> Unit) {
-        val projectConfig = CommercialApplicationConfig().apply(block)
-        projectConfig.applyToProject(project)
+        val projectConfig = CommercialApplicationConfig(project).apply(block)
+        projectConfig.applyToProject()
         projectConfigurations[project] = projectConfig
     }
 
     fun withCommercialApplicationLibrary(project: Project, block: CommercialApplicationAndLibraryConfig.() -> Unit) {
-        val projectConfig = CommercialApplicationAndLibraryConfig().apply(block)
-        projectConfig.applyToProject(project)
+        val projectConfig = CommercialApplicationAndLibraryConfig(project).apply(block)
+        projectConfig.applyToProject()
         projectConfigurations[project] = projectConfig
     }
 
     fun withCommercialLibrary(project: Project, block: CommercialLibraryConfig.() -> Unit) {
-        val projectConfig = CommercialLibraryConfig().apply(block)
-        projectConfig.applyToProject(project)
+        val projectConfig = CommercialLibraryConfig(project).apply(block)
+        projectConfig.applyToProject()
         projectConfigurations[project] = projectConfig
     }
 }

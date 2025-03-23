@@ -1,6 +1,7 @@
 package io.specmatic.gradle.extensions
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import io.specmatic.gradle.dock.registerDockerTasks
 import io.specmatic.gradle.jar.publishing.*
 import io.specmatic.gradle.specmaticExtension
 import org.gradle.api.Action
@@ -12,7 +13,7 @@ import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 // just a marker interface
 interface DistributionFlavor
 
-abstract class BaseDistribution : DistributionFlavor {
+abstract class BaseDistribution(protected val project: Project) : DistributionFlavor {
     internal var publicationConfigurations = mutableListOf<Action<MavenPublication>>()
     internal var githubRelease: GithubReleaseConfig = GithubReleaseConfig()
     internal var shadowActions = mutableListOf<Action<ShadowJar>>()
@@ -23,16 +24,15 @@ abstract class BaseDistribution : DistributionFlavor {
         this.publicationConfigurations.add(configuration)
     }
 
-
-    internal open fun applyToProject(target: Project) {
-        target.plugins.apply(JavaPlugin::class.java)
-        target.plugins.withType(JavaPlugin::class.java) {
-            target.configurations.named("implementation") {
-                this.dependencies.add(target.dependencies.create("org.jetbrains.kotlin:kotlin-stdlib:${target.specmaticExtension().kotlinVersion}"))
+    internal open fun applyToProject() {
+        project.plugins.apply(JavaPlugin::class.java)
+        project.plugins.withType(JavaPlugin::class.java) {
+            project.configurations.named("implementation") {
+                this.dependencies.add(project.dependencies.create("org.jetbrains.kotlin:kotlin-stdlib:${project.specmaticExtension().kotlinVersion}"))
             }
         }
-        target.configureSigning()
-        target.configurePublishing()
+        project.configureSigning()
+        project.configurePublishing()
     }
 
     protected open fun shadow(prefix: String?, action: Action<ShadowJar>?) {
@@ -54,14 +54,17 @@ abstract class BaseDistribution : DistributionFlavor {
         githubRelease = GithubReleaseConfig().apply(block)
     }
 
+    protected open fun dockerBuild(vararg dockerBuildArgs: String?) {
+        this.project.registerDockerTasks(*dockerBuildArgs)
+    }
 }
 
-open class OSSLibraryConfig : GithubReleaseFeature, BaseDistribution() {
-    override fun applyToProject(target: Project) {
-        super.applyToProject(target)
-        target.plugins.withType(JavaPlugin::class.java) {
-            target.plugins.withType(MavenPublishPlugin::class.java) {
-                target.createUnobfuscatedJarPublication(publicationConfigurations, target.name)
+open class OSSLibraryConfig(project: Project) : GithubReleaseFeature, BaseDistribution(project) {
+    override fun applyToProject() {
+        super.applyToProject()
+        project.plugins.withType(JavaPlugin::class.java) {
+            project.plugins.withType(MavenPublishPlugin::class.java) {
+                project.createUnobfuscatedJarPublication(publicationConfigurations, project.name)
             }
         }
     }
@@ -71,20 +74,21 @@ open class OSSLibraryConfig : GithubReleaseFeature, BaseDistribution() {
     }
 }
 
-open class OSSApplicationConfig() : ApplicationFeature, ShadowingFeature, GithubReleaseFeature, BaseDistribution(),
-    DockerBuildFeature by DockerBuildFeatureImpl() {
+open class OSSApplicationConfig(project: Project) : ApplicationFeature, DockerBuildFeature, ShadowingFeature,
+    GithubReleaseFeature,
+    BaseDistribution(project) {
     override var mainClass: String = ""
 
-    override fun applyToProject(target: Project) {
-        super.applyToProject(target)
+    override fun applyToProject() {
+        super.applyToProject()
 
-        target.plugins.withType(JavaPlugin::class.java) {
-            val unobfuscatedShadowJarTask = target.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, true)
-            target.plugins.withType(MavenPublishPlugin::class.java) {
-                target.createShadowedUnobfuscatedJarPublication(
+        project.plugins.withType(JavaPlugin::class.java) {
+            val unobfuscatedShadowJarTask = project.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, true)
+            project.plugins.withType(MavenPublishPlugin::class.java) {
+                project.createShadowedUnobfuscatedJarPublication(
                     publicationConfigurations,
                     unobfuscatedShadowJarTask,
-                    target.name,
+                    project.name,
                 )
             }
         }
@@ -97,67 +101,34 @@ open class OSSApplicationConfig() : ApplicationFeature, ShadowingFeature, Github
     override fun githubRelease(block: GithubReleaseConfig.() -> Unit) {
         super.githubRelease(block)
     }
+
+    override fun dockerBuild(vararg dockerBuildArgs: String?) {
+        super.dockerBuild(*dockerBuildArgs)
+    }
 }
 
-class CommercialLibraryConfig : ObfuscationFeature, ShadowingFeature, GithubReleaseFeature, BaseDistribution() {
-    override fun applyToProject(target: Project) {
-        super.applyToProject(target)
-        target.plugins.withType(JavaPlugin::class.java) {
-            val obfuscatedOriginalJar = target.createObfuscatedOriginalJar(proguardExtraArgs)
-            val unobfuscatedShadowJar = target.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, false)
-            val obfuscatedShadowJar = target.createObfuscatedShadowJar(
+class CommercialLibraryConfig(project: Project) : ObfuscationFeature, ShadowingFeature,
+    GithubReleaseFeature, BaseDistribution(project) {
+    override fun applyToProject() {
+        super.applyToProject()
+        project.plugins.withType(JavaPlugin::class.java) {
+            val obfuscatedOriginalJar = project.createObfuscatedOriginalJar(proguardExtraArgs)
+            val unobfuscatedShadowJar = project.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, false)
+            val obfuscatedShadowJar = project.createObfuscatedShadowJar(
                 obfuscatedOriginalJar, shadowActions, shadowPrefix, false
             )
-            target.plugins.withType(MavenPublishPlugin::class.java) {
-                target.createUnobfuscatedJarPublication(
-                    publicationConfigurations, "${target.name}-dont-use-this-unless-you-know-what-you-are-doing"
+            project.plugins.withType(MavenPublishPlugin::class.java) {
+                project.createUnobfuscatedJarPublication(
+                    publicationConfigurations, "${project.name}-dont-use-this-unless-you-know-what-you-are-doing"
                 )
-                target.createObfuscatedOriginalJarPublication(
-                    publicationConfigurations, obfuscatedOriginalJar, "${target.name}-min"
+                project.createObfuscatedOriginalJarPublication(
+                    publicationConfigurations, obfuscatedOriginalJar, "${project.name}-min"
                 )
-                target.createShadowedUnobfuscatedJarPublication(
-                    publicationConfigurations, unobfuscatedShadowJar, "${target.name}-all-debug"
+                project.createShadowedUnobfuscatedJarPublication(
+                    publicationConfigurations, unobfuscatedShadowJar, "${project.name}-all-debug"
                 )
-                target.createShadowedObfuscatedJarPublication(
-                    publicationConfigurations, obfuscatedShadowJar, target.name
-                )
-            }
-        }
-    }
-
-    override fun shadow(prefix: String?, action: Action<ShadowJar>?) {
-        super.shadow(prefix, action)
-    }
-
-    override fun obfuscate(vararg proguardExtraArgs: String?) {
-        super.obfuscate(*proguardExtraArgs)
-    }
-
-    override fun githubRelease(block: GithubReleaseConfig.() -> Unit) {
-        super.githubRelease(block)
-    }
-}
-
-
-class CommercialApplicationConfig : ApplicationFeature, ShadowingFeature, ObfuscationFeature, GithubReleaseFeature,
-    BaseDistribution(),
-    DockerBuildFeature by DockerBuildFeatureImpl() {
-    override var mainClass: String = ""
-    override fun applyToProject(target: Project) {
-        super.applyToProject(target)
-
-        target.plugins.withType(JavaPlugin::class.java) {
-            val obfuscatedOriginalJar = target.createObfuscatedOriginalJar(proguardExtraArgs)
-            val unobfuscatedShadowJar = target.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, true)
-            val obfuscatedShadowJar =
-                target.createObfuscatedShadowJar(obfuscatedOriginalJar, shadowActions, shadowPrefix, true)
-
-            target.plugins.withType(MavenPublishPlugin::class.java) {
-                target.createShadowedObfuscatedJarPublication(
-                    publicationConfigurations, obfuscatedShadowJar, target.name
-                )
-                target.createShadowedUnobfuscatedJarPublication(
-                    publicationConfigurations, unobfuscatedShadowJar, "${target.name}-all-debug"
+                project.createShadowedObfuscatedJarPublication(
+                    publicationConfigurations, obfuscatedShadowJar, project.name
                 )
             }
         }
@@ -176,26 +147,27 @@ class CommercialApplicationConfig : ApplicationFeature, ShadowingFeature, Obfusc
     }
 }
 
-class CommercialApplicationAndLibraryConfig : ShadowingFeature, ObfuscationFeature, ApplicationFeature,
+
+class CommercialApplicationConfig(project: Project) : ApplicationFeature, ShadowingFeature, ObfuscationFeature,
     GithubReleaseFeature,
-    BaseDistribution(), DockerBuildFeature by DockerBuildFeatureImpl() {
+    DockerBuildFeature,
+    BaseDistribution(project) {
     override var mainClass: String = ""
+    override fun applyToProject() {
+        super.applyToProject()
 
-    override fun applyToProject(target: Project) {
-        super.applyToProject(target)
-
-        target.plugins.withType(JavaPlugin::class.java) {
-            val obfuscatedOriginalJar = target.createObfuscatedOriginalJar(proguardExtraArgs)
-            val unobfuscatedShadowJar = target.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, true)
+        project.plugins.withType(JavaPlugin::class.java) {
+            val obfuscatedOriginalJar = project.createObfuscatedOriginalJar(proguardExtraArgs)
+            val unobfuscatedShadowJar = project.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, true)
             val obfuscatedShadowJar =
-                target.createObfuscatedShadowJar(obfuscatedOriginalJar, shadowActions, shadowPrefix, true)
+                project.createObfuscatedShadowJar(obfuscatedOriginalJar, shadowActions, shadowPrefix, true)
 
-            target.plugins.withType(MavenPublishPlugin::class.java) {
-                target.createShadowedObfuscatedJarPublication(
-                    publicationConfigurations, obfuscatedShadowJar, target.name
+            project.plugins.withType(MavenPublishPlugin::class.java) {
+                project.createShadowedObfuscatedJarPublication(
+                    publicationConfigurations, obfuscatedShadowJar, project.name
                 )
-                target.createShadowedUnobfuscatedJarPublication(
-                    publicationConfigurations, unobfuscatedShadowJar, "${target.name}-all-debug"
+                project.createShadowedUnobfuscatedJarPublication(
+                    publicationConfigurations, unobfuscatedShadowJar, "${project.name}-all-debug"
                 )
             }
         }
@@ -211,5 +183,53 @@ class CommercialApplicationAndLibraryConfig : ShadowingFeature, ObfuscationFeatu
 
     override fun githubRelease(block: GithubReleaseConfig.() -> Unit) {
         super.githubRelease(block)
+    }
+
+    override fun dockerBuild(vararg dockerBuildArgs: String?) {
+        super.dockerBuild(*dockerBuildArgs)
+    }
+}
+
+class CommercialApplicationAndLibraryConfig(project: Project) : ShadowingFeature, ObfuscationFeature,
+    ApplicationFeature,
+    GithubReleaseFeature,
+    DockerBuildFeature,
+    BaseDistribution(project) {
+    override var mainClass: String = ""
+
+    override fun applyToProject() {
+        super.applyToProject()
+
+        project.plugins.withType(JavaPlugin::class.java) {
+            val obfuscatedOriginalJar = project.createObfuscatedOriginalJar(proguardExtraArgs)
+            val unobfuscatedShadowJar = project.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, true)
+            val obfuscatedShadowJar =
+                project.createObfuscatedShadowJar(obfuscatedOriginalJar, shadowActions, shadowPrefix, true)
+
+            project.plugins.withType(MavenPublishPlugin::class.java) {
+                project.createShadowedObfuscatedJarPublication(
+                    publicationConfigurations, obfuscatedShadowJar, project.name
+                )
+                project.createShadowedUnobfuscatedJarPublication(
+                    publicationConfigurations, unobfuscatedShadowJar, "${project.name}-all-debug"
+                )
+            }
+        }
+    }
+
+    override fun shadow(prefix: String?, action: Action<ShadowJar>?) {
+        super.shadow(prefix, action)
+    }
+
+    override fun obfuscate(vararg proguardExtraArgs: String?) {
+        super.obfuscate(*proguardExtraArgs)
+    }
+
+    override fun githubRelease(block: GithubReleaseConfig.() -> Unit) {
+        super.githubRelease(block)
+    }
+
+    override fun dockerBuild(vararg dockerBuildArgs: String?) {
+        super.dockerBuild(*dockerBuildArgs)
     }
 }
