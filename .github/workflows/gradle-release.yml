@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       bump_type:
-        description: 'The part of the version to bump major|minor|patch'
+        description: 'The part of the version to bump (major|minor|patch)'
         required: true
 
 jobs:
@@ -16,20 +16,8 @@ jobs:
       - name: Create secrets file
         run: |
           echo "" > ~/.specmatic-secrets
-          echo "export ORG_GRADLE_PROJECT_mavenCentralUsername='${{ secrets.SPECMATIC_MAVEN_CENTRAL_USERNAME }}'" >> ~/.specmatic-secrets
-          echo "export ORG_GRADLE_PROJECT_mavenCentralPassword='${{ secrets.SPECMATIC_MAVEN_CENTRAL_PASSWORD }}'" >> ~/.specmatic-secrets
-          echo "export ORG_GRADLE_PROJECT_signingInMemoryKey='${{ secrets.SPECMATIC_GPG_PRIVATE_KEY }}'" >> ~/.specmatic-secrets
-          echo "export ORG_GRADLE_PROJECT_signingInMemoryKeyId='${{ secrets.SPECMATIC_GPG_KEY_ID }}'" >> ~/.specmatic-secrets
-          echo "export ORG_GRADLE_PROJECT_signingInMemoryKeyPassword='${{ secrets.SPECMATIC_GPG_PRIVATE_KEY_PASSPHRASE }}'" >> ~/.specmatic-secrets
-          echo "export ORG_GRADLE_PROJECT_specmaticPrivateUsername='${{ secrets.SPECMATIC_GITHUB_USER }}'" >> ~/.specmatic-secrets
-          echo "export ORG_GRADLE_PROJECT_specmaticPrivatePassword='${{ secrets.SPECMATIC_GITHUB_TOKEN }}'" >> ~/.specmatic-secrets
-          echo "export GRADLE_PUBLISH_KEY='${{ secrets.SPECMATIC_GRADLE_PUBLISH_KEY }}' >> ~/.specmatic-secrets
-          echo "export GRADLE_PUBLISH_SECRET='${{ secrets.SPECMATIC_GRADLE_PUBLISH_SECRET }}' >> ~/.specmatic-secrets
-
-      - uses: znsio/specmatic-github-workflows/action-gradle-post-build@main
+      - uses: znsio/specmatic-github-workflows/action-build-gradle@main
         with:
-          gradle-extra-env-file: ~/.specmatic-secrets
-          download-artifact-github-token: ${{ secrets.GITHUB_TOKEN }}
           gradle-extra-args: >
             release
             -Prelease.useAutomaticVersion=true
@@ -39,3 +27,13 @@ jobs:
             git config --local user.email "github-service-account@specmatic.io"
             git config --local user.name "Specmatic GitHub Service Account"
             git clean -fd
+
+            export ORG_GRADLE_PROJECT_mavenCentralUsername='${{ secrets.SPECMATIC_MAVEN_CENTRAL_USERNAME }}'
+            export ORG_GRADLE_PROJECT_mavenCentralPassword='${{ secrets.SPECMATIC_MAVEN_CENTRAL_PASSWORD }}'
+            export ORG_GRADLE_PROJECT_signingInMemoryKey='${{ secrets.SPECMATIC_GPG_PRIVATE_KEY }}'
+            export ORG_GRADLE_PROJECT_signingInMemoryKeyId='${{ secrets.SPECMATIC_GPG_KEY_ID }}'
+            export ORG_GRADLE_PROJECT_signingInMemoryKeyPassword='${{ secrets.SPECMATIC_GPG_PRIVATE_KEY_PASSPHRASE }}'
+            export ORG_GRADLE_PROJECT_specmaticPrivateUsername='${{ secrets.SPECMATIC_GITHUB_USER }}'
+            export ORG_GRADLE_PROJECT_specmaticPrivatePassword='${{ secrets.SPECMATIC_GITHUB_TOKEN }}'
+            export GRADLE_PUBLISH_KEY='${{ secrets.SPECMATIC_GRADLE_PUBLISH_KEY }}
+            export GRADLE_PUBLISH_SECRET='${{ secrets.SPECMATIC_GRADLE_PUBLISH_SECRET }}
