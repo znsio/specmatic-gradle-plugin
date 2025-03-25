@@ -44,6 +44,6 @@ jobs:
             export GRADLE_PUBLISH_SECRET='${{ secrets.SPECMATIC_GRADLE_PUBLISH_SECRET }}'
        
             export RELEASE_VERSION=$(semver get release $(/usr/bin/grep -E '^\s*version\s*=' gradle.properties | /usr/bin/sed -E -e 's/^\s*version\s*=//g'))
-            export NEXT_VERSION=$(semver bump ${{ github.event.bump_type }} $(/usr/bin/grep -E '^\s*version\s*=' gradle.properties | /usr/bin/sed -E -e 's/^\s*version\s*=//g'))-SNAPSHOT
+            export NEXT_VERSION=$(semver bump ${{ github.event.inputs.bump_type }} $(/usr/bin/grep -E '^\s*version\s*=' gradle.properties | /usr/bin/sed -E -e 's/^\s*version\s*=//g'))-SNAPSHOT
             
             echo "Making a release with version $RELEASE_VERSION and next version $NEXT_VERSION..."
