@@ -21,6 +21,10 @@ jobs:
       - name: Create secrets file
         run: |
           echo "" > ~/.specmatic-secrets
+
+      - name: 'Build/test'
+        uses: znsio/specmatic-github-workflows/action-build-gradle@main
+
       - uses: znsio/specmatic-github-workflows/action-build-gradle@main
         with:
           gradle-extra-args: >

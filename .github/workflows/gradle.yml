@@ -12,7 +12,9 @@ jobs:
     permissions:
       contents: write # This is required so that the dependency check can push dependency graph to the github repository
     steps:
-      - uses: znsio/specmatic-github-workflows/action-build-gradle@main
+      - name: 'Build/Test'
+        uses: znsio/specmatic-github-workflows/action-build-gradle@main
+
       - name: Publish Snapshot
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
         run: ./gradlew publishAllPublicationsToMavenCentralRepository publishPluginMavenPublicationToSpecmaticPrivateRepository
