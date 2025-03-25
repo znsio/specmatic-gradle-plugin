@@ -26,8 +26,8 @@ jobs:
           gradle-extra-args: >
             release
             -Prelease.useAutomaticVersion=true
-            -Prelease.releaseVersion=$(semver get release $(/usr/bin/grep -E '^\s*version\s*=' gradle.properties | /usr/bin/sed -E -e 's/^\s*version\s*=//g'))
-            -Prelease.newVersion=$(semver bump ${{ github.event.bump_type }} $(/usr/bin/grep -E '^\s*version\s*=' gradle.properties | /usr/bin/sed -E -e 's/^\s*version\s*=//g'))-SNAPSHOT
+            -Prelease.releaseVersion=${RELEASE_VERSION}
+            -Prelease.newVersion=${NEXT_VERSION}
           pre-gradle-command: |
             git config --local user.email "github-service-account@specmatic.io"
             git config --local user.name "Specmatic GitHub Service Account"
@@ -42,3 +42,8 @@ jobs:
             export ORG_GRADLE_PROJECT_specmaticPrivatePassword='${{ secrets.SPECMATIC_GITHUB_TOKEN }}'
             export GRADLE_PUBLISH_KEY='${{ secrets.SPECMATIC_GRADLE_PUBLISH_KEY }}'
             export GRADLE_PUBLISH_SECRET='${{ secrets.SPECMATIC_GRADLE_PUBLISH_SECRET }}'
+       
+            export RELEASE_VERSION=$(semver get release $(/usr/bin/grep -E '^\s*version\s*=' gradle.properties | /usr/bin/sed -E -e 's/^\s*version\s*=//g'))
+            export NEXT_VERSION=$(semver bump ${{ github.event.bump_type }} $(/usr/bin/grep -E '^\s*version\s*=' gradle.properties | /usr/bin/sed -E -e 's/^\s*version\s*=//g'))-SNAPSHOT
+            
+            echo "Making a release with version $RELEASE_VERSION and next version $NEXT_VERSION..."
