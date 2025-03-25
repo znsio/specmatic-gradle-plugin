@@ -15,11 +15,11 @@ import io.specmatic.gradle.jar.publishing.ConfigurePublicationsPlugin
 import io.specmatic.gradle.license.SpecmaticLicenseReportingPlugin
 import io.specmatic.gradle.license.pluginInfo
 import io.specmatic.gradle.plugin.VersionInfo
+import io.specmatic.gradle.vuln.SpecmaticVulnScanPlugin
 import io.specmatic.gradle.shadow.ShadowJarsPlugin
 import io.specmatic.gradle.tests.SpecmaticTestReportingPlugin
 import io.specmatic.gradle.versioninfo.VersionInfoPlugin
 import io.specmatic.gradle.versioninfo.versionInfo
-import net.researchgate.release.ReleasePlugin
 import org.barfuin.gradle.taskinfo.GradleTaskInfoPlugin
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
@@ -27,7 +27,6 @@ import org.gradle.api.Project
 import org.gradle.api.component.SoftwareComponentFactory
 import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.plugins.JavaPlugin
-import org.kohsuke.github.GitHubBuilder
 
 @Suppress("unused")
 class SpecmaticGradlePlugin : Plugin<Project> {
@@ -50,6 +49,8 @@ class SpecmaticGradlePlugin : Plugin<Project> {
         target.plugins.apply(SpecmaticReleasePlugin::class.java)
 
         target.plugins.apply(GradleTaskInfoPlugin::class.java)
+
+        target.plugins.apply(SpecmaticVulnScanPlugin::class.java)
 
         target.applyToRootProjectOrSubprojects {
             plugins.apply(VersionInfoPlugin::class.java)
