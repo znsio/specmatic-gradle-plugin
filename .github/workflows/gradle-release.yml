@@ -4,8 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       bump_type:
-        description: 'The part of the version to bump (major|minor|patch)'
+        description: 'The part of the version to bump, after cutting a release'
         required: true
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
 
 jobs:
   release:
@@ -22,7 +27,7 @@ jobs:
             release
             -Prelease.useAutomaticVersion=true
             -Prelease.releaseVersion=$(semver get release $(/usr/bin/grep -E '^\s*version\s*=' gradle.properties | /usr/bin/sed -E -e 's/^\s*version\s*=//g'))
-            -Prelease.newVersion=$(semver bump ${{ github.event.bump_type }} $(/usr/bin/grep -E '^\s*version\s*=' gradle.properties | /usr/bin/sed -E -e 's/^\s*version\s*=//g'))
+            -Prelease.newVersion=$(semver bump ${{ github.event.bump_type }} $(/usr/bin/grep -E '^\s*version\s*=' gradle.properties | /usr/bin/sed -E -e 's/^\s*version\s*=//g'))-SNAPSHOT
           pre-gradle-command: |
             git config --local user.email "github-service-account@specmatic.io"
             git config --local user.name "Specmatic GitHub Service Account"
