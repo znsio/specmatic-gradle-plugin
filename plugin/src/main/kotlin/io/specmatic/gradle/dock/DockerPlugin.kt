@@ -38,6 +38,7 @@ class DockerPlugin : Plugin<Project> {
         )
 
         target.tasks.register("dockerBuild", Exec::class.java) {
+            dependsOn("assemble")
             group = "docker"
             description = "Builds the docker image"
             commandLine(
@@ -57,6 +58,7 @@ class DockerPlugin : Plugin<Project> {
         }
 
         target.tasks.register("dockerBuildxPublish", Exec::class.java) {
+            dependsOn("assemble")
             group = "docker"
             description = "Publishes the multivariant docker image"
 
