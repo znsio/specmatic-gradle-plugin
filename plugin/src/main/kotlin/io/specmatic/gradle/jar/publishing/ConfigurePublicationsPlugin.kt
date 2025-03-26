@@ -16,6 +16,7 @@ import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.kotlin.dsl.get
 import org.gradle.plugins.signing.Sign
 import org.gradle.plugins.signing.SigningExtension
 import org.gradle.plugins.signing.SigningPlugin
@@ -105,8 +106,10 @@ class ConfigurePublicationsPlugin() : Plugin<Project> {
             project.configureOriginalJarPublicationWhenObfuscationOrShadowPresent(
                 publishing, configuration
             )
-
+        } else {
+            project.configureOriginalJarPublicationWhenObfuscationOrShadowNotPresent(publishing, configuration)
         }
+
 
         if (configuration.publicationTypes.contains(PublicationType.OBFUSCATED_ORIGINAL)) {
             project.createObfuscatedOriginalJarPublicationTask(publishing, configuration)
@@ -119,6 +122,18 @@ class ConfigurePublicationsPlugin() : Plugin<Project> {
         if (configuration.publicationTypes.contains(PublicationType.SHADOWED_OBFUSCATED)) {
             project.createShadowObfuscatedJarPublicationTask(publishing, configuration)
         }
+    }
+}
+
+private fun Project.configureOriginalJarPublicationWhenObfuscationOrShadowNotPresent(
+    publishing: PublishingExtension,
+    configuration: ProjectConfiguration
+) {
+    publishing.publications.register(ORIGINAL_JAR, MavenPublication::class.java) {
+        from(project.components.get("java"))
+        artifactId = project.name
+        pom.packaging = "jar"
+        configuration.publicationConfigurations?.execute(this)
     }
 }
 
