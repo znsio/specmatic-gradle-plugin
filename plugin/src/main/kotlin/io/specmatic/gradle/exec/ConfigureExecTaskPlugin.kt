@@ -81,7 +81,7 @@ fun shellEscape(word: String): String {
     if (len == 0) {
         // Empty string is a special case: needs to be quoted to ensure that it gets
         // treated as a separate argument.
-        return "''"
+        return "\"\""
     }
     for (ii in 0 until len) {
         val c = word[ii]
@@ -89,7 +89,7 @@ fun shellEscape(word: String): String {
         // any unsafe characters.
         if (!Character.isLetterOrDigit(c) && SAFE_PUNCTUATION.indexOf(c) == -1) {
             // replace() actually means "replace all".
-            return "'" + word.replace("'", "'\\''") + "'"
+            return "\"" + word.replace("\"", "\"\"").replace("\\", "\\\\") + "\""
         }
     }
     return word

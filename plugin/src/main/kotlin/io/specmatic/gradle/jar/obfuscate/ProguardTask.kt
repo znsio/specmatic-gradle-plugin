@@ -96,9 +96,9 @@ abstract class ProguardTask @Inject constructor(
         appendArgsToFile("-injars", inputJar!!.absolutePath)
         appendArgsToFile("-outjars", outputJar!!.absolutePath)
 
-        appendArgsToFile("-printseeds", "${getProguardOutputDir()}/seeds.txt")
-        appendArgsToFile("-printconfiguration", "${getProguardOutputDir()}/proguard.cfg")
-        appendArgsToFile("-dump", "${getProguardOutputDir()}/proguard.dump.txt")
+        appendArgsToFile("-printseeds", "${getProguardOutputDir().resolve("seeds.txt")}")
+        appendArgsToFile("-printconfiguration", "${getProguardOutputDir().resolve("proguard.cfg")}")
+        appendArgsToFile("-dump", "${getProguardOutputDir().resolve("proguard.dump.txt")}")
         appendArgsToFile("-whyareyoukeeping", "class io.specmatic.** { *; }")
         appendArgsToFile("-dontoptimize")
         appendArgsToFile("-keepattributes", "!LocalVariableTable, !LocalVariableTypeTable")
