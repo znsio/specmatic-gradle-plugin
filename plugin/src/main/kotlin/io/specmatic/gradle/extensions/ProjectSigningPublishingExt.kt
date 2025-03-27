@@ -36,13 +36,10 @@ internal fun Project.configurePublishing(publicationConfigurations: MutableList<
     plugins.apply(MavenPublishBasePlugin::class.java)
     plugins.withType(MavenPublishBasePlugin::class.java) {
         pluginInfo("Configuring maven publishing on $project")
-        val stagingRepo = rootProject.layout.buildDirectory.dir("mvn-repo")
-
         project.mavenPublications {
             publicationConfigurations.forEach { it.execute(this) }
         }
 
-        project.pluginInfo("Configuring publishing to staging repo ${project.uri(stagingRepo)}")
         setupPublishingTargets()
     }
 }

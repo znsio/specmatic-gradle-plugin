@@ -24,7 +24,7 @@ internal fun Project.createUnobfuscatedShadowJar(
     shadowActions: MutableList<Action<ShadowJar>>,
     shadowPrefix: String,
     isApplication: Boolean
-) {
+): TaskProvider<ShadowJar> {
     val jarTask = project.tasks.jar
     project.pluginInfo("Created task $UNOBFUSCATED_SHADOW_JAR on $project")
     val shadowOriginalJarTask = project.tasks.register(UNOBFUSCATED_SHADOW_JAR, ShadowJar::class.java) {
@@ -42,6 +42,7 @@ internal fun Project.createUnobfuscatedShadowJar(
     }
 
     applyProjectSpecifiedConfigurations(shadowOriginalJarTask, shadowActions)
+    return shadowOriginalJarTask
 }
 
 internal fun Project.createObfuscatedShadowJar(

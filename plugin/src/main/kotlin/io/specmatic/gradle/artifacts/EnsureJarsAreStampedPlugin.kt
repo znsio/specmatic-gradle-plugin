@@ -16,7 +16,7 @@ class EnsureJarsAreStampedPlugin : Plugin<Project> {
                 target.pluginInfo("Ensuring that ${this.path} is stamped")
                 val extension = this.project.specmaticExtension()
                 val module = extension.projectConfigurations[this.project]
-                if (module is ApplicationFeature) {
+                if (module is ApplicationFeature && module.mainClass.isNotBlank()) {
                     val mainClass = module.mainClass
                     target.pluginInfo("Adding main class($mainClass) to manifest in ${this.path}")
                     manifest.attributes["Main-Class"] = mainClass

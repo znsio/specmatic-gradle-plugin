@@ -1,5 +1,6 @@
 package io.specmatic.gradle.jar.publishing
 
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.specmatic.gradle.jar.massage.jar
 import io.specmatic.gradle.jar.massage.publishing
 import io.specmatic.gradle.jar.massage.unobfuscatedShadowJarTask
@@ -7,6 +8,7 @@ import io.specmatic.gradle.license.pluginInfo
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.get
 
 
@@ -31,11 +33,16 @@ internal fun Project.publishOriginalJar(
 }
 
 internal fun Project.publishUnobfuscatedShadowJar(
-    publicationConfigurations: MutableList<Action<MavenPublication>>, artifactId: String
+    unobfuscatedShadowJarTask: TaskProvider<ShadowJar>,
+    publicationConfigurations: MutableList<Action<MavenPublication>>,
+    artifactId: String
 ) {
     pluginInfo("Configuring publication named ${this.name} with artifactID $artifactId")
     publishing.publications.register(UNOBFUSCATED_SHADOW_JAR, MavenPublication::class.java) {
-        from(components["java"])
+        artifact(unobfuscatedShadowJarTask) {
+            // but we remove the classifier when publishing, because we don't want the classifier in the published jar name.
+            classifier = null
+        }
         this.artifactId = artifactId
         this.pom.packaging = "jar"
 

@@ -71,8 +71,8 @@ open class OSSApplicationConfig() : ApplicationFeature, ShadowingFeature, BaseDi
 
         target.applyToRootProjectOrSubprojects {
             afterEvaluate {
-                target.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, true)
-                target.publishUnobfuscatedShadowJar(publicationConfigurations, target.name)
+                val unobfuscatedShadowJarTask = target.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, true)
+                target.publishUnobfuscatedShadowJar(unobfuscatedShadowJarTask, publicationConfigurations, target.name)
             }
         }
     }
@@ -88,8 +88,22 @@ class CommercialLibraryConfig : ObfuscationFeature, ShadowingFeature, BaseDistri
 
         target.applyToRootProjectOrSubprojects {
             afterEvaluate {
-                target.createCommerialAllJars(shadowActions, shadowPrefix, false, proguardExtraArgs)
-                target.publishCommericalAllPublications(publicationConfigurations)
+                target.createObfuscatedOriginalJar(proguardExtraArgs)
+                val unobfuscatedShadowJar = target.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, false)
+                target.createObfuscatedShadowJar(shadowActions, shadowPrefix, false)
+
+
+                target.publishObfuscatedShadowJar(publicationConfigurations, target.name)
+                target.publishOriginalJar(
+                    publicationConfigurations,
+                    "${target.name}-dont-use-this-unless-you-know-what-you-are-doing"
+                )
+                target.publishObfuscatedOriginalJar(publicationConfigurations, "${target.name}-min")
+                target.publishUnobfuscatedShadowJar(
+                    unobfuscatedShadowJar,
+                    publicationConfigurations,
+                    "${target.name}-all-debug"
+                )
             }
         }
     }
@@ -112,11 +126,15 @@ class CommercialApplicationConfig : ApplicationFeature, ShadowingFeature, Obfusc
 
         target.applyToRootProjectOrSubprojects {
             afterEvaluate {
-                target.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, true)
+                val unobfuscatedShadowJar = target.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, true)
                 target.createObfuscatedShadowJar(shadowActions, shadowPrefix, true)
 
                 target.publishObfuscatedShadowJar(publicationConfigurations, target.name)
-                target.publishUnobfuscatedShadowJar(publicationConfigurations, "${target.name}-all-debug")
+                target.publishUnobfuscatedShadowJar(
+                    unobfuscatedShadowJar,
+                    publicationConfigurations,
+                    "${target.name}-all-debug"
+                )
             }
         }
     }
@@ -139,8 +157,22 @@ class CommercialApplicationAndLibraryConfig : ShadowingFeature, ObfuscationFeatu
 
         target.applyToRootProjectOrSubprojects {
             afterEvaluate {
-                target.createCommerialAllJars(shadowActions, shadowPrefix, true, proguardExtraArgs)
-                target.publishCommericalAllPublications(publicationConfigurations)
+                target.createObfuscatedOriginalJar(proguardExtraArgs)
+                val unobfuscatedShadowJar = target.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, true)
+                target.createObfuscatedShadowJar(shadowActions, shadowPrefix, true)
+
+                //
+                target.publishObfuscatedShadowJar(publicationConfigurations, target.name)
+                target.publishOriginalJar(
+                    publicationConfigurations,
+                    "${target.name}-dont-use-this-unless-you-know-what-you-are-doing"
+                )
+                target.publishObfuscatedOriginalJar(publicationConfigurations, "${target.name}-min")
+                target.publishUnobfuscatedShadowJar(
+                    unobfuscatedShadowJar,
+                    publicationConfigurations,
+                    "${target.name}-all-debug"
+                )
             }
         }
     }
@@ -154,22 +186,3 @@ class CommercialApplicationAndLibraryConfig : ShadowingFeature, ObfuscationFeatu
     }
 }
 
-private fun Project.createCommerialAllJars(
-    shadowActions: MutableList<Action<ShadowJar>>,
-    shadowPrefix: String,
-    isApplication: Boolean,
-    proguardExtraArgs: MutableList<String?>
-) {
-    createObfuscatedOriginalJar(proguardExtraArgs)
-    createUnobfuscatedShadowJar(shadowActions, shadowPrefix, isApplication)
-    createObfuscatedShadowJar(shadowActions, shadowPrefix, isApplication)
-}
-
-private fun Project.publishCommericalAllPublications(
-    publicationConfigurations: MutableList<Action<MavenPublication>>
-) {
-    publishObfuscatedShadowJar(publicationConfigurations, name)
-    publishOriginalJar(publicationConfigurations, "$name-dont-use-this-unless-you-know-what-you-are-doing")
-    publishObfuscatedOriginalJar(publicationConfigurations, "$name-min")
-    publishUnobfuscatedShadowJar(publicationConfigurations, "$name-all-debug")
-}

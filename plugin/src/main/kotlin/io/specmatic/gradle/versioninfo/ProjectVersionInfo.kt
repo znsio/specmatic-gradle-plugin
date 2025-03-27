@@ -30,7 +30,7 @@ data class ProjectVersionInfo(
         """.trimIndent()
     }
 
-    private fun shortCommit() = gitCommit.take(8)
+    private fun shortCommit() = gitCommit.take(8).trim()
 
     fun packageDir() = kotlinPackage().replace(".", "/")
     fun kotlinFilePath() = "${packageDir()}/VersionInfo.kt"
