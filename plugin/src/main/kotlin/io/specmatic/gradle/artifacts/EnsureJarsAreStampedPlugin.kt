@@ -1,5 +1,6 @@
 package io.specmatic.gradle.artifacts
 
+import io.specmatic.gradle.extensions.ApplicationFeature
 import io.specmatic.gradle.license.pluginInfo
 import io.specmatic.gradle.specmaticExtension
 import io.specmatic.gradle.versioninfo.versionInfo
@@ -12,12 +13,11 @@ class EnsureJarsAreStampedPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         target.afterEvaluate {
             target.tasks.withType(Jar::class.java) {
-                target.pluginInfo("Ensuring that ${this.path} is stamped")
-                val extension = this.project.specmaticExtension()
-                val applicationMainClass = extension.projectConfigurations[this.project]?.applicationMainClass
-                if (!applicationMainClass.isNullOrBlank()) {
-                    target.pluginInfo("Adding main class($applicationMainClass) to manifest")
-                    manifest.attributes["Main-Class"] = applicationMainClass
+                if (mainclass().isNullOrEmpty()) {
+                    target.pluginInfo("Ensuring that ${this.path} is stamped")
+                } else {
+                    manifest.attributes["Main-Class"] = mainclass()
+                    target.pluginInfo("Ensuring that ${this.path} is stamped with main class ${mainclass()}")
                 }
 
                 project.versionInfo().addToManifest(manifest)
@@ -25,4 +25,12 @@ class EnsureJarsAreStampedPlugin : Plugin<Project> {
         }
     }
 
+    private fun Project.mainclass(): String? {
+        val extension = this.specmaticExtension()
+        val module = extension.projectConfigurations[this]
+        if (module is ApplicationFeature && module.mainClass.isNotBlank()) {
+            return module.mainClass
+        }
+        return null
+    }
 }

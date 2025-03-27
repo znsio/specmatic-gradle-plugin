@@ -1,12 +1,13 @@
 package io.specmatic.gradle.dock
 
+import io.specmatic.gradle.extensions.DockerBuildFeatureImpl
 import io.specmatic.gradle.license.pluginInfo
 import io.specmatic.gradle.specmaticExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.Exec
 import java.text.SimpleDateFormat
-import java.util.Date
+import java.util.*
 
 class DockerPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -18,9 +19,10 @@ class DockerPlugin : Plugin<Project> {
     private fun applyAfterEvaluate(target: Project) {
         val specmaticExtension = target.specmaticExtension()
         val projectConfiguration = specmaticExtension.projectConfigurations[target]
-        if (projectConfiguration?.dockerBuild != true) {
+        if (projectConfiguration !is DockerBuildFeatureImpl) {
             return
         }
+
 
         target.pluginInfo("Adding docker tasks on $target")
 
