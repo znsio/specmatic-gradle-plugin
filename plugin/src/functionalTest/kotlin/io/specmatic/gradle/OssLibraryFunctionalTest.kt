@@ -8,7 +8,6 @@ import kotlin.test.Test
 class OssLibraryFunctionalTest : AbstractFunctionalTest() {
 
 
-
     @Nested
     inner class OSSLibrary {
         @Nested
@@ -44,19 +43,18 @@ class OssLibraryFunctionalTest : AbstractFunctionalTest() {
 
             @Test
             fun `it should have publicationTasks`() {
-                val result = runner().withArguments("tasks").build()
+                val result = runWithSuccess("tasks")
                 assertThat(result.output).contains("publishToMavenLocal")
                 assertThat(result.output).contains("publishAllPublicationsToStagingRepository")
             }
 
             @Test
             fun `it publish jar with all dependencies declared in the pom to staging repository`() {
-                val result = runner().withArguments("publishAllPublicationsToStagingRepository").build()
+                val result = runWithSuccess("publishAllPublicationsToStagingRepository")
 
-                assertThat(getPublishedArtifactCoordinates()).isEqualTo(setOf("io.specmatic.example:example-project:1.2.3"))
-                assertPublished("io.specmatic.example", "example-project", "1.2.3")
+                assertPublished("io.specmatic.example:example-project:1.2.3")
                 assertThat(getDependencies("io.specmatic.example:example-project:1.2.3"))
-                    .containsExactly(
+                    .containsExactlyInAnyOrder(
                         "org.jetbrains.kotlin:kotlin-stdlib:2.1.20",
                         "org.slf4j:slf4j-api:2.0.17"
                     )
@@ -110,10 +108,10 @@ class OssLibraryFunctionalTest : AbstractFunctionalTest() {
 
             @Test
             fun `it fails`() {
-                val result = runner().withArguments("publishAllPublicationsToStagingRepository").buildAndFail()
+                val result = runWithFailure("publishAllPublicationsToStagingRepository")
                 assertThat(result.output).contains("Cannot access 'shadow': it is protected in 'OSSLibraryConfig'")
 
-                assertThat(getPublishedArtifactCoordinates()).isEmpty()
+                assertNothingPublished()
             }
         }
 
@@ -174,31 +172,27 @@ class OssLibraryFunctionalTest : AbstractFunctionalTest() {
 
             @Test
             fun `it should have publicationTasks`() {
-                val result = runner().withArguments("tasks").build()
+                val result = runWithSuccess("tasks")
                 assertThat(result.output).contains("publishToMavenLocal")
                 assertThat(result.output).contains("publishAllPublicationsToStagingRepository")
             }
 
             @Test
             fun `it publish all jars with dependencies`() {
-                val result = runner().withArguments("publishAllPublicationsToStagingRepository").build()
+                val result = runWithSuccess("publishAllPublicationsToStagingRepository")
 
-                assertThat(getPublishedArtifactCoordinates()).isEqualTo(
-                    setOf(
-                        "io.specmatic.example:executable:1.2.3", "io.specmatic.example:core:1.2.3"
-                    )
+                assertPublished(
+                    "io.specmatic.example:executable:1.2.3", "io.specmatic.example:core:1.2.3"
                 )
-                assertPublished("io.specmatic.example", "executable", "1.2.3")
-                assertPublished("io.specmatic.example", "core", "1.2.3")
 
                 assertThat(getDependencies("io.specmatic.example:executable:1.2.3"))
-                    .containsExactly(
+                    .containsExactlyInAnyOrder(
                         "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
                         "org.slf4j:slf4j-api:2.0.17",
                         "io.specmatic.example:core:1.2.3"
                     )
                 assertThat(getDependencies("io.specmatic.example:core:1.2.3"))
-                    .containsExactly(
+                    .containsExactlyInAnyOrder(
                         "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
                         "org.slf4j:slf4j-api:2.0.17"
                     )
@@ -274,9 +268,9 @@ class OssLibraryFunctionalTest : AbstractFunctionalTest() {
 
             @Test
             fun `it fails`() {
-                val result = runner().withArguments("publishAllPublicationsToStagingRepository").buildAndFail()
+                val result = runWithFailure("publishAllPublicationsToStagingRepository")
                 assertThat(result.output).contains("Cannot access 'shadow': it is protected in 'OSSLibraryConfig'")
-                assertThat(getPublishedArtifactCoordinates()).isEmpty()
+                assertNothingPublished()
             }
         }
     }

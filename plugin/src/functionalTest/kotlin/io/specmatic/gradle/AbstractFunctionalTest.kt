@@ -34,6 +34,27 @@ open class AbstractFunctionalTest {
         )
     }
 
+    fun writeRandomClasses(projectDir: File, packageName: String) {
+        repeat(5) { i ->
+            val className = "Class${i + 1}"
+            val fileName = "$className.kt"
+            projectDir.resolve("src/main/kotlin/${packageName.replace(".", "/")}/$fileName").also {
+                it.parentFile.mkdirs()
+                it.writeText(
+                    """
+                        package $packageName
+                        
+                        class $className {
+                            fun sayHello() {
+                                println("Hello from $className")
+                            }
+                        }
+                    """.trimIndent()
+                )
+            }
+        }
+    }
+
     fun writeMainClass(projectDir: File, mainClass: String) {
         val fileName = mainClass.replace(".", "/") + ".kt"
         val packageName = mainClass.substringBeforeLast(".")
@@ -60,9 +81,17 @@ open class AbstractFunctionalTest {
         }
     }
 
-    fun runner(): GradleRunner {
-        return GradleRunner.create().forwardOutput().withPluginClasspath().withProjectDir(projectDir)
+    fun runWithSuccess(vararg gradleRunArgs: String): BuildResult {
+        return createRunner(gradleRunArgs).build()
     }
+
+    fun runWithFailure(vararg gradleRunArgs: String): BuildResult {
+        return createRunner(gradleRunArgs).buildAndFail()
+    }
+
+    private fun createRunner(gradleRunArgs: Array<out String>): GradleRunner =
+        GradleRunner.create().forwardOutput().withPluginClasspath().withProjectDir(projectDir)
+            .withArguments(*gradleRunArgs)
 
     fun assertMainJarExecutes(result: BuildResult) {
         assertThat(result.output).contains("No SLF4J providers were found.")
@@ -88,7 +117,7 @@ open class AbstractFunctionalTest {
         return model.dependencies.map { "${it.groupId}:${it.artifactId}:${it.version}" }.toSet()
     }
 
-    fun getPublishedArtifactCoordinates(): Set<String> {
+    private fun getPublishedArtifactCoordinates(): Set<String> {
         val publishedPomFiles = stagingRepo.walk().filter { it.extension == "pom" }
 
         val publishedArtifacts = publishedPomFiles.map { pomFile ->
@@ -99,12 +128,22 @@ open class AbstractFunctionalTest {
         return publishedArtifacts.toSet()
     }
 
-    fun assertPublished(groupId: String, artifactId: String, version: String) {
-        assertThat(artifactDir(groupId, artifactId, version).resolve("$artifactId-$version.jar")).exists()
-        assertThat(artifactDir(groupId, artifactId, version).resolve("$artifactId-$version.pom")).exists()
+    fun assertPublished(vararg coordinates: String) {
+        coordinates.forEach {
+            val groupId = it.groupId()
+            val artifactId = it.artifactId()
+            val version = it.version()
+            assertThat(artifactDir(groupId, artifactId, version).resolve("${artifactId}-${version}.jar")).exists()
+            assertThat(artifactDir(groupId, artifactId, version).resolve("${artifactId}-${version}.pom")).exists()
+        }
+        assertThat(getPublishedArtifactCoordinates()).containsExactlyInAnyOrder(*coordinates)
     }
 
-    fun artifactDir(groupId: String, artifactId: String, version: String): File {
+    fun assertNothingPublished() {
+        assertThat(getPublishedArtifactCoordinates()).isEmpty()
+    }
+
+    private fun artifactDir(groupId: String, artifactId: String, version: String): File {
         val groupPath = groupId.replace(".", "/")
         val namePath = artifactId.replace(".", "/")
         return stagingRepo.resolve("$groupPath/$namePath/$version")
@@ -114,7 +153,7 @@ open class AbstractFunctionalTest {
         return artifactDir(coordinates.groupId(), coordinates.artifactId(), coordinates.version())
     }
 
-    fun String.version() = split(":").get(2)
-    fun String.artifactId() = split(":").get(1)
-    fun String.groupId() = split(":").get(0)
+    private fun String.version() = split(":").get(2)
+    private fun String.artifactId() = split(":").get(1)
+    private fun String.groupId() = split(":").get(0)
 }

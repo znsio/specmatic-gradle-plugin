@@ -27,7 +27,8 @@ internal fun Project.createUnobfuscatedShadowJar(
 ): TaskProvider<ShadowJar> {
     val jarTask = project.tasks.jar
     project.pluginInfo("Created task $UNOBFUSCATED_SHADOW_JAR on $project")
-    val shadowOriginalJarTask = project.tasks.register(UNOBFUSCATED_SHADOW_JAR, ShadowJar::class.java) {
+
+    return project.tasks.register<ShadowJar?>(UNOBFUSCATED_SHADOW_JAR, ShadowJar::class.java) {
         group = "build"
         description = "Shadow the original jar"
 
@@ -39,22 +40,20 @@ internal fun Project.createUnobfuscatedShadowJar(
         from(project.provider { project.zipTree(jarTask.get().archiveFile) })
 
         configureCommonShadowConfigs(jarTask, project, shadowPrefix, isApplication)
+        applyProjectSpecifiedConfigurations(this, shadowActions)
     }
-
-    applyProjectSpecifiedConfigurations(shadowOriginalJarTask, shadowActions)
-    return shadowOriginalJarTask
 }
 
 internal fun Project.createObfuscatedShadowJar(
     shadowActions: MutableList<Action<ShadowJar>>,
     shadowPrefix: String,
     isApplication: Boolean
-) {
+): TaskProvider<ShadowJar> {
     val obfuscateJarTask = project.tasks.obfuscateJarTask
     val jarTask = project.tasks.jar
 
     project.pluginInfo("Created task $SHADOW_OBFUSCATED_JAR on $project")
-    val shadowObfuscatedJarTask = project.tasks.register(SHADOW_OBFUSCATED_JAR, ShadowJar::class.java) {
+    return project.tasks.register(SHADOW_OBFUSCATED_JAR, ShadowJar::class.java) {
         group = "build"
         description = "Shadow the obfuscated jar"
 
@@ -67,18 +66,18 @@ internal fun Project.createObfuscatedShadowJar(
         from(project.provider { project.zipTree(obfuscateJarTask.get().archiveFile) })
 
         configureCommonShadowConfigs(jarTask, project, shadowPrefix, isApplication)
+        applyProjectSpecifiedConfigurations(this, shadowActions)
     }
 
-    applyProjectSpecifiedConfigurations(shadowObfuscatedJarTask, shadowActions)
 }
 
 
 private fun Project.applyProjectSpecifiedConfigurations(
-    shadowJarTask: TaskProvider<ShadowJar>, shadowActions: MutableList<Action<ShadowJar>>
+    shadowJarTask: ShadowJar, shadowActions: MutableList<Action<ShadowJar>>
 ) {
     shadowActions.forEach {
         project.pluginInfo("Applying custom shadow jar configuration on $project")
-        shadowJarTask.configure(it)
+        it.execute(shadowJarTask)
     }
 }
 

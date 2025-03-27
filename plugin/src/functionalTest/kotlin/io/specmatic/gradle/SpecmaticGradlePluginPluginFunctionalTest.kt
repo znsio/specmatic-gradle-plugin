@@ -1,10 +1,7 @@
 package io.specmatic.gradle
 
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatCode
-import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
-import org.gradle.testkit.runner.UnexpectedBuildFailure
 import org.junit.jupiter.api.Nested
 import java.util.jar.JarFile
 import java.util.regex.Pattern
@@ -32,10 +29,9 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
         )
 
         // Run the build
-        assertThatCode { runner().withArguments("tasks").build() }
-            .isInstanceOf(UnexpectedBuildFailure::class.java)
-            .hasMessageContaining("Unexpected build execution failure")
-            .hasMessageContaining("Invalid Java package name: bad-package")
+        val runWithFailure = runWithFailure("tasks")
+        assertThat(runWithFailure.output)
+            .contains("Invalid Java package name: bad-package")
     }
 
     @Test
@@ -56,7 +52,7 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
         )
 
         // Run the build
-        val result = runner().withArguments("myExec").build()
+        val result = runWithSuccess("myExec")
 
         // Verify the result
         assertThat(result.output).contains("hello world")
@@ -79,7 +75,7 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
             )
 
             // Run the build
-            val result = runner().withArguments("assemble").build()
+            val result = runWithSuccess("assemble")
 
             // Verify the result
             assertThat(result.task(":createVersionPropertiesFile")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
@@ -119,7 +115,7 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
             """.trimIndent()
             )
             // Run the build
-            val result = runner().withArguments("assemble").build()
+            val result = runWithSuccess("assemble")
 
             // Verify the result
             assertThat(result.task(":project-a:createVersionPropertiesFile")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
@@ -163,7 +159,7 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
 
 
             // Run the build
-            val result = runner().withArguments("tasks", "--all").build()
+            val result = runWithSuccess("tasks", "--all")
 
             assertThat(result.output).doesNotMatch(
                 Pattern.compile(
@@ -196,7 +192,7 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
 
 
             // Run the build
-            val result = runner().withArguments("tasks", "--all").build()
+            val result = runWithSuccess("tasks", "--all")
 
             println(result.tasks.joinToString("\n") { it.path })
             assertThat(result.output).matches(
@@ -240,7 +236,7 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
                 """.trimIndent()
             )
 
-            val result = runner().withArguments("jar", "customJar").build()
+            val result = runWithSuccess("jar", "customJar")
             assertThat(result.task(":jar")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
             val jarFile = projectDir.resolve("build/libs/fooBar-1.2.3.jar")
             assertThat(jarFile).exists()
@@ -277,7 +273,7 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
                 """.trimIndent()
             )
 
-            val result = runner().withArguments("jar", "customJar").build()
+            val result = runWithSuccess("jar", "customJar")
             assertThat(result.task(":jar")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
             val jarFile = projectDir.resolve("build/libs/fooBar-1.2.3.jar")
             assertThat(jarFile).exists()

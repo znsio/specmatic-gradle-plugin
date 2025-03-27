@@ -2,6 +2,7 @@ package io.specmatic.gradle.extensions
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.specmatic.gradle.jar.massage.applyToRootProjectOrSubprojects
+import io.specmatic.gradle.jar.massage.obfuscateJarTask
 import io.specmatic.gradle.jar.publishing.*
 import org.gradle.api.Action
 import org.gradle.api.Project
@@ -71,7 +72,7 @@ open class OSSApplicationConfig() : ApplicationFeature, ShadowingFeature, BaseDi
         target.applyToRootProjectOrSubprojects {
             afterEvaluate {
                 val unobfuscatedShadowJarTask = target.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, true)
-                target.publishUnobfuscatedShadowJar(unobfuscatedShadowJarTask, publicationConfigurations, target.name)
+                target.publishJar(unobfuscatedShadowJarTask, publicationConfigurations, target.name)
             }
         }
     }
@@ -89,19 +90,15 @@ class CommercialLibraryConfig : ObfuscationFeature, ShadowingFeature, BaseDistri
             afterEvaluate {
                 target.createObfuscatedOriginalJar(proguardExtraArgs)
                 val unobfuscatedShadowJar = target.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, false)
-                target.createObfuscatedShadowJar(shadowActions, shadowPrefix, false)
+                val obfuscatedShadowJar = target.createObfuscatedShadowJar(shadowActions, shadowPrefix, false)
 
-
-                target.publishObfuscatedShadowJar(publicationConfigurations, target.name)
+                target.publishJar(obfuscatedShadowJar, publicationConfigurations, target.name)
                 target.publishOriginalJar(
-                    publicationConfigurations,
-                    "${target.name}-dont-use-this-unless-you-know-what-you-are-doing"
+                    publicationConfigurations, "${target.name}-dont-use-this-unless-you-know-what-you-are-doing"
                 )
-                target.publishObfuscatedOriginalJar(publicationConfigurations, "${target.name}-min")
-                target.publishUnobfuscatedShadowJar(
-                    unobfuscatedShadowJar,
-                    publicationConfigurations,
-                    "${target.name}-all-debug"
+                target.publishJar(target.tasks.obfuscateJarTask, publicationConfigurations, "${target.name}-min")
+                target.publishJar(
+                    unobfuscatedShadowJar, publicationConfigurations, "${target.name}-all-debug"
                 )
             }
         }
@@ -125,15 +122,12 @@ class CommercialApplicationConfig : ApplicationFeature, ShadowingFeature, Obfusc
 
         target.applyToRootProjectOrSubprojects {
             afterEvaluate {
+                target.createObfuscatedOriginalJar(proguardExtraArgs)
                 val unobfuscatedShadowJar = target.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, true)
-                target.createObfuscatedShadowJar(shadowActions, shadowPrefix, true)
+                val obfuscatedShadowJar = target.createObfuscatedShadowJar(shadowActions, shadowPrefix, true)
 
-                target.publishObfuscatedShadowJar(publicationConfigurations, target.name)
-                target.publishUnobfuscatedShadowJar(
-                    unobfuscatedShadowJar,
-                    publicationConfigurations,
-                    "${target.name}-all-debug"
-                )
+                target.publishJar(obfuscatedShadowJar, publicationConfigurations, target.name)
+                target.publishJar(unobfuscatedShadowJar, publicationConfigurations, "${target.name}-all-debug")
             }
         }
     }
@@ -158,20 +152,15 @@ class CommercialApplicationAndLibraryConfig : ShadowingFeature, ObfuscationFeatu
             afterEvaluate {
                 target.createObfuscatedOriginalJar(proguardExtraArgs)
                 val unobfuscatedShadowJar = target.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, true)
-                target.createObfuscatedShadowJar(shadowActions, shadowPrefix, true)
-
+                val obfuscatedShadowJar = target.createObfuscatedShadowJar(shadowActions, shadowPrefix, true)
                 //
-                target.publishObfuscatedShadowJar(publicationConfigurations, target.name)
+                target.publishJar(obfuscatedShadowJar, publicationConfigurations, target.name)
                 target.publishOriginalJar(
                     publicationConfigurations,
                     "${target.name}-dont-use-this-unless-you-know-what-you-are-doing"
                 )
-                target.publishObfuscatedOriginalJar(publicationConfigurations, "${target.name}-min")
-                target.publishUnobfuscatedShadowJar(
-                    unobfuscatedShadowJar,
-                    publicationConfigurations,
-                    "${target.name}-all-debug"
-                )
+                target.publishJar(target.tasks.obfuscateJarTask, publicationConfigurations, "${target.name}-min")
+                target.publishJar(unobfuscatedShadowJar, publicationConfigurations, "${target.name}-all-debug")
             }
         }
     }

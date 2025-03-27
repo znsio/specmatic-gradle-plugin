@@ -1,11 +1,8 @@
 package io.specmatic.gradle.jar.publishing
 
-import io.specmatic.gradle.extensions.ObfuscationFeature
 import io.specmatic.gradle.jar.massage.jar
 import io.specmatic.gradle.jar.obfuscate.ProguardTask
 import io.specmatic.gradle.license.pluginInfo
-import io.specmatic.gradle.specmaticExtension
-import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.jvm.tasks.Jar
@@ -13,11 +10,6 @@ import org.gradle.jvm.tasks.Jar
 internal const val OBFUSCATE_JAR_TASK = "obfuscateJar"
 
 internal fun Project.createObfuscatedOriginalJar(proguardExtraArgs: MutableList<String?>) {
-    val distributionFlavor = project.specmaticExtension().projectConfigurations[this]!!
-    if (distributionFlavor !is ObfuscationFeature) {
-        throw GradleException("Obfuscation feature is not enabled on $this")
-    }
-
     project.pluginInfo("Installing obfuscation hook on $project")
     project.plugins.withType(JavaPlugin::class.java) {
         project.pluginInfo("Configuring obfuscation for on $project")

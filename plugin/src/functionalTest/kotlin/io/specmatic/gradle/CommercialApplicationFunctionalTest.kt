@@ -1,11 +1,17 @@
 package io.specmatic.gradle
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
-import kotlin.test.Test
+import org.junit.jupiter.api.Test
 
-class OssApplicationFunctionalTest : AbstractFunctionalTest() {
+class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
+
+    @AfterEach
+    fun foo() {
+        assertThat(true).isFalse()
+    }
 
     @Nested
     inner class RootModuleOnly {
@@ -29,7 +35,7 @@ class OssApplicationFunctionalTest : AbstractFunctionalTest() {
                     }
                     
                     specmatic {
-                        withOSSApplication(rootProject) {
+                        withCommercialApplication(rootProject) {
                             mainClass = "io.specmatic.example.Main"
                         }
                     }
@@ -44,6 +50,7 @@ class OssApplicationFunctionalTest : AbstractFunctionalTest() {
             )
 
             writeMainClass(projectDir, "io.specmatic.example.Main")
+            writeRandomClasses(projectDir, "io.specmatic.example.internal.fluxcapacitor")
         }
 
         @Test
@@ -58,7 +65,10 @@ class OssApplicationFunctionalTest : AbstractFunctionalTest() {
             val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain")
             assertMainJarExecutes(result)
 
-            assertPublished("io.specmatic.example:example-project:1.2.3")
+            assertPublished(
+                "io.specmatic.example:example-project-all-debug:1.2.3",
+                "io.specmatic.example:example-project:1.2.3"
+            )
             assertThat(getDependencies("io.specmatic.example:example-project:1.2.3")).isEmpty()
 
             assertThat(
@@ -98,7 +108,7 @@ class OssApplicationFunctionalTest : AbstractFunctionalTest() {
                     }
                     
                     specmatic {
-                        withOSSApplication(rootProject) {
+                        withCommercialApplication(rootProject) {
                             mainClass = "io.specmatic.example.Main"
                             shadow("example")
                         }
@@ -113,6 +123,7 @@ class OssApplicationFunctionalTest : AbstractFunctionalTest() {
             )
 
             writeMainClass(projectDir, "io.specmatic.example.Main")
+            writeRandomClasses(projectDir, "io.specmatic.example.internal.fluxcapacitor")
         }
 
         @Test
@@ -127,7 +138,10 @@ class OssApplicationFunctionalTest : AbstractFunctionalTest() {
             val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain")
             assertMainJarExecutes(result)
 
-            assertPublished("io.specmatic.example:example-project:1.2.3")
+            assertPublished(
+                "io.specmatic.example:example-project-all-debug:1.2.3",
+                "io.specmatic.example:example-project:1.2.3"
+            )
             assertThat(getDependencies("io.specmatic.example:example-project:1.2.3")).isEmpty()
 
             assertThat(
@@ -181,10 +195,10 @@ class OssApplicationFunctionalTest : AbstractFunctionalTest() {
                     }
                     
                     specmatic {
-                        withOSSLibrary(project(":core")) {
+                        withCommercialLibrary(project(":core")) {
                         }
                         
-                        withOSSApplication(project("executable")) {
+                        withCommercialApplication(project("executable")) {
                             mainClass = "io.specmatic.example.executable.Main"
                         }
                     }
@@ -205,6 +219,12 @@ class OssApplicationFunctionalTest : AbstractFunctionalTest() {
             )
 
             writeMainClass(projectDir.resolve("executable"), "io.specmatic.example.executable.Main")
+            writeRandomClasses(
+                projectDir.resolve("executable"),
+                "io.specmatic.example.executable.internal.fluxcapacitor"
+            )
+            writeRandomClasses(projectDir.resolve("core"), "io.specmatic.example.core.internal.chronocore")
+
         }
 
         @Test
@@ -216,21 +236,46 @@ class OssApplicationFunctionalTest : AbstractFunctionalTest() {
 
         @Test
         fun `it publish single fat jar for executable with no deps, and core jar with dependencies`() {
-            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain")
+            val result =
+                runWithSuccess("publishAllPublicationsToStagingRepository", "runMain", "--stacktrace")
             assertMainJarExecutes(result)
 
             assertPublished(
-                "io.specmatic.example:executable:1.2.3", "io.specmatic.example:core:1.2.3"
+                "io.specmatic.example:executable:1.2.3",
+                "io.specmatic.example:executable-all-debug:1.2.3",
+
+                "io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3",
+                "io.specmatic.example:core:1.2.3",
+                "io.specmatic.example:core-all-debug:1.2.3",
+                "io.specmatic.example:core-min:1.2.3"
             )
 
             assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).isEmpty()
-            assertThat(getDependencies("io.specmatic.example:core:1.2.3")).containsExactlyInAnyOrder(
-                "org.jetbrains.kotlin:kotlin-stdlib:1.9.25", "org.slf4j:slf4j-api:2.0.17"
+            assertThat(getDependencies("io.specmatic.example:executable-all-debug:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:core:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:core-all-debug:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:core-min:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3")).containsExactlyInAnyOrder(
+                "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
+                "org.slf4j:slf4j-api:2.0.17"
             )
 
             assertThat(
+                openJar("io.specmatic.example:executable-all-debug:1.2.3").stream()
+                    .map { it.name })
+                .contains("io/specmatic/example/core/VersionInfo.class") // from the core dependency
+                .contains("io/specmatic/example/core/version.properties") // from the core dependency
+                .contains("io/specmatic/example/executable/VersionInfo.class")
+                .contains("io/specmatic/example/executable/version.properties")
+                .contains("kotlin/Metadata.class") // kotlin is also packaged
+                .contains("org/jetbrains/annotations/Contract.class") // kotlin is also packaged
+                .contains("org/intellij/lang/annotations/Language.class") // kotlin is also packaged
+                .contains("org/slf4j/Logger.class") // slf4j dependency is also packaged
+
+            assertThat(
                 openJar("io.specmatic.example:executable:1.2.3").stream()
-                    .map { it.name }).contains("io/specmatic/example/core/VersionInfo.class") // from the core dependency
+                    .map { it.name })
+                .contains("io/specmatic/example/core/VersionInfo.class") // from the core dependency
                 .contains("io/specmatic/example/core/version.properties") // from the core dependency
                 .contains("io/specmatic/example/executable/VersionInfo.class")
                 .contains("io/specmatic/example/executable/version.properties")
@@ -281,10 +326,10 @@ class OssApplicationFunctionalTest : AbstractFunctionalTest() {
                     }
                     
                     specmatic {
-                        withOSSLibrary(project(":core")) {
+                        withCommercialLibrary(project(":core")) {
                         }
                         
-                        withOSSApplication(project("executable")) {
+                        withCommercialApplication(project("executable")) {
                             mainClass = "io.specmatic.example.executable.Main"
                             shadow("example")
                         }
@@ -306,6 +351,11 @@ class OssApplicationFunctionalTest : AbstractFunctionalTest() {
             )
 
             writeMainClass(projectDir.resolve("executable"), "io.specmatic.example.executable.Main")
+            writeRandomClasses(
+                projectDir.resolve("executable"),
+                "io.specmatic.example.executable.internal.fluxcapacitor"
+            )
+            writeRandomClasses(projectDir.resolve("core"), "io.specmatic.example.core.internal.chronocore")
         }
 
         @Test
@@ -321,13 +371,17 @@ class OssApplicationFunctionalTest : AbstractFunctionalTest() {
             assertMainJarExecutes(result)
 
             assertPublished(
-                "io.specmatic.example:executable:1.2.3", "io.specmatic.example:core:1.2.3"
+                "io.specmatic.example:executable:1.2.3",
+                "io.specmatic.example:executable-all-debug:1.2.3",
+
+                "io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3",
+                "io.specmatic.example:core:1.2.3",
+                "io.specmatic.example:core-all-debug:1.2.3",
+                "io.specmatic.example:core-min:1.2.3"
             )
 
             assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).isEmpty()
-            assertThat(getDependencies("io.specmatic.example:core:1.2.3")).containsExactlyInAnyOrder(
-                "org.jetbrains.kotlin:kotlin-stdlib:1.9.25", "org.slf4j:slf4j-api:2.0.17"
-            )
+            assertThat(getDependencies("io.specmatic.example:core:1.2.3")).isEmpty()
 
             assertThat(
                 openJar("io.specmatic.example:executable:1.2.3").stream()
@@ -346,4 +400,3 @@ class OssApplicationFunctionalTest : AbstractFunctionalTest() {
         }
     }
 }
-
