@@ -131,3 +131,7 @@ class SpecmaticLicenseReportingPlugin : Plugin<Project> {
 fun Project.pluginInfo(string: String) {
     println("[Specmatic Gradle Plugin]: $string")
 }
+
+fun pluginInfo(string: String) {
+    println("[Specmatic Gradle Plugin]: $string")
+}

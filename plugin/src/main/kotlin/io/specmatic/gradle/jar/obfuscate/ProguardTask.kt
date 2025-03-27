@@ -24,7 +24,7 @@ abstract class ProguardTask @Inject constructor(
         .convention(javaToolchainService.launcherFor({}))
 
     @get:Input
-    val argsInFile = mutableListOf<String>()
+    val proguardArgs = mutableListOf<String>()
 
     @get:InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -33,22 +33,20 @@ abstract class ProguardTask @Inject constructor(
     @get:OutputFile
     var outputJar: File? = null
 
-    init {
-        val proguard = project.configurations.create("proguard")
-
-        // since proguard is GPL, we avoid compile time dependencies on it
-        proguard.dependencies.add(project.dependencies.create("com.guardsquare:proguard-base:7.6.1"))
-
-        appendArgsToFile("-cp")
-        appendArgsToFile(proguard.asPath)
-        appendArgsToFile("proguard.ProGuard") // main class
+    @InputFiles
+    @PathSensitive(PathSensitivity.ABSOLUTE)
+    fun getProguardJars(): Configuration {
+        return project.configurations.named("proguard").get()
     }
 
     @TaskAction
     fun exec() {
-
-        createArgs()
-        getArgsFile().writeText(argsInFile.joinToString("\n", transform = ::shellEscape))
+        val args = mutableListOf<String>()
+        args.add("-cp")
+        args.add(getProguardJars().asPath)
+        args.add("proguard.ProGuard") // main class
+        args.addAll(createArgs())
+        getArgsFile().writeText(args.joinToString("\n", transform = ::shellEscape))
         val completeCLI = listOf(javaLauncher.get().executablePath.asFile.path, "@${getArgsFile()}")
         val outputFile = project.file("${getProguardOutputDir()}/proguard-task-output-${this.name}.log")
         val outputFileStream = outputFile.outputStream()
@@ -90,25 +88,26 @@ abstract class ProguardTask @Inject constructor(
         return File("${project.layout.buildDirectory.get().asFile}/proguard")
     }
 
-    private fun createArgs() {
+    private fun createArgs(): MutableList<String> {
         addLibraryArgs()
 
-        appendArgsToFile("-injars", inputJar!!.absolutePath)
-        appendArgsToFile("-outjars", outputJar!!.absolutePath)
+        appendProguardArgs("-injars", inputJar!!.absolutePath)
+        appendProguardArgs("-outjars", outputJar!!.absolutePath)
 
-        appendArgsToFile("-printseeds", "${getProguardOutputDir().resolve("seeds.txt")}")
-        appendArgsToFile("-printconfiguration", "${getProguardOutputDir().resolve("proguard.cfg")}")
-        appendArgsToFile("-dump", "${getProguardOutputDir().resolve("proguard.dump.txt")}")
-        appendArgsToFile("-whyareyoukeeping", "class io.specmatic.** { *; }")
-        appendArgsToFile("-dontoptimize")
-        appendArgsToFile("-keepattributes", "!LocalVariableTable, !LocalVariableTypeTable")
+        appendProguardArgs("-printseeds", "${getProguardOutputDir().resolve("seeds.txt")}")
+        appendProguardArgs("-printconfiguration", "${getProguardOutputDir().resolve("proguard.cfg")}")
+        appendProguardArgs("-dump", "${getProguardOutputDir().resolve("proguard.dump.txt")}")
+        appendProguardArgs("-whyareyoukeeping", "class io.specmatic.** { *; }")
+        appendProguardArgs("-dontoptimize")
+        appendProguardArgs("-keepattributes", "!LocalVariableTable, !LocalVariableTypeTable")
 
         // Keep all public members in the internal package
-        appendArgsToFile("-keep", "class !**.internal.** { public <fields>; public <methods>;}")
+        appendProguardArgs("-keep", "class !**.internal.** { public <fields>; public <methods>;}")
         // obfuscate everything in the internal package
-        appendArgsToFile("-keep,allowobfuscation", "class io.specmatic.**.internal.** { *; }")
+        appendProguardArgs("-keep,allowobfuscation", "class io.specmatic.**.internal.** { *; }")
         // Keep kotlin metadata
-        appendArgsToFile("-keep", "class kotlin.Metadata")
+        appendProguardArgs("-keep", "class kotlin.Metadata")
+        return proguardArgs
     }
 
     private fun addLibraryArgs() {
@@ -116,8 +115,8 @@ abstract class ProguardTask @Inject constructor(
         libraryJars(getJVMLibraryFiles().map { "${it.absolutePath}(!**.jar;!module-info.class)" })
     }
 
-    fun appendArgsToFile(vararg toAdd: String?) {
-        argsInFile.addAll(toAdd.filterNotNull())
+    fun appendProguardArgs(vararg toAdd: String?) {
+        proguardArgs.addAll(toAdd.filterNotNull())
     }
 
     private fun libraryJars(configuration: Configuration) {
@@ -126,7 +125,7 @@ abstract class ProguardTask @Inject constructor(
 
     private fun libraryJars(libJar: Collection<String?>) {
         libJar.filterNotNull().forEach {
-            appendArgsToFile("-libraryjars", it)
+            appendProguardArgs("-libraryjars", it)
         }
     }
 

@@ -21,6 +21,7 @@ dependencies {
     implementation("com.vanniktech.maven.publish:com.vanniktech.maven.publish.gradle.plugin:0.31.0")
     implementation("org.kohsuke:github-api:1.327")
 
+    testImplementation("org.apache.maven:maven-model:3.9.9")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.assertj:assertj-core:3.27.3")
 
@@ -64,7 +65,7 @@ tasks.named<Task>("check") {
 
 tasks.named<Test>("test") {
     useJUnitPlatform()
-    maxParallelForks = 3
+    maxParallelForks = 5
 }
 
 val stagingRepo = layout.buildDirectory.dir("mvn-repo").get()

@@ -1,33 +1,23 @@
 package io.specmatic.gradle
 
-import com.github.jengelman.gradle.plugins.shadow.ShadowBasePlugin
-import com.github.jengelman.gradle.plugins.shadow.ShadowJavaPlugin.Companion.SHADOW_RUNTIME_ELEMENTS_CONFIGURATION_NAME
 import io.specmatic.gradle.artifacts.EnsureJarsAreStampedPlugin
 import io.specmatic.gradle.artifacts.EnsureReproducibleArtifactsPlugin
 import io.specmatic.gradle.compiler.ConfigureCompilerOptionsPlugin
 import io.specmatic.gradle.dock.DockerPlugin
 import io.specmatic.gradle.exec.ConfigureExecTaskPlugin
 import io.specmatic.gradle.extensions.SpecmaticGradleExtension
-import io.specmatic.gradle.jar.massage.jar
-import io.specmatic.gradle.jar.massage.shadow
-import io.specmatic.gradle.jar.obfuscate.ObfuscateJarPlugin
-import io.specmatic.gradle.jar.publishing.ConfigurePublicationsPlugin
+import io.specmatic.gradle.jar.massage.applyToRootProjectOrSubprojects
+import io.specmatic.gradle.jar.publishing.applyShadowConfigs
 import io.specmatic.gradle.license.SpecmaticLicenseReportingPlugin
 import io.specmatic.gradle.license.pluginInfo
 import io.specmatic.gradle.plugin.VersionInfo
-import io.specmatic.gradle.shadow.ShadowJarsPlugin
 import io.specmatic.gradle.tests.SpecmaticTestReportingPlugin
 import io.specmatic.gradle.versioninfo.VersionInfoPlugin
 import io.specmatic.gradle.versioninfo.versionInfo
-import net.researchgate.release.ReleasePlugin
 import org.barfuin.gradle.taskinfo.GradleTaskInfoPlugin
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.component.SoftwareComponentFactory
-import org.gradle.api.internal.project.ProjectInternal
-import org.gradle.api.plugins.JavaPlugin
-import org.kohsuke.github.GitHubBuilder
 
 @Suppress("unused")
 class SpecmaticGradlePlugin : Plugin<Project> {
@@ -36,9 +26,8 @@ class SpecmaticGradlePlugin : Plugin<Project> {
 
         target.pluginInfo("Specmatic Gradle Plugin ${VersionInfo.describe()}")
 
-        target.applyToRootProjectOrSubprojects {
-            applyShadowConfigs()
-        }
+        target.applyToRootProjectOrSubprojects { applyShadowConfigs() }
+        target.applyToRootProjectOrSubprojects { applyProguardConfigs() }
 
         target.rootProject.versionInfo()
 
@@ -56,12 +45,6 @@ class SpecmaticGradlePlugin : Plugin<Project> {
         }
 
         target.applyToRootProjectOrSubprojects {
-            // obfuscation needs to happen before shadowing!
-            plugins.apply(ObfuscateJarPlugin::class.java)
-            plugins.apply(ShadowJarsPlugin::class.java)
-            // publishing needs to happen after shadow
-            plugins.apply(ConfigurePublicationsPlugin::class.java)
-
             plugins.apply(ConfigureCompilerOptionsPlugin::class.java)
             plugins.apply(EnsureReproducibleArtifactsPlugin::class.java)
             plugins.apply(EnsureJarsAreStampedPlugin::class.java)
@@ -73,55 +56,13 @@ class SpecmaticGradlePlugin : Plugin<Project> {
         }
     }
 
-
-    private fun Project.applyToRootProjectOrSubprojects(block: Project.() -> Unit) {
-        if (subprojects.isEmpty()) {
-            // apply on self
-            block()
-        } else {
-            subprojects {
-                // apply on eachSubproject
-                block()
-            }
-        }
+    private fun Project.applyProguardConfigs() {
+        project.repositories.mavenCentral()
+        val proguard = project.configurations.create("proguard")
+        // since proguard is GPL, we avoid compile time dependencies on it
+        proguard.dependencies.add(project.dependencies.create("com.guardsquare:proguard-base:7.6.1"))
     }
 
-}
-
-private fun Project.applyShadowConfigs() {
-    plugins.withType(JavaPlugin::class.java) {
-        pluginInfo("Applying shadow configurations to project $name")
-        val shadowConfiguration = configurations.create("shadow")
-
-        val shadowRuntimeElements = configurations.create(SHADOW_RUNTIME_ELEMENTS_CONFIGURATION_NAME) {
-            extendsFrom(shadowConfiguration)
-            isCanBeConsumed = true
-            isCanBeResolved = false
-        }
-
-        configurations.named("compileClasspath") {
-            extendsFrom(shadowConfiguration)
-        }
-
-        configurations.named("testImplementation") {
-            extendsFrom(shadowConfiguration)
-        }
-
-        configurations.named("testRuntimeOnly") {
-            extendsFrom(shadowConfiguration)
-        }
-
-        val softwareComponentFactory = (project as ProjectInternal).services.get(SoftwareComponentFactory::class.java)
-        val shadowComponent = softwareComponentFactory.adhoc(ShadowBasePlugin.COMPONENT_NAME)
-        project.components.add(shadowComponent)
-        shadowComponent.addVariantsFromConfiguration(shadowRuntimeElements) {
-            mapToMavenScope("runtime")
-        }
-
-        tasks.jar.configure {
-            from(provider { configurations.shadow.get().files.map { zipTree(it) } })
-        }
-    }
 
 }
 

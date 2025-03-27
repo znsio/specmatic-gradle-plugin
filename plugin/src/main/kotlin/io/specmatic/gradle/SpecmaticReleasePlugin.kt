@@ -1,5 +1,7 @@
 package io.specmatic.gradle
 
+import io.specmatic.gradle.extensions.BaseDistribution
+import io.specmatic.gradle.extensions.GithubReleaseFeature
 import io.specmatic.gradle.license.pluginInfo
 import net.researchgate.release.ReleasePlugin
 import org.gradle.api.Plugin
@@ -18,11 +20,11 @@ private fun Project.configureGithubRelease() {
         project.afterEvaluate {
 
             project.specmaticExtension().projectConfigurations.forEach { eachProject, eachProjectConfig ->
-                if (eachProjectConfig.githubReleaseEnabled) {
+                if (eachProjectConfig is GithubReleaseFeature) {
                     val createGithubReleaseTask = findOrCreateGithubReleaseTask()
 
                     createGithubReleaseTask.configure {
-                        publish(eachProject, eachProjectConfig.githubRelease)
+                        publish(eachProject, (eachProjectConfig as BaseDistribution).githubRelease)
                     }
 
                     project.tasks.named("createReleaseTag") {
