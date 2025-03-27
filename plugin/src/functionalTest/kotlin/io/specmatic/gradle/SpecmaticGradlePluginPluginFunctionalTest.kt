@@ -5,32 +5,12 @@ import org.assertj.core.api.Assertions.assertThatCode
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.gradle.testkit.runner.UnexpectedBuildFailure
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.io.TempDir
-import java.io.File
 import java.util.jar.JarFile
 import java.util.regex.Pattern
 import kotlin.test.Test
 
-class SpecmaticGradlePluginPluginFunctionalTest {
-
-    @field:TempDir
-    lateinit var projectDir: File
-
-    private val buildFile by lazy { projectDir.resolve("build.gradle.kts") }
-    private val settingsFile by lazy { projectDir.resolve("settings.gradle.kts") }
-    private val gradleProperties by lazy { projectDir.resolve("gradle.properties") }
-
-    @BeforeEach
-    fun setup() {
-        gradleProperties.writeText(
-            """
-                version=1.2.3
-                group=com.example.group
-            """.trimIndent()
-        )
-    }
+class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
 
     @Test
     fun `throws error when shadow prefix is not valid package name`() {
@@ -131,10 +111,10 @@ class SpecmaticGradlePluginPluginFunctionalTest {
             // Set up the test build
             settingsFile.writeText(
                 """
-                rootProject.name = "fooBar"
-                include("project-a")
-                include("project-b")
-            """.trimIndent()
+                    rootProject.name = "fooBar"
+                    include("project-a")
+                    include("project-b")
+                """.trimIndent()
             )
 
             buildFile.writeText(

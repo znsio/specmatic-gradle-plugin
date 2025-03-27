@@ -65,7 +65,6 @@ open class OSSApplicationConfig() : ApplicationFeature, ShadowingFeature, BaseDi
     DockerBuildFeature by DockerBuildFeatureImpl() {
     override var mainClass: String = ""
 
-
     override fun applyToProject(target: Project) {
         super.applyToProject(target)
 
