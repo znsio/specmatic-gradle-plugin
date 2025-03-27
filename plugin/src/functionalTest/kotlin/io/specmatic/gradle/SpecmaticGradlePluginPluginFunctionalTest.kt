@@ -44,8 +44,7 @@ class SpecmaticGradlePluginPluginFunctionalTest {
             }
             
             specmatic {
-                withProject(rootProject) {
-                    // we asked it to be published, but not specified where
+                withOSSApplication(rootProject) {
                     shadow("bad-package") 
                 }
             }
@@ -85,7 +84,7 @@ class SpecmaticGradlePluginPluginFunctionalTest {
         runner.forwardOutput()
         runner.withPluginClasspath()
         runner.withProjectDir(projectDir)
-        val result = runner.withArguments("-i", "myExec").build()
+        val result = runner.withArguments("myExec").build()
 
         // Verify the result
         assertThat(result.output).contains("hello world")
@@ -188,7 +187,7 @@ class SpecmaticGradlePluginPluginFunctionalTest {
                     }
                     
                     specmatic {
-                        withProject(rootProject) {
+                        withOSSApplication(rootProject) {
                             // we asked it to be published, but not specified where
                             publish() {
                                 // we don't configure pom
@@ -227,7 +226,7 @@ class SpecmaticGradlePluginPluginFunctionalTest {
                     specmatic {
                         publishToMavenCentral()
                         
-                        withProject(rootProject) {
+                        withOSSApplication(rootProject) {
                             // we asked it to be published, but also specified where
                             publish {}
                         }
@@ -269,8 +268,8 @@ class SpecmaticGradlePluginPluginFunctionalTest {
                     specmatic {
                         publishToMavenCentral()
                         
-                        withProject(rootProject) {
-                            applicationMainClass = "org.example.Main"
+                        withOSSApplication(rootProject) {
+                            mainClass = "org.example.Main"
                             
                             // we asked it to be published, but also specified where
                             publish {}
@@ -289,7 +288,7 @@ class SpecmaticGradlePluginPluginFunctionalTest {
             runner.forwardOutput()
             runner.withPluginClasspath()
             runner.withProjectDir(projectDir)
-            val result = runner.withArguments("jar", "customJar", "-i").build()
+            val result = runner.withArguments("jar", "customJar").build()
             assertThat(result.task(":jar")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
             val jarFile = projectDir.resolve("build/libs/fooBar-1.2.3.jar")
             assertThat(jarFile).exists()
@@ -315,10 +314,7 @@ class SpecmaticGradlePluginPluginFunctionalTest {
                     specmatic {
                         publishToMavenCentral()
                         
-                        withProject(rootProject) {
-                            // we asked it to be published, but also specified where
-                            publish {}
-                        }
+                        withOSSApplication(rootProject) { }
                     }
                     
                     tasks.register("customJar", Jar::class.java) {
@@ -345,5 +341,4 @@ class SpecmaticGradlePluginPluginFunctionalTest {
             assertThat(JarFile(customJar).manifest.mainAttributes.containsValue("Main-Class")).isFalse()
         }
     }
-
 }

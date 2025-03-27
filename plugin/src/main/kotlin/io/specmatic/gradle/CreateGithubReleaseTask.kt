@@ -1,6 +1,6 @@
 package io.specmatic.gradle
 
-import io.specmatic.gradle.extensions.GithubRelease
+import io.specmatic.gradle.extensions.GithubReleaseConfig
 import io.specmatic.gradle.license.pluginInfo
 import org.apache.commons.codec.digest.DigestUtils
 import org.gradle.api.DefaultTask
@@ -10,7 +10,6 @@ import org.gradle.api.tasks.TaskAction
 import org.kohsuke.github.GHRelease
 import org.kohsuke.github.GHRepository
 import org.kohsuke.github.GitHubBuilder
-import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
@@ -20,7 +19,7 @@ open class CreateGithubReleaseTask() : DefaultTask() {
 
     private val files = mutableMapOf<Project, MutableMap<String, String>>()
 
-    fun publish(target: Project, release: GithubRelease) {
+    fun publish(target: Project, release: GithubReleaseConfig) {
         release.files.keys.forEach { task ->
             dependsOn(target.tasks.getByName(task))
         }
