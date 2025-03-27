@@ -32,11 +32,7 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
         )
 
         // Run the build
-        val runner = GradleRunner.create()
-        runner.forwardOutput()
-        runner.withPluginClasspath()
-        runner.withProjectDir(projectDir)
-        assertThatCode { runner.withArguments("tasks").build() }
+        assertThatCode { runner().withArguments("tasks").build() }
             .isInstanceOf(UnexpectedBuildFailure::class.java)
             .hasMessageContaining("Unexpected build execution failure")
             .hasMessageContaining("Invalid Java package name: bad-package")
@@ -60,11 +56,7 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
         )
 
         // Run the build
-        val runner = GradleRunner.create()
-        runner.forwardOutput()
-        runner.withPluginClasspath()
-        runner.withProjectDir(projectDir)
-        val result = runner.withArguments("myExec").build()
+        val result = runner().withArguments("myExec").build()
 
         // Verify the result
         assertThat(result.output).contains("hello world")
@@ -87,21 +79,17 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
             )
 
             // Run the build
-            val runner = GradleRunner.create()
-            runner.forwardOutput()
-            runner.withPluginClasspath()
-            runner.withProjectDir(projectDir)
-            val result = runner.withArguments("assemble").build()
+            val result = runner().withArguments("assemble").build()
 
             // Verify the result
             assertThat(result.task(":createVersionPropertiesFile")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
             assertThat(result.task(":createVersionInfoKotlin")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
             val versionPropertiesFile =
-                projectDir.resolve("src/main/gen-resources/com/example/group/version.properties")
+                projectDir.resolve("src/main/gen-resources/io/specmatic/example/version.properties")
             assertThat(versionPropertiesFile).exists()
             assertThat(versionPropertiesFile.readText()).contains("version=1.2.3")
 
-            val versinInfoKotlinFile = projectDir.resolve("src/main/gen-kt/com/example/group/VersionInfo.kt")
+            val versinInfoKotlinFile = projectDir.resolve("src/main/gen-kt/io/specmatic/example/VersionInfo.kt")
             assertThat(versinInfoKotlinFile).exists()
             assertThat(versinInfoKotlinFile.readText()).contains("val version = \"1.2.3\"")
         }
@@ -131,21 +119,17 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
             """.trimIndent()
             )
             // Run the build
-            val runner = GradleRunner.create()
-            runner.forwardOutput()
-            runner.withPluginClasspath()
-            runner.withProjectDir(projectDir)
-            val result = runner.withArguments("assemble").build()
+            val result = runner().withArguments("assemble").build()
 
             // Verify the result
             assertThat(result.task(":project-a:createVersionPropertiesFile")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
             assertThat(result.task(":project-a:createVersionInfoKotlin")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
 
-            assertThat(projectDir.resolve("src/main/gen-resources/com/example/group/version.properties")).doesNotExist()
-            assertThat(projectDir.resolve("src/main/gen-kt/com/example/group/VersionInfo.kt")).doesNotExist()
+            assertThat(projectDir.resolve("src/main/gen-resources/io/specmatic/example/version.properties")).doesNotExist()
+            assertThat(projectDir.resolve("src/main/gen-kt/io/specmatic/example/VersionInfo.kt")).doesNotExist()
 
-            assertThat(projectDir.resolve("project-a/src/main/gen-resources/com/example/group/project/a/version.properties")).exists()
-            assertThat(projectDir.resolve("project-a/src/main/gen-kt/com/example/group/project/a/VersionInfo.kt")).exists()
+            assertThat(projectDir.resolve("project-a/src/main/gen-resources/io/specmatic/example/project/a/version.properties")).exists()
+            assertThat(projectDir.resolve("project-a/src/main/gen-kt/io/specmatic/example/project/a/VersionInfo.kt")).exists()
 
             // no generated resources dir itself
             assertThat(projectDir.resolve("project-b/src/main/gen-resources")).doesNotExist()
@@ -179,11 +163,7 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
 
 
             // Run the build
-            val runner = GradleRunner.create()
-            runner.forwardOutput()
-            runner.withPluginClasspath()
-            runner.withProjectDir(projectDir)
-            val result = runner.withArguments("tasks", "--all").build()
+            val result = runner().withArguments("tasks", "--all").build()
 
             assertThat(result.output).doesNotMatch(
                 Pattern.compile(
@@ -216,11 +196,7 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
 
 
             // Run the build
-            val runner = GradleRunner.create()
-            runner.forwardOutput()
-            runner.withPluginClasspath()
-            runner.withProjectDir(projectDir)
-            val result = runner.withArguments("tasks", "--all").build()
+            val result = runner().withArguments("tasks", "--all").build()
 
             println(result.tasks.joinToString("\n") { it.path })
             assertThat(result.output).matches(
@@ -264,11 +240,7 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
                 """.trimIndent()
             )
 
-            val runner = GradleRunner.create()
-            runner.forwardOutput()
-            runner.withPluginClasspath()
-            runner.withProjectDir(projectDir)
-            val result = runner.withArguments("jar", "customJar").build()
+            val result = runner().withArguments("jar", "customJar").build()
             assertThat(result.task(":jar")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
             val jarFile = projectDir.resolve("build/libs/fooBar-1.2.3.jar")
             assertThat(jarFile).exists()
@@ -305,11 +277,7 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
                 """.trimIndent()
             )
 
-            val runner = GradleRunner.create()
-            runner.forwardOutput()
-            runner.withPluginClasspath()
-            runner.withProjectDir(projectDir)
-            val result = runner.withArguments("jar", "customJar").build()
+            val result = runner().withArguments("jar", "customJar").build()
             assertThat(result.task(":jar")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
             val jarFile = projectDir.resolve("build/libs/fooBar-1.2.3.jar")
             assertThat(jarFile).exists()
