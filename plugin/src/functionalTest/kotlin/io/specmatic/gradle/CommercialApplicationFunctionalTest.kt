@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import java.util.regex.Pattern
 
 class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
 
@@ -49,7 +48,6 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
                         args = listOf("error")
                     }
                 """.trimIndent()
-
             )
 
             writeRandomClasses(projectDir, "io.specmatic.example.internal.fluxcapacitor")
@@ -93,9 +91,10 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
         }
 
         @Test
-        fun `it should obfuscate`() {
+        fun `it should obfuscate classes`() {
             var result = runWithFailure("errorMain")
             assertThat(result.output).contains("""Exception in thread "main" java.lang.RuntimeException: Error in Class1""")
+            // `io.specmatic.example.a.a.a.b` -> `b` is the method name, the `a` immediately before that is the class, everything befor that is the package name
             assertThat(result.output).contains("at io.specmatic.example.a.a.a.b(Class1.kt:")
             assertThat(result.output).contains("at io.specmatic.example.a.a.b.b(Class2.kt:")
             assertThat(result.output).contains("at io.specmatic.example.a.a.c.b(Class3.kt:")
