@@ -1,17 +1,12 @@
 package io.specmatic.gradle
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import java.util.regex.Pattern
 
 class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
-
-    @AfterEach
-    fun foo() {
-        assertThat(true).isFalse()
-    }
 
     @Nested
     inner class RootModuleOnly {
@@ -44,13 +39,21 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
                         dependsOn("publishAllPublicationsToStagingRepository")
                         classpath("build/mvn-repo/io/specmatic/example/example-project/1.2.3/example-project-1.2.3.jar")
                         mainClass = "io.specmatic.example.Main"
+                        args = listOf("hello")
+                    }
+                    
+                    tasks.register("errorMain", JavaExec::class.java) {
+                        dependsOn("publishAllPublicationsToStagingRepository")
+                        classpath("build/mvn-repo/io/specmatic/example/example-project/1.2.3/example-project-1.2.3.jar")
+                        mainClass = "io.specmatic.example.Main"
+                        args = listOf("error")
                     }
                 """.trimIndent()
 
             )
 
-            writeMainClass(projectDir, "io.specmatic.example.Main")
             writeRandomClasses(projectDir, "io.specmatic.example.internal.fluxcapacitor")
+            writeMainClass(projectDir, "io.specmatic.example.Main", "io.specmatic.example.internal.fluxcapacitor")
         }
 
         @Test
@@ -65,24 +68,40 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
             val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain")
             assertMainJarExecutes(result)
 
-            assertPublished(
+            val artifacts = arrayOf(
                 "io.specmatic.example:example-project-all-debug:1.2.3",
                 "io.specmatic.example:example-project:1.2.3"
             )
-            assertThat(getDependencies("io.specmatic.example:example-project:1.2.3")).isEmpty()
 
-            assertThat(
-                openJar("io.specmatic.example:example-project:1.2.3").stream()
-                    .map { it.name }).contains("io/specmatic/example/VersionInfo.class")
-                .contains("io/specmatic/example/version.properties")
-                .contains("kotlin/Metadata.class") // kotlin is also packaged
-                .contains("org/jetbrains/annotations/Contract.class") // kotlin is also packaged
-                .contains("org/intellij/lang/annotations/Language.class") // kotlin is also packaged
-                .contains("org/slf4j/Logger.class") // slf4j dependency is also packaged
+            assertPublished(*artifacts)
+            artifacts.forEach { assertThat(getDependencies(it)).isEmpty() }
 
-            assertThat(openJar("io.specmatic.example:example-project:1.2.3").manifest.mainAttributes.getValue("Main-Class")).isEqualTo(
-                "io.specmatic.example.Main"
-            )
+            artifacts.forEach {
+                assertThat(
+                    openJar(it).stream()
+                        .map { it.name })
+                    .contains("io/specmatic/example/VersionInfo.class")
+                    .contains("io/specmatic/example/version.properties")
+                    .contains("kotlin/Metadata.class") // kotlin is also packaged
+                    .contains("org/jetbrains/annotations/Contract.class") // kotlin is also packaged
+                    .contains("org/intellij/lang/annotations/Language.class") // kotlin is also packaged
+                    .contains("org/slf4j/Logger.class") // slf4j dependency is also packaged
+
+                assertThat(openJar(it).manifest.mainAttributes.getValue("Main-Class"))
+                    .isEqualTo("io.specmatic.example.Main")
+            }
+        }
+
+        @Test
+        fun `it should obfuscate`() {
+            var result = runWithFailure("errorMain")
+            assertThat(result.output).contains("""Exception in thread "main" java.lang.RuntimeException: Error in Class1""")
+            assertThat(result.output).contains("at io.specmatic.example.a.a.a.b(Class1.kt:")
+            assertThat(result.output).contains("at io.specmatic.example.a.a.b.b(Class2.kt:")
+            assertThat(result.output).contains("at io.specmatic.example.a.a.c.b(Class3.kt:")
+            assertThat(result.output).contains("at io.specmatic.example.a.a.d.b(Class4.kt:")
+            assertThat(result.output).contains("at io.specmatic.example.a.a.e.b(Class5.kt:")
+            assertThat(result.output).contains("at io.specmatic.example.Main.main(Main.kt")
         }
     }
 

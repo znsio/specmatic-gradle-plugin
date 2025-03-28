@@ -38,27 +38,51 @@ open class AbstractFunctionalTest {
         repeat(5) { i ->
             val className = "Class${i + 1}"
             val fileName = "$className.kt"
+            val previousClassName = if (i > 0) "Class$i" else null
             projectDir.resolve("src/main/kotlin/${packageName.replace(".", "/")}/$fileName").also {
                 it.parentFile.mkdirs()
                 it.writeText(
                     """
                         package $packageName
                         
-                        class $className {
+                        object $className {
+                            @JvmStatic
                             fun sayHello() {
                                 println("Hello from $className")
+                                ${previousClassName?.let { "$previousClassName.sayHello()" } ?: ""}
+                            }
+
+                            @JvmStatic
+                            fun throwError() {
+                                ${previousClassName?.let { "$previousClassName.throwError()" } ?: "throw RuntimeException(\"Error in $className\")"}
                             }
                         }
-                    """.trimIndent()
-                )
+                    """.trimIndent())
             }
         }
     }
 
-    fun writeMainClass(projectDir: File, mainClass: String) {
+    fun writeMainClass(projectDir: File, mainClass: String, innerPackage: String? = null) {
         val fileName = mainClass.replace(".", "/") + ".kt"
         val packageName = mainClass.substringBeforeLast(".")
         projectDir.resolve("src/main/kotlin/${fileName}").also {
+
+            val callInnerPackageCode = if (innerPackage.orEmpty().isNotEmpty())
+                """
+                    if (args.isNotEmpty()) {
+                        if (args[0] == "hello") {
+                            println("Calling inner package")
+                            $innerPackage.Class5.sayHello()
+                        } else if (args[0] == "error") {
+                            println("Calling inner package")
+                            $innerPackage.Class5.throwError()
+                        } else {
+                            throw RuntimeException("Invalid argument: " + args[0])
+                        }
+                    }
+                """.trimIndent()
+            else
+                ""
             it.parentFile.mkdirs()
             it.writeText(
                 """
@@ -74,6 +98,8 @@ open class AbstractFunctionalTest {
                             
                             // this should only print if the above works
                             println("Hello, world! Version: " + VersionInfo.describe())
+                            
+                            $callInnerPackageCode
                         }
                     }
                 """.trimIndent()
