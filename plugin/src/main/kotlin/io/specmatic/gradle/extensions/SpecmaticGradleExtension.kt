@@ -18,6 +18,8 @@ open class SpecmaticGradleExtension {
             field = value
         }
 
+    var kotlinversion = "1.9.25"
+
     var kotlinApiVersion: KotlinVersion = KotlinVersion.KOTLIN_1_9
     internal val publishTo = mutableListOf<PublishTarget>()
     internal val licenseData = mutableListOf<ModuleLicenseData>()

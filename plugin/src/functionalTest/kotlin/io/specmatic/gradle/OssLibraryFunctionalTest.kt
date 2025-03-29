@@ -6,16 +6,12 @@ import org.junit.jupiter.api.Nested
 import kotlin.test.Test
 
 class OssLibraryFunctionalTest : AbstractFunctionalTest() {
-
-
     @Nested
-    inner class OSSLibrary {
-        @Nested
-        inner class RootModuleOnly {
-            @BeforeEach
-            fun setup() {
-                buildFile.writeText(
-                    """
+    inner class RootModuleOnly {
+        @BeforeEach
+        fun setup() {
+            buildFile.writeText(
+                """
                     plugins {
                         id("java")
                         kotlin("jvm") version "1.9.25"
@@ -36,50 +32,50 @@ class OssLibraryFunctionalTest : AbstractFunctionalTest() {
                         }
                     }
                 """.trimIndent()
-                )
+            )
 
-                writeMainClass(projectDir, "io.specmatic.example.Main")
-            }
-
-            @Test
-            fun `it should have publicationTasks`() {
-                val result = runWithSuccess("tasks")
-                assertThat(result.output).contains("publishToMavenLocal")
-                assertThat(result.output).contains("publishAllPublicationsToStagingRepository")
-            }
-
-            @Test
-            fun `it publish jar with all dependencies declared in the pom to staging repository`() {
-                val result = runWithSuccess("publishAllPublicationsToStagingRepository")
-
-                assertPublished("io.specmatic.example:example-project:1.2.3")
-                assertThat(getDependencies("io.specmatic.example:example-project:1.2.3"))
-                    .containsExactlyInAnyOrder(
-                        "org.jetbrains.kotlin:kotlin-stdlib:2.1.20",
-                        "org.slf4j:slf4j-api:2.0.17"
-                    )
-
-                assertThat(
-                    openJar("io.specmatic.example:example-project:1.2.3")
-                        .stream()
-                        .map { it.name })
-                    .contains("io/specmatic/example/VersionInfo.class")
-                    .contains("io/specmatic/example/version.properties")
-                    .doesNotContain("kotlin/Metadata.class") // kotlin is also packaged
-                    .doesNotContain("org/jetbrains/annotations/Contract.class") // kotlin is also packaged
-                    .doesNotContain("org/intellij/lang/annotations/Language.class") // kotlin is also packaged
-                    .doesNotContain("org/slf4j/Logger.class") // slf4j dependency is also packaged
-
-                assertThat(openJar("io.specmatic.example:example-project:1.2.3").manifest.mainAttributes.getValue("Main-Class")).isNull()
-            }
+            writeMainClass(projectDir, "io.specmatic.example.Main")
         }
 
-        @Nested
-        inner class RootModuleOnlyWithShadowingPrefix {
-            @BeforeEach
-            fun setup() {
-                buildFile.writeText(
-                    """
+        @Test
+        fun `it should have publicationTasks`() {
+            val result = runWithSuccess("tasks")
+            assertThat(result.output).contains("publishToMavenLocal")
+            assertThat(result.output).contains("publishAllPublicationsToStagingRepository")
+        }
+
+        @Test
+        fun `it publish jar with all dependencies declared in the pom to staging repository`() {
+            val result = runWithSuccess("publishAllPublicationsToStagingRepository")
+
+            assertPublished("io.specmatic.example:example-project:1.2.3")
+            assertThat(getDependencies("io.specmatic.example:example-project:1.2.3"))
+                .containsExactlyInAnyOrder(
+                    "org.jetbrains.kotlin:kotlin-stdlib:2.1.20",
+                    "org.slf4j:slf4j-api:2.0.17"
+                )
+
+            assertThat(
+                openJar("io.specmatic.example:example-project:1.2.3")
+                    .stream()
+                    .map { it.name })
+                .contains("io/specmatic/example/VersionInfo.class")
+                .contains("io/specmatic/example/version.properties")
+                .doesNotContain("kotlin/Metadata.class") // kotlin is also packaged
+                .doesNotContain("org/jetbrains/annotations/Contract.class") // kotlin is also packaged
+                .doesNotContain("org/intellij/lang/annotations/Language.class") // kotlin is also packaged
+                .doesNotContain("org/slf4j/Logger.class") // slf4j dependency is also packaged
+
+            assertThat(openJar("io.specmatic.example:example-project:1.2.3").manifest.mainAttributes.getValue("Main-Class")).isNull()
+        }
+    }
+
+    @Nested
+    inner class RootModuleOnlyWithShadowingPrefix {
+        @BeforeEach
+        fun setup() {
+            buildFile.writeText(
+                """
                     plugins {
                         id("java")
                         kotlin("jvm") version "1.9.25"
@@ -101,34 +97,34 @@ class OssLibraryFunctionalTest : AbstractFunctionalTest() {
                         }
                     }
                 """.trimIndent()
-                )
+            )
 
-                writeMainClass(projectDir, "io.specmatic.example.Main")
-            }
-
-            @Test
-            fun `it fails`() {
-                val result = runWithFailure("publishAllPublicationsToStagingRepository")
-                assertThat(result.output).contains("Cannot access 'shadow': it is protected in 'OSSLibraryConfig'")
-
-                assertNothingPublished()
-            }
+            writeMainClass(projectDir, "io.specmatic.example.Main")
         }
 
-        @Nested
-        inner class MultiModuleOnly {
-            @BeforeEach
-            fun setup() {
-                settingsFile.appendText(
-                    """
+        @Test
+        fun `it fails`() {
+            val result = runWithFailure("publishAllPublicationsToStagingRepository")
+            assertThat(result.output).contains("Cannot access 'shadow': it is protected in 'OSSLibraryConfig'")
+
+            assertNothingPublished()
+        }
+    }
+
+    @Nested
+    inner class MultiModuleOnly {
+        @BeforeEach
+        fun setup() {
+            settingsFile.appendText(
+                """
                     //
                     include("core")
                     include("executable")
                     """.trimIndent()
-                )
+            )
 
-                buildFile.writeText(
-                    """
+            buildFile.writeText(
+                """
                     plugins {
                         id("java")
                         kotlin("jvm") version "1.9.25"
@@ -165,68 +161,68 @@ class OssLibraryFunctionalTest : AbstractFunctionalTest() {
                     }
                     
                 """.trimIndent()
-                )
+            )
 
-                writeMainClass(projectDir.resolve("executable"), "io.specmatic.example.executable.Main")
-            }
-
-            @Test
-            fun `it should have publicationTasks`() {
-                val result = runWithSuccess("tasks")
-                assertThat(result.output).contains("publishToMavenLocal")
-                assertThat(result.output).contains("publishAllPublicationsToStagingRepository")
-            }
-
-            @Test
-            fun `it publish all jars with dependencies`() {
-                val result = runWithSuccess("publishAllPublicationsToStagingRepository")
-
-                assertPublished(
-                    "io.specmatic.example:executable:1.2.3", "io.specmatic.example:core:1.2.3"
-                )
-
-                assertThat(getDependencies("io.specmatic.example:executable:1.2.3"))
-                    .containsExactlyInAnyOrder(
-                        "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
-                        "org.slf4j:slf4j-api:2.0.17",
-                        "io.specmatic.example:core:1.2.3"
-                    )
-                assertThat(getDependencies("io.specmatic.example:core:1.2.3"))
-                    .containsExactlyInAnyOrder(
-                        "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
-                        "org.slf4j:slf4j-api:2.0.17"
-                    )
-
-                assertThat(
-                    openJar("io.specmatic.example:executable:1.2.3").stream()
-                        .map { it.name })
-                    .contains("io/specmatic/example/executable/VersionInfo.class")
-                    .contains("io/specmatic/example/executable/version.properties")
-                    .doesNotContain("io/specmatic/example/core/VersionInfo.class") // from the core dependency
-                    .doesNotContain("io/specmatic/example/core/version.properties") // from the core dependency
-                    .doesNotContain("kotlin/Metadata.class") // kotlin is also packaged
-                    .doesNotContain("org/jetbrains/annotations/Contract.class") // kotlin is also packaged
-                    .doesNotContain("org/intellij/lang/annotations/Language.class") // kotlin is also packaged
-                    .doesNotContain("org/slf4j/Logger.class") // slf4j dependency is also packaged
-
-                assertThat(openJar("io.specmatic.example:executable:1.2.3").manifest.mainAttributes.getValue("Main-Class")).isNull()
-            }
+            writeMainClass(projectDir.resolve("executable"), "io.specmatic.example.executable.Main")
         }
 
-        @Nested
-        inner class MultiModuleOnlyWithShadowingPrefix {
-            @BeforeEach
-            fun setup() {
-                settingsFile.appendText(
-                    """
+        @Test
+        fun `it should have publicationTasks`() {
+            val result = runWithSuccess("tasks")
+            assertThat(result.output).contains("publishToMavenLocal")
+            assertThat(result.output).contains("publishAllPublicationsToStagingRepository")
+        }
+
+        @Test
+        fun `it publish all jars with dependencies`() {
+            val result = runWithSuccess("publishAllPublicationsToStagingRepository")
+
+            assertPublished(
+                "io.specmatic.example:executable:1.2.3", "io.specmatic.example:core:1.2.3"
+            )
+
+            assertThat(getDependencies("io.specmatic.example:executable:1.2.3"))
+                .containsExactlyInAnyOrder(
+                    "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
+                    "org.slf4j:slf4j-api:2.0.17",
+                    "io.specmatic.example:core:1.2.3"
+                )
+            assertThat(getDependencies("io.specmatic.example:core:1.2.3"))
+                .containsExactlyInAnyOrder(
+                    "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
+                    "org.slf4j:slf4j-api:2.0.17"
+                )
+
+            assertThat(
+                openJar("io.specmatic.example:executable:1.2.3").stream()
+                    .map { it.name })
+                .contains("io/specmatic/example/executable/VersionInfo.class")
+                .contains("io/specmatic/example/executable/version.properties")
+                .doesNotContain("io/specmatic/example/core/VersionInfo.class") // from the core dependency
+                .doesNotContain("io/specmatic/example/core/version.properties") // from the core dependency
+                .doesNotContain("kotlin/Metadata.class") // kotlin is also packaged
+                .doesNotContain("org/jetbrains/annotations/Contract.class") // kotlin is also packaged
+                .doesNotContain("org/intellij/lang/annotations/Language.class") // kotlin is also packaged
+                .doesNotContain("org/slf4j/Logger.class") // slf4j dependency is also packaged
+
+            assertThat(openJar("io.specmatic.example:executable:1.2.3").manifest.mainAttributes.getValue("Main-Class")).isNull()
+        }
+    }
+
+    @Nested
+    inner class MultiModuleOnlyWithShadowingPrefix {
+        @BeforeEach
+        fun setup() {
+            settingsFile.appendText(
+                """
                         //
                         include("core")
                         include("executable")
                     """.trimIndent()
-                )
+            )
 
-                buildFile.writeText(
-                    """
+            buildFile.writeText(
+                """
                     plugins {
                         id("java")
                         kotlin("jvm") version "1.9.25"
@@ -261,17 +257,16 @@ class OssLibraryFunctionalTest : AbstractFunctionalTest() {
                     }
                     
                 """.trimIndent()
-                )
+            )
 
-                writeMainClass(projectDir.resolve("executable"), "io.specmatic.example.executable.Main")
-            }
+            writeMainClass(projectDir.resolve("executable"), "io.specmatic.example.executable.Main")
+        }
 
-            @Test
-            fun `it fails`() {
-                val result = runWithFailure("publishAllPublicationsToStagingRepository")
-                assertThat(result.output).contains("Cannot access 'shadow': it is protected in 'OSSLibraryConfig'")
-                assertNothingPublished()
-            }
+        @Test
+        fun `it fails`() {
+            val result = runWithFailure("publishAllPublicationsToStagingRepository")
+            assertThat(result.output).contains("Cannot access 'shadow': it is protected in 'OSSLibraryConfig'")
+            assertNothingPublished()
         }
     }
 }

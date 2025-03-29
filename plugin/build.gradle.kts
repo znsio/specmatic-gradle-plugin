@@ -65,7 +65,7 @@ tasks.named<Task>("check") {
 
 tasks.named<Test>("test") {
     useJUnitPlatform()
-    maxParallelForks = 3
+    maxParallelForks = 5
 }
 
 val stagingRepo = layout.buildDirectory.dir("mvn-repo").get()

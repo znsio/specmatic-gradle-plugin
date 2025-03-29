@@ -25,10 +25,10 @@ internal fun Project.configureSigning() {
             val password = System.getenv("ORG_GRADLE_PROJECT_signingInMemoryKeyPassword")
             useInMemoryPgpKeys(keyId, key, password)
         }
-    }
 
-    tasks.withType(Sign::class.java) {
-        isRequired = System.getenv("ORG_GRADLE_PROJECT_signingInMemoryKeyId") != null
+        tasks.withType(Sign::class.java) {
+            isRequired = System.getenv("ORG_GRADLE_PROJECT_signingInMemoryKeyId") != null
+        }
     }
 }
 
@@ -40,6 +40,16 @@ internal fun Project.configurePublishing(publicationConfigurations: MutableList<
             publicationConfigurations.forEach { it.execute(this) }
         }
 
+//        println("project.publishing.publications - " + project.publishing.publications.count())
+//        project.publishing.publications.configureEach {
+//            if (this is MavenPublication) {
+//                RuntimeException().printStackTrace()
+//                println("project.publishing.publications - " + project.publishing.publications.map { it.name })
+//                pluginInfo("x")
+//                pluginInfo("Found publication named ${this.name} for artifact '$groupId:$artifactId:$version' using artifact(s) - ${artifacts.map { "${it.javaClass} -> ${it.file}" }} - from component - ${components.map { it.name }}")
+//                pluginInfo("y")
+//            }
+//        }
         setupPublishingTargets()
     }
 }

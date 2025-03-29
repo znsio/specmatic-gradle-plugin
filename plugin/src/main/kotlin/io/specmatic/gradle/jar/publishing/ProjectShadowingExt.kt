@@ -4,7 +4,6 @@ import com.github.jengelman.gradle.plugins.shadow.ShadowBasePlugin
 import com.github.jengelman.gradle.plugins.shadow.ShadowJavaPlugin.Companion.SHADOW_RUNTIME_ELEMENTS_CONFIGURATION_NAME
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.specmatic.gradle.jar.massage.jar
-import io.specmatic.gradle.jar.massage.obfuscateJarTask
 import io.specmatic.gradle.jar.massage.shadow
 import io.specmatic.gradle.license.pluginInfo
 import org.gradle.api.Action
@@ -17,18 +16,15 @@ import org.gradle.jvm.tasks.Jar
 import java.io.File
 import java.util.jar.JarFile
 
-internal const val UNOBFUSCATED_SHADOW_JAR = "unobfuscatedShadowJar"
 private const val SHADOW_OBFUSCATED_JAR = "shadowObfuscatedJar"
 
 internal fun Project.createUnobfuscatedShadowJar(
-    shadowActions: MutableList<Action<ShadowJar>>,
-    shadowPrefix: String,
-    isApplication: Boolean
+    shadowActions: MutableList<Action<ShadowJar>>, shadowPrefix: String, isApplication: Boolean
 ): TaskProvider<ShadowJar> {
     val jarTask = project.tasks.jar
-    project.pluginInfo("Created task $UNOBFUSCATED_SHADOW_JAR on $project")
 
-    return project.tasks.register<ShadowJar?>(UNOBFUSCATED_SHADOW_JAR, ShadowJar::class.java) {
+    return project.tasks.register<ShadowJar?>("unobfuscatedShadowJar", ShadowJar::class.java) {
+        project.pluginInfo("Created task $path on $project")
         group = "build"
         description = "Shadow the original jar"
 
@@ -45,15 +41,15 @@ internal fun Project.createUnobfuscatedShadowJar(
 }
 
 internal fun Project.createObfuscatedShadowJar(
+    obfuscateJarTask: TaskProvider<Jar>,
     shadowActions: MutableList<Action<ShadowJar>>,
     shadowPrefix: String,
     isApplication: Boolean
 ): TaskProvider<ShadowJar> {
-    val obfuscateJarTask = project.tasks.obfuscateJarTask
     val jarTask = project.tasks.jar
 
-    project.pluginInfo("Created task $SHADOW_OBFUSCATED_JAR on $project")
     return project.tasks.register(SHADOW_OBFUSCATED_JAR, ShadowJar::class.java) {
+        project.pluginInfo("Created task $path on $project")
         group = "build"
         description = "Shadow the obfuscated jar"
 
@@ -116,9 +112,7 @@ internal fun Project.applyShadowConfigs() {
             from(provider { configurations.shadow.get().files.map { zipTree(it) } })
         }
     }
-
 }
-
 
 private fun ShadowJar.maybeRelocateIfConfigured(project: Project, shadowPrefix: String, isApplication: Boolean) {
     val runtimeClasspath = project.configurations.findByName("runtimeClasspath")

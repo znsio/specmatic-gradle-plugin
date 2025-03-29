@@ -48,7 +48,7 @@ open class AbstractFunctionalTest {
                         object $className {
                             @JvmStatic
                             fun sayHello() {
-                                println("Hello from $className")
+                                println("Hello from " + $className::class.java)
                                 ${previousClassName?.let { "$previousClassName.sayHello()" } ?: ""}
                             }
 
@@ -117,11 +117,47 @@ open class AbstractFunctionalTest {
 
     private fun createRunner(gradleRunArgs: Array<out String>): GradleRunner =
         GradleRunner.create().forwardOutput().withPluginClasspath().withProjectDir(projectDir)
-            .withArguments(*gradleRunArgs)
+            .withArguments(
+                *gradleRunArgs,
+                "--stacktrace",
+//                "-Dorg.gradle.debug=true"
+            )
 
-    fun assertMainJarExecutes(result: BuildResult) {
+    fun assertMainJarExecutes(result: BuildResult, innerPackage: String? = null) {
         assertThat(result.output).contains("No SLF4J providers were found.")
         assertThat(result.output).contains("Hello, world! Version: v1.2.3(unknown)")
+        if (!innerPackage.isNullOrBlank()) {
+            val expectedLines = result.output.lines()
+                .filter { it.startsWith("Hello from class $innerPackage") && it.contains(".internal.") }
+            assertThat(expectedLines).containsExactly(
+                "Hello from class $innerPackage.Class5",
+                "Hello from class $innerPackage.Class4",
+                "Hello from class $innerPackage.Class3",
+                "Hello from class $innerPackage.Class2",
+                "Hello from class $innerPackage.Class1",
+            )
+        }
+        assertThat(result.output).contains("BUILD SUCCESSFUL")
+    }
+
+    fun assertMainObfuscatedJarExecutes(result: BuildResult, innerPackage: String? = null) {
+        assertThat(result.output).contains("No SLF4J providers were found.")
+        assertThat(result.output).contains("Hello, world! Version: v1.2.3(unknown)")
+
+        if (!innerPackage.isNullOrBlank()) {
+            val packageComponents = innerPackage.split(".internal.")
+            val expectedLines = result.output.lines()
+                .filter { it.startsWith("Hello from class ${packageComponents[0]}") && !it.contains(".internal.") }
+            assertThat(expectedLines)
+                .containsExactlyInAnyOrder(
+                    "Hello from class ${packageComponents[0]}.a.a.e",
+                    "Hello from class ${packageComponents[0]}.a.a.d",
+                    "Hello from class ${packageComponents[0]}.a.a.c",
+                    "Hello from class ${packageComponents[0]}.a.a.b",
+                    "Hello from class ${packageComponents[0]}.a.a.a"
+                )
+
+        }
         assertThat(result.output).contains("BUILD SUCCESSFUL")
     }
 

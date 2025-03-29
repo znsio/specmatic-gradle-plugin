@@ -1,9 +1,6 @@
 package io.specmatic.gradle.jar.massage
 
 import com.github.jengelman.gradle.plugins.shadow.ShadowBasePlugin.Companion.CONFIGURATION_NAME
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import io.specmatic.gradle.jar.publishing.OBFUSCATE_JAR_TASK
-import io.specmatic.gradle.jar.publishing.UNOBFUSCATED_SHADOW_JAR
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
@@ -28,11 +25,11 @@ internal fun Project.mavenPublications(action: Action<MavenPublication>) {
 internal inline val TaskContainer.jar: TaskProvider<Jar>
     get() = named("jar", Jar::class.java)
 
-internal inline val TaskContainer.obfuscateJarTask: TaskProvider<Jar>
-    get() = named(OBFUSCATE_JAR_TASK, Jar::class.java)
+//internal inline val TaskContainer.obfuscateJarTask: TaskProvider<Jar>
+//    get() = named(OBFUSCATE_JAR_TASK, Jar::class.java)
 
-internal inline val TaskContainer.unobfuscatedShadowJarTask: TaskProvider<ShadowJar>
-    get() = named(UNOBFUSCATED_SHADOW_JAR, ShadowJar::class.java)
+//internal inline val TaskContainer.unobfuscatedShadowJarTask: TaskProvider<ShadowJar>
+//    get() = named(UNOBFUSCATED_SHADOW_JAR, ShadowJar::class.java)
 
 internal fun Project.applyToRootProjectOrSubprojects(block: Project.() -> Unit) {
     if (subprojects.isEmpty()) {

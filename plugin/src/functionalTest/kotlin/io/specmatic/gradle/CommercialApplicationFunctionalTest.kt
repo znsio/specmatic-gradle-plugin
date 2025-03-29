@@ -15,7 +15,7 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
                 """
                     plugins {
                         id("java")
-                        kotlin("jvm") version "1.9.25"
+//                        kotlin("jvm") version "1.9.25"
                         id("io.specmatic.gradle")
                     }
 
@@ -29,6 +29,7 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
                     }
                     
                     specmatic {
+                        kotlinVersion = "1.9.20"
                         withCommercialApplication(rootProject) {
                             mainClass = "io.specmatic.example.Main"
                         }
@@ -36,14 +37,28 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
                     
                     tasks.register("runMain", JavaExec::class.java) {
                         dependsOn("publishAllPublicationsToStagingRepository")
-                        classpath("build/mvn-repo/io/specmatic/example/example-project/1.2.3/example-project-1.2.3.jar")
+                        classpath(rootProject.file("build/mvn-repo/io/specmatic/example/example-project/1.2.3/example-project-1.2.3.jar"))
                         mainClass = "io.specmatic.example.Main"
                         args = listOf("hello")
                     }
                     
                     tasks.register("errorMain", JavaExec::class.java) {
                         dependsOn("publishAllPublicationsToStagingRepository")
-                        classpath("build/mvn-repo/io/specmatic/example/example-project/1.2.3/example-project-1.2.3.jar")
+                        classpath(rootProject.file("build/mvn-repo/io/specmatic/example/example-project/1.2.3/example-project-1.2.3.jar"))
+                        mainClass = "io.specmatic.example.Main"
+                        args = listOf("error")
+                    }
+
+                    tasks.register("runMainOriginal", JavaExec::class.java) {
+                        dependsOn("publishAllPublicationsToStagingRepository")
+                        classpath(rootProject.file("build/mvn-repo/io/specmatic/example/example-project-all-debug/1.2.3/example-project-all-debug-1.2.3.jar"))
+                        mainClass = "io.specmatic.example.Main"
+                        args = listOf("hello")
+                    }
+                    
+                    tasks.register("errorMainOriginal", JavaExec::class.java) {
+                        dependsOn("publishAllPublicationsToStagingRepository")
+                        classpath(rootProject.file("build/mvn-repo/io/specmatic/example/example-project-all-debug/1.2.3/example-project-all-debug-1.2.3.jar"))
                         mainClass = "io.specmatic.example.Main"
                         args = listOf("error")
                     }
@@ -63,8 +78,10 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
 
         @Test
         fun `it publish single fat jar without any dependencies declared in the pom to staging repository`() {
-            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain")
-            assertMainJarExecutes(result)
+            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain", "runMainOriginal")
+            assertMainObfuscatedJarExecutes(result, "io.specmatic.example.internal.fluxcapacitor")
+            assertMainJarExecutes(result, "io.specmatic.example.internal.fluxcapacitor")
+
 
             val artifacts = arrayOf(
                 "io.specmatic.example:example-project-all-debug:1.2.3",
@@ -134,14 +151,37 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
                     
                     tasks.register("runMain", JavaExec::class.java) {
                         dependsOn("publishAllPublicationsToStagingRepository")
-                        classpath("build/mvn-repo/io/specmatic/example/example-project/1.2.3/example-project-1.2.3.jar")
+                        classpath(rootProject.file("build/mvn-repo/io/specmatic/example/example-project/1.2.3/example-project-1.2.3.jar"))
                         mainClass = "io.specmatic.example.Main"
+                        args = listOf("hello")
                     }
+            
+                    tasks.register("errorMain", JavaExec::class.java) {
+                        dependsOn("publishAllPublicationsToStagingRepository")
+                        classpath(rootProject.file("build/mvn-repo/io/specmatic/example/example-project/1.2.3/example-project-1.2.3.jar"))
+                        mainClass = "io.specmatic.example.Main"
+                        args = listOf("error")
+                    }
+
+                    tasks.register("runMainOriginal", JavaExec::class.java) {
+                        dependsOn("publishAllPublicationsToStagingRepository")
+                        classpath(rootProject.file("build/mvn-repo/io/specmatic/example/example-project-all-debug/1.2.3/example-project-all-debug-1.2.3.jar"))
+                        mainClass = "io.specmatic.example.Main"
+                        args = listOf("hello")
+                    }
+                    
+                    tasks.register("errorMainOriginal", JavaExec::class.java) {
+                        dependsOn("publishAllPublicationsToStagingRepository")
+                        classpath(rootProject.file("build/mvn-repo/io/specmatic/example/example-project-all-debug/1.2.3/example-project-all-debug-1.2.3.jar"))
+                        mainClass = "io.specmatic.example.Main"
+                        args = listOf("error")
+                    }
+
                 """.trimIndent()
             )
 
-            writeMainClass(projectDir, "io.specmatic.example.Main")
             writeRandomClasses(projectDir, "io.specmatic.example.internal.fluxcapacitor")
+            writeMainClass(projectDir, "io.specmatic.example.Main", "io.specmatic.example.internal.fluxcapacitor")
         }
 
         @Test
@@ -151,29 +191,48 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
             assertThat(result.output).contains("publishAllPublicationsToStagingRepository")
         }
 
+
         @Test
         fun `it publish single fat jar without any dependencies declared in the pom to staging repository`() {
-            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain")
-            assertMainJarExecutes(result)
+            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain", "runMainOriginal")
+            assertMainObfuscatedJarExecutes(result, "io.specmatic.example.internal.fluxcapacitor")
+            assertMainJarExecutes(result, "io.specmatic.example.internal.fluxcapacitor")
 
-            assertPublished(
+            val artifacts = arrayOf(
                 "io.specmatic.example:example-project-all-debug:1.2.3",
                 "io.specmatic.example:example-project:1.2.3"
             )
-            assertThat(getDependencies("io.specmatic.example:example-project:1.2.3")).isEmpty()
 
-            assertThat(
-                openJar("io.specmatic.example:example-project:1.2.3").stream()
-                    .map { it.name }).contains("io/specmatic/example/VersionInfo.class")
-                .contains("io/specmatic/example/version.properties")
-                .contains("example/kotlin/Metadata.class") // kotlin is also packaged
-                .contains("example/org/jetbrains/annotations/Contract.class") // kotlin is also packaged
-                .contains("example/org/intellij/lang/annotations/Language.class") // kotlin is also packaged
-                .contains("example/org/slf4j/Logger.class") // slf4j dependency is also packaged
+            assertPublished(*artifacts)
+            artifacts.forEach { assertThat(getDependencies(it)).isEmpty() }
 
-            assertThat(openJar("io.specmatic.example:example-project:1.2.3").manifest.mainAttributes.getValue("Main-Class")).isEqualTo(
-                "io.specmatic.example.Main"
-            )
+            artifacts.forEach {
+                assertThat(
+                    openJar(it).stream()
+                        .map { it.name })
+                    .contains("io/specmatic/example/VersionInfo.class")
+                    .contains("io/specmatic/example/version.properties")
+                    .contains("example/kotlin/Metadata.class") // kotlin is also packaged
+                    .contains("example/org/jetbrains/annotations/Contract.class") // kotlin is also packaged
+                    .contains("example/org/intellij/lang/annotations/Language.class") // kotlin is also packaged
+                    .contains("example/org/slf4j/Logger.class") // slf4j dependency is also packaged
+
+                assertThat(openJar(it).manifest.mainAttributes.getValue("Main-Class"))
+                    .isEqualTo("io.specmatic.example.Main")
+            }
+        }
+
+        @Test
+        fun `it should obfuscate classes`() {
+            var result = runWithFailure("errorMain")
+            assertThat(result.output).contains("""Exception in thread "main" java.lang.RuntimeException: Error in Class1""")
+            // `io.specmatic.example.a.a.a.b` -> `b` is the method name, the `a` immediately before that is the class, everything befor that is the package name
+            assertThat(result.output).contains("at io.specmatic.example.a.a.a.b(Class1.kt:")
+            assertThat(result.output).contains("at io.specmatic.example.a.a.b.b(Class2.kt:")
+            assertThat(result.output).contains("at io.specmatic.example.a.a.c.b(Class3.kt:")
+            assertThat(result.output).contains("at io.specmatic.example.a.a.d.b(Class4.kt:")
+            assertThat(result.output).contains("at io.specmatic.example.a.a.e.b(Class5.kt:")
+            assertThat(result.output).contains("at io.specmatic.example.Main.main(Main.kt")
         }
     }
 
@@ -216,7 +275,7 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
                         withCommercialLibrary(project(":core")) {
                         }
                         
-                        withCommercialApplication(project("executable")) {
+                        withCommercialApplication(project(":executable")) {
                             mainClass = "io.specmatic.example.executable.Main"
                         }
                     }
@@ -230,19 +289,44 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
                             dependsOn("publishAllPublicationsToStagingRepository")
                             classpath(rootProject.file("build/mvn-repo/io/specmatic/example/executable/1.2.3/executable-1.2.3.jar"))
                             mainClass = "io.specmatic.example.executable.Main"
+                            args = listOf("hello")
+                        }
+                        
+                        tasks.register("errorMain", JavaExec::class.java) {
+                            dependsOn("publishAllPublicationsToStagingRepository")
+                            classpath(rootProject.file("build/mvn-repo/io/specmatic/example/example-project/1.2.3/example-project-1.2.3.jar"))
+                            mainClass = "io.specmatic.example.executable.Main"
+                            args = listOf("error")
+                        }
+    
+                        tasks.register("runMainOriginal", JavaExec::class.java) {
+                            dependsOn("publishAllPublicationsToStagingRepository")
+                            classpath(rootProject.file("build/mvn-repo/io/specmatic/example/executable-all-debug/1.2.3/executable-all-debug-1.2.3.jar"))
+                            mainClass = "io.specmatic.example.executable.Main"
+                            args = listOf("hello")
+                        }
+                        
+                        tasks.register("errorMainOriginal", JavaExec::class.java) {
+                            dependsOn("publishAllPublicationsToStagingRepository")
+                            classpath(rootProject.file("build/mvn-repo/io/specmatic/example/executable-all-debug/1.2.3/executable-all-debug-1.2.3.jar"))
+                            mainClass = "io.specmatic.example.executable.Main"
+                            args = listOf("error")
                         }
                     }
                     
                 """.trimIndent()
             )
 
-            writeMainClass(projectDir.resolve("executable"), "io.specmatic.example.executable.Main")
             writeRandomClasses(
                 projectDir.resolve("executable"),
                 "io.specmatic.example.executable.internal.fluxcapacitor"
             )
+            writeMainClass(
+                projectDir.resolve("executable"),
+                "io.specmatic.example.executable.Main",
+                "io.specmatic.example.executable.internal.fluxcapacitor"
+            )
             writeRandomClasses(projectDir.resolve("core"), "io.specmatic.example.core.internal.chronocore")
-
         }
 
         @Test
@@ -255,8 +339,9 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
         @Test
         fun `it publish single fat jar for executable with no deps, and core jar with dependencies`() {
             val result =
-                runWithSuccess("publishAllPublicationsToStagingRepository", "runMain", "--stacktrace")
-            assertMainJarExecutes(result)
+                runWithSuccess("publishAllPublicationsToStagingRepository", "runMain", "runMainOriginal")
+            assertMainObfuscatedJarExecutes(result, "io.specmatic.example.executable.internal.fluxcapacitor")
+            assertMainJarExecutes(result, "io.specmatic.example.executable.internal.fluxcapacitor")
 
             assertPublished(
                 "io.specmatic.example:executable:1.2.3",
@@ -270,13 +355,24 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
 
             assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).isEmpty()
             assertThat(getDependencies("io.specmatic.example:executable-all-debug:1.2.3")).isEmpty()
+
             assertThat(getDependencies("io.specmatic.example:core:1.2.3")).isEmpty()
             assertThat(getDependencies("io.specmatic.example:core-all-debug:1.2.3")).isEmpty()
-            assertThat(getDependencies("io.specmatic.example:core-min:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:core-min:1.2.3")).containsExactlyInAnyOrder(
+                "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
+                "org.slf4j:slf4j-api:2.0.17",
+            )
             assertThat(getDependencies("io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3")).containsExactlyInAnyOrder(
                 "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
-                "org.slf4j:slf4j-api:2.0.17"
+                "org.slf4j:slf4j-api:2.0.17",
             )
+
+            // original jar should be larger than obfuscated jar
+            assertThat(getJar("io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3").length()).isGreaterThan(
+                getJar("io.specmatic.example:core-min:1.2.3").length()
+            )
+            assertThat(getJar("io.specmatic.example:core-all-debug:1.2.3").length()).isGreaterThan(getJar("io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3").length())
+            assertThat(getJar("io.specmatic.example:core-all-debug:1.2.3").length()).isGreaterThan(getJar("io.specmatic.example:core:1.2.3").length())
 
             assertThat(
                 openJar("io.specmatic.example:executable-all-debug:1.2.3").stream()
@@ -347,7 +443,7 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
                         withCommercialLibrary(project(":core")) {
                         }
                         
-                        withCommercialApplication(project("executable")) {
+                        withCommercialApplication(project(":executable")) {
                             mainClass = "io.specmatic.example.executable.Main"
                             shadow("example")
                         }
@@ -362,15 +458,41 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
                             dependsOn("publishAllPublicationsToStagingRepository")
                             classpath(rootProject.file("build/mvn-repo/io/specmatic/example/executable/1.2.3/executable-1.2.3.jar"))
                             mainClass = "io.specmatic.example.executable.Main"
+                            args = listOf("hello")
+                        }
+                        
+                        tasks.register("errorMain", JavaExec::class.java) {
+                            dependsOn("publishAllPublicationsToStagingRepository")
+                            classpath(rootProject.file("build/mvn-repo/io/specmatic/example/example-project/1.2.3/example-project-1.2.3.jar"))
+                            mainClass = "io.specmatic.example.executable.Main"
+                            args = listOf("error")
+                        }
+                        
+                        tasks.register("runMainOriginal", JavaExec::class.java) {
+                            dependsOn("publishAllPublicationsToStagingRepository")
+                            classpath(rootProject.file("build/mvn-repo/io/specmatic/example/executable-all-debug/1.2.3/executable-all-debug-1.2.3.jar"))
+                            mainClass = "io.specmatic.example.executable.Main"
+                            args = listOf("hello")
+                        }
+                        
+                        tasks.register("errorMainOriginal", JavaExec::class.java) {
+                            dependsOn("publishAllPublicationsToStagingRepository")
+                            classpath(rootProject.file("build/mvn-repo/io/specmatic/example/executable-all-debug/1.2.3/executable-all-debug-1.2.3.jar"))
+                            mainClass = "io.specmatic.example.executable.Main"
+                            args = listOf("error")
                         }
                     }
                     
                 """.trimIndent()
             )
 
-            writeMainClass(projectDir.resolve("executable"), "io.specmatic.example.executable.Main")
             writeRandomClasses(
                 projectDir.resolve("executable"),
+                "io.specmatic.example.executable.internal.fluxcapacitor"
+            )
+            writeMainClass(
+                projectDir.resolve("executable"),
+                "io.specmatic.example.executable.Main",
                 "io.specmatic.example.executable.internal.fluxcapacitor"
             )
             writeRandomClasses(projectDir.resolve("core"), "io.specmatic.example.core.internal.chronocore")
@@ -385,8 +507,10 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
 
         @Test
         fun `it publish single fat jar for executable with no deps, and core jar with dependencies`() {
-            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain")
-            assertMainJarExecutes(result)
+            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain", "runMainOriginal")
+            assertMainObfuscatedJarExecutes(result, "io.specmatic.example.executable.internal.fluxcapacitor")
+            assertMainJarExecutes(result, "io.specmatic.example.executable.internal.fluxcapacitor")
+
 
             assertPublished(
                 "io.specmatic.example:executable:1.2.3",
