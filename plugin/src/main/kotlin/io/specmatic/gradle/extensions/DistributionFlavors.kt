@@ -6,6 +6,7 @@ import io.specmatic.gradle.jar.publishing.createObfuscatedOriginalJar
 import io.specmatic.gradle.jar.publishing.createObfuscatedShadowJar
 import io.specmatic.gradle.jar.publishing.createUnobfuscatedShadowJar
 import io.specmatic.gradle.jar.publishing.publishJar
+import io.specmatic.gradle.specmaticExtension
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
@@ -32,6 +33,13 @@ abstract class BaseDistribution : DistributionFlavor {
 
     internal open fun applyToProject(target: Project) {
         target.plugins.apply(JavaPlugin::class.java)
+        target.plugins.withType(JavaPlugin::class.java) {
+            target.afterEvaluate {
+                target.configurations.named("implementation") {
+                    this.dependencies.add(target.dependencies.create("org.jetbrains.kotlin:kotlin-stdlib:${target.specmaticExtension().kotlinVersion}"))
+                }
+            }
+        }
 //        target.applyToRootProjectOrSubprojects {
         target.configureSigning()
         target.configurePublishing(publicationConfigurations)

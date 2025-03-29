@@ -28,6 +28,7 @@ class OssLibraryFunctionalTest : AbstractFunctionalTest() {
                     }
                     
                     specmatic {
+                        kotlinVersion = "1.9.20"
                         withOSSLibrary(rootProject) {
                         }
                     }
@@ -51,7 +52,7 @@ class OssLibraryFunctionalTest : AbstractFunctionalTest() {
             assertPublished("io.specmatic.example:example-project:1.2.3")
             assertThat(getDependencies("io.specmatic.example:example-project:1.2.3"))
                 .containsExactlyInAnyOrder(
-                    "org.jetbrains.kotlin:kotlin-stdlib:2.1.20",
+                    "org.jetbrains.kotlin:kotlin-stdlib:1.9.20",
                     "org.slf4j:slf4j-api:2.0.17"
                 )
 

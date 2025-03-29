@@ -13,17 +13,24 @@ class EnsureJarsAreStampedPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         target.afterEvaluate {
             target.tasks.withType(Jar::class.java) {
-                target.pluginInfo("Ensuring that ${this.path} is stamped")
-                val extension = this.project.specmaticExtension()
-                val module = extension.projectConfigurations[this.project]
-                if (module is ApplicationFeature && module.mainClass.isNotBlank()) {
-                    val mainClass = module.mainClass
-                    target.pluginInfo("Adding main class($mainClass) to manifest in ${this.path}")
-                    manifest.attributes["Main-Class"] = mainClass
+                if (mainclass().isNullOrEmpty()) {
+                    target.pluginInfo("Ensuring that ${this.path} is stamped")
+                } else {
+                    manifest.attributes["Main-Class"] = mainclass()
+                    target.pluginInfo("Ensuring that ${this.path} is stamped with main class ${mainclass()}")
                 }
+
                 project.versionInfo().addToManifest(manifest)
             }
         }
     }
 
+    private fun Project.mainclass(): String? {
+        val extension = this.specmaticExtension()
+        val module = extension.projectConfigurations[this]
+        if (module is ApplicationFeature && module.mainClass.isNotBlank()) {
+            return module.mainClass
+        }
+        return null
+    }
 }
