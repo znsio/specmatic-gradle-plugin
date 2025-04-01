@@ -3,6 +3,7 @@ package io.specmatic.gradle.extensions
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.specmatic.gradle.dock.registerDockerTasks
 import io.specmatic.gradle.jar.publishing.*
+import io.specmatic.gradle.license.pluginInfo
 import io.specmatic.gradle.specmaticExtension
 import org.gradle.api.Action
 import org.gradle.api.Project
@@ -28,6 +29,7 @@ abstract class BaseDistribution(protected val project: Project) : DistributionFl
         project.plugins.apply(JavaPlugin::class.java)
         project.plugins.withType(JavaPlugin::class.java) {
             project.configurations.named("implementation") {
+                project.pluginInfo("Adding kotlin-stdlib to implementation configuration - org.jetbrains.kotlin:kotlin-stdlib:${project.specmaticExtension().kotlinVersion}")
                 this.dependencies.add(project.dependencies.create("org.jetbrains.kotlin:kotlin-stdlib:${project.specmaticExtension().kotlinVersion}"))
             }
         }
