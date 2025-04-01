@@ -1,11 +1,8 @@
-import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
-
 plugins {
     id("io.specmatic.gradle") version ("0.0.30")
 }
 
 specmatic {
-    kotlinApiVersion = KotlinVersion.KOTLIN_1_9
     publishToMavenCentral()
     publishTo("specmaticPrivate", "https://maven.pkg.github.com/znsio/specmatic-private-maven-repo")
     withProject(project(":plugin")) {
