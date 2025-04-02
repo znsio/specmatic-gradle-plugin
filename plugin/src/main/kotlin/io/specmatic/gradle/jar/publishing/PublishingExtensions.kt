@@ -18,7 +18,7 @@ internal fun Project.createUnobfuscatedJarPublication(
 ) {
     val jarTask = tasks.jar
     val publication = publishJar(
-        publicationConfigurations, JavaComponentPublisher(artifactIdentifier, components["java"])
+        publicationConfigurations, JavaComponentPublisher(project, artifactIdentifier, components["java"])
     )
     createConfigurationAndAddArtifacts(publication.name, jarTask)
 }
@@ -65,6 +65,7 @@ internal fun Project.createShadowedObfuscatedJarPublication(
     publishJar(
         publicationConfigurations,
         ArtifactPublishingConfigurer(
+            project,
             artifactIdentifier, task
         )
     )
@@ -78,7 +79,7 @@ internal fun Project.createShadowedUnobfuscatedJarPublication(
     task: TaskProvider<out Jar>,
     artifactIdentifier: String
 ) {
-    publishJar(publicationConfigurations, ArtifactPublishingConfigurer(artifactIdentifier, task))
+    publishJar(publicationConfigurations, ArtifactPublishingConfigurer(project, artifactIdentifier, task))
     createConfigurationAndAddArtifacts(task)
 }
 
@@ -100,22 +101,30 @@ interface PublishingConfigurer {
     fun name(): String
 }
 
-class JavaComponentPublisher(private val artifactIdentifier: String, private val component: SoftwareComponent) :
+class JavaComponentPublisher(
+    private val project: Project,
+    private val artifactIdentifier: String,
+    private val component: SoftwareComponent
+) :
     PublishingConfigurer {
     override fun configure(publication: MavenPublication) {
         publication.from(component)
         publication.artifactId = artifactIdentifier
-        pluginInfo("Configuring publication named ${name()} for artifact '${publication.groupId}:${publication.artifactId}:${publication.version}' using component ${component.name}")
+        project.pluginInfo("Configuring publication named ${name()} for artifact '${publication.groupId}:${publication.artifactId}:${publication.version}' using component ${component.name}")
     }
 
     override fun name(): String = artifactIdentifier
 
 }
 
-class ArtifactPublishingConfigurer(private val artifactIdentifier: String, private val task: TaskProvider<out Jar>) :
+class ArtifactPublishingConfigurer(
+    private val project: Project,
+    private val artifactIdentifier: String,
+    private val task: TaskProvider<out Jar>
+) :
     PublishingConfigurer {
     override fun configure(publication: MavenPublication) {
-        pluginInfo("Configuring publication named ${name()} for artifact '${publication.groupId}:${publication.artifactId}:${publication.version}' using task ${task.get().path}")
+        project.pluginInfo("Configuring publication named ${name()} for artifact '${publication.groupId}:${publication.artifactId}:${publication.version}' using task ${task.get().path}")
         publication.artifact(task) {
             // we keep the classifier when building the jar, because we need to distinguish between the original and obfuscated jars, in the `lib` dir.
             // but we remove the classifier when publishing, because we don't want the classifier in the published jar name.

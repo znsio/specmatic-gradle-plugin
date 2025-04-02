@@ -26,7 +26,7 @@ internal fun Project.createUnobfuscatedShadowJar(
     val jarTask = project.tasks.jar
 
     return project.tasks.register<ShadowJar?>("unobfuscatedShadowJar", ShadowJar::class.java) {
-        project.pluginInfo("Created task $path on $project")
+        project.pluginInfo("Created task $path")
         group = "build"
         description = "Shadow the original jar"
 
@@ -51,7 +51,7 @@ internal fun Project.createObfuscatedShadowJar(
     val jarTask = project.tasks.jar
 
     return project.tasks.register(SHADOW_OBFUSCATED_JAR, ShadowJar::class.java) {
-        project.pluginInfo("Created task $path on $project")
+        project.pluginInfo("Created task $path")
         group = "build"
         description = "Shadow the obfuscated jar"
 
@@ -74,7 +74,7 @@ private fun Project.applyProjectSpecifiedConfigurations(
     shadowJarTask: ShadowJar, shadowActions: MutableList<Action<ShadowJar>>
 ) {
     shadowActions.forEach {
-        project.pluginInfo("Applying custom shadow jar configuration on $project")
+        project.pluginInfo("Applying custom shadow jar configuration")
         it.execute(shadowJarTask)
     }
 }

@@ -10,9 +10,6 @@ import org.gradle.jvm.tasks.Jar
 internal const val OBFUSCATE_JAR_TASK = "obfuscateJar"
 
 internal fun Project.createObfuscatedOriginalJar(proguardExtraArgs: MutableList<String?>): TaskProvider<Jar> {
-    project.pluginInfo("Installing obfuscation hook on $project")
-    project.pluginInfo("Configuring obfuscation for on $project")
-
     val obfuscateJarInternalTask = project.tasks.register("obfuscateJarInternal", ProguardTask::class.java) {
         val jarTask = project.tasks.jar.get()
         dependsOn(jarTask)
@@ -24,7 +21,7 @@ internal fun Project.createObfuscatedOriginalJar(proguardExtraArgs: MutableList<
 
     // Jar tasks automatically register as maven publication, so we "copy" the proguard jar into another one
     val obfuscateJarTask = project.tasks.register(OBFUSCATE_JAR_TASK, Jar::class.java) {
-        project.pluginInfo("Created task $path on $project")
+        project.pluginInfo("Created task $path")
 
         group = "build"
         description = "Run obfuscation on the output of the `jar` task"
