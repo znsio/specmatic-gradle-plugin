@@ -83,7 +83,7 @@ abstract class AbstractVulnScanTask @Inject constructor(private val execLauncher
                 }
             }
         } catch (e: Exception) {
-            project.pluginInfo("osv-scanner failed with error: ${e.message}")
+            project.pluginInfo("osv-scanner failed with error: ${e.message} (ignoring error)")
             return false
         }
         return true
