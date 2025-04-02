@@ -29,7 +29,6 @@ abstract class BaseDistribution(protected val project: Project) : DistributionFl
         project.plugins.apply(JavaPlugin::class.java)
         project.plugins.withType(JavaPlugin::class.java) {
             project.configurations.named("implementation") {
-                project.pluginInfo("Adding kotlin-stdlib to implementation configuration - org.jetbrains.kotlin:kotlin-stdlib:${project.specmaticExtension().kotlinVersion}")
                 this.dependencies.add(project.dependencies.create("org.jetbrains.kotlin:kotlin-stdlib:${project.specmaticExtension().kotlinVersion}"))
             }
         }
@@ -211,6 +210,9 @@ class CommercialApplicationAndLibraryConfig(project: Project) : ShadowingFeature
             project.plugins.withType(MavenPublishPlugin::class.java) {
                 project.createShadowedObfuscatedJarPublication(
                     publicationConfigurations, obfuscatedShadowJar, project.name
+                )
+                project.createObfuscatedOriginalJarPublication(
+                    publicationConfigurations, obfuscatedOriginalJar, "${project.name}-min"
                 )
                 project.createShadowedUnobfuscatedJarPublication(
                     publicationConfigurations, unobfuscatedShadowJar, "${project.name}-all-debug"
