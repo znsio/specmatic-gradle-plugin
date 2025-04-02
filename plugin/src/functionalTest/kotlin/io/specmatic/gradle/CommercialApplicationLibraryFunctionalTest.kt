@@ -66,13 +66,20 @@ class CommercialApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
 
             val artifacts = arrayOf(
                 "io.specmatic.example:example-project-all-debug:1.2.3",
-                "io.specmatic.example:example-project:1.2.3"
+                "io.specmatic.example:example-project:1.2.3",
+                "io.specmatic.example:example-project-min:1.2.3",
             )
 
             assertPublished(*artifacts)
-            artifacts.forEach { assertThat(getDependencies(it)).isEmpty() }
 
-            artifacts.forEach {
+            assertThat(getDependencies("io.specmatic.example:example-project-all-debug:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:example-project:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:example-project-min:1.2.3")).containsExactlyInAnyOrder(
+                "org.jetbrains.kotlin:kotlin-stdlib:1.9.20",
+                "org.slf4j:slf4j-api:2.0.17",
+            )
+
+            artifacts.filter { !it.contains("-min:") }.forEach {
                 assertThat(
                     openJar(it).stream()
                         .map { it.name })
@@ -158,13 +165,20 @@ class CommercialApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
 
             val artifacts = arrayOf(
                 "io.specmatic.example:example-project-all-debug:1.2.3",
-                "io.specmatic.example:example-project:1.2.3"
+                "io.specmatic.example:example-project:1.2.3",
+                "io.specmatic.example:example-project-min:1.2.3"
             )
 
             assertPublished(*artifacts)
-            artifacts.forEach { assertThat(getDependencies(it)).isEmpty() }
 
-            artifacts.forEach {
+            assertThat(getDependencies("io.specmatic.example:example-project-all-debug:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:example-project:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:example-project-min:1.2.3")).containsExactlyInAnyOrder(
+                "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
+                "org.slf4j:slf4j-api:2.0.17",
+            )
+
+            artifacts.filter { !it.contains("-min:") }.forEach {
                 assertThat(
                     openJar(it).stream()
                         .map { it.name })
@@ -287,6 +301,7 @@ class CommercialApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
             assertPublished(
                 "io.specmatic.example:executable:1.2.3",
                 "io.specmatic.example:executable-all-debug:1.2.3",
+                "io.specmatic.example:executable-min:1.2.3",
 
                 "io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3",
                 "io.specmatic.example:core:1.2.3",
@@ -296,6 +311,11 @@ class CommercialApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
 
             assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).isEmpty()
             assertThat(getDependencies("io.specmatic.example:executable-all-debug:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:executable-min:1.2.3")).containsExactlyInAnyOrder(
+                "io.specmatic.example:core:1.2.3",
+                "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
+                "org.slf4j:slf4j-api:2.0.17",
+            )
 
             assertThat(getDependencies("io.specmatic.example:core:1.2.3")).isEmpty()
             assertThat(getDependencies("io.specmatic.example:core-all-debug:1.2.3")).isEmpty()
@@ -444,6 +464,7 @@ class CommercialApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
             assertPublished(
                 "io.specmatic.example:executable:1.2.3",
                 "io.specmatic.example:executable-all-debug:1.2.3",
+                "io.specmatic.example:executable-min:1.2.3",
 
                 "io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3",
                 "io.specmatic.example:core:1.2.3",
@@ -452,6 +473,12 @@ class CommercialApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
             )
 
             assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:executable-all-debug:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:executable-min:1.2.3")).containsExactlyInAnyOrder(
+                "io.specmatic.example:core:1.2.3",
+                "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
+                "org.slf4j:slf4j-api:2.0.17",
+            )
             assertThat(getDependencies("io.specmatic.example:core:1.2.3")).isEmpty()
 
             assertThat(
