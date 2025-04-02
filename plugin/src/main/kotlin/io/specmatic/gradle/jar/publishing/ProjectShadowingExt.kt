@@ -3,6 +3,7 @@ package io.specmatic.gradle.jar.publishing
 import com.github.jengelman.gradle.plugins.shadow.ShadowBasePlugin
 import com.github.jengelman.gradle.plugins.shadow.ShadowJavaPlugin.Companion.SHADOW_RUNTIME_ELEMENTS_CONFIGURATION_NAME
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com.github.jengelman.gradle.plugins.shadow.transformers.PropertiesFileTransformer
 import io.specmatic.gradle.extensions.ApplicationFeature
 import io.specmatic.gradle.jar.massage.jar
 import io.specmatic.gradle.jar.massage.shadow
@@ -11,6 +12,7 @@ import io.specmatic.gradle.specmaticExtension
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.component.SoftwareComponentFactory
+import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.TaskProvider
@@ -199,10 +201,27 @@ internal fun ShadowJar.configureCommonShadowConfigs(
 
     maybeRelocateIfConfigured(project, shadowPrefix, isApplication)
 
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    isPreserveFileTimestamps = false
+    isReproducibleFileOrder = true
+
     manifest.inheritFrom(jarTask.get().manifest)
     configurations.set(listOf(runtimeClasspath))
 
     mergeServiceFiles()
+
+    // these files contain hints for spring to find and scan for beans
+    append("META-INF/spring.handlers")
+    append("META-INF/spring.schemas")
+    append("META-INF/spring.tooling")
+    append("META-INF/spring/aot.factories")
+    append("META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports")
+    append("META-INF/spring/org.springframework.boot.actuate.autoconfigure.web.ManagementContextConfiguration.imports")
+
+    transform(PropertiesFileTransformer::class.java) {
+        paths.set(listOf("META-INF/spring.factories"))
+        mergeStrategy.set(PropertiesFileTransformer.MergeStrategy.Append)
+    }
 
     exclude(
         "META-INF/INDEX.LIST",
