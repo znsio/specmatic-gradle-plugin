@@ -13,6 +13,7 @@ import io.specmatic.gradle.plugin.VersionInfo
 import io.specmatic.gradle.tests.SpecmaticTestReportingPlugin
 import io.specmatic.gradle.versioninfo.VersionInfoPlugin
 import io.specmatic.gradle.versioninfo.versionInfo
+import io.specmatic.gradle.versions.ForceVersionConstraintsPlugin
 import io.specmatic.gradle.vuln.SpecmaticVulnScanPlugin
 import org.barfuin.gradle.taskinfo.GradleTaskInfoPlugin
 import org.gradle.api.GradleException
@@ -50,6 +51,7 @@ class SpecmaticGradlePlugin : Plugin<Project> {
             plugins.apply(EnsureReproducibleArtifactsPlugin::class.java)
             plugins.apply(EnsureJarsAreStampedPlugin::class.java)
             plugins.apply(ConfigureExecTaskPlugin::class.java)
+            plugins.apply(ForceVersionConstraintsPlugin::class.java)
         }
     }
 
