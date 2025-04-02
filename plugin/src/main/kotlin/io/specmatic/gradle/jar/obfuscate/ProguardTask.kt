@@ -20,6 +20,9 @@ abstract class ProguardTask @Inject constructor(
     private val execLauncher: ExecOperations, javaToolchainService: JavaToolchainService, objectFactory: ObjectFactory
 ) : DefaultTask() {
 
+    @get:Input
+    val proguardVersion = "7.7.0"
+
     private var javaLauncher: Property<JavaLauncher> = objectFactory.property<JavaLauncher?>(JavaLauncher::class.java)
         .convention(javaToolchainService.launcherFor({}))
 
@@ -33,17 +36,17 @@ abstract class ProguardTask @Inject constructor(
     @get:OutputFile
     var outputJar: File? = null
 
-    @InputFiles
-    @PathSensitive(PathSensitivity.ABSOLUTE)
-    fun getProguardJars(): Configuration {
-        return project.configurations.named("proguard").get()
-    }
-
     @TaskAction
     fun exec() {
+        val proguard = project.configurations.create("proguard_${name}")
+        // since proguard is GPL, we avoid compile time dependencies on it
+        proguard.dependencies.add(project.dependencies.create("com.guardsquare:proguard-base:$proguardVersion"))
+
+        project.repositories.mavenCentral()
+
         val args = mutableListOf<String>()
         args.add("-cp")
-        args.add(getProguardJars().asPath)
+        args.add(this.project.configurations.named("proguard_${this.name}").get().asPath)
         args.add("proguard.ProGuard") // main class
         args.addAll(createArgs())
         getArgsFile().writeText(args.joinToString("\n", transform = ::shellEscape))
@@ -66,7 +69,7 @@ abstract class ProguardTask @Inject constructor(
             project.pluginInfo("Check the proguard output in $outputFile")
             throw e
         } finally {
-            project.configurations.remove(project.configurations.getByName("proguard"))
+            project.configurations.remove(proguard)
         }
     }
 
@@ -85,7 +88,7 @@ abstract class ProguardTask @Inject constructor(
 
     @OutputDirectory
     fun getProguardOutputDir(): File {
-        return File("${project.layout.buildDirectory.get().asFile}/proguard")
+        return File("${project.layout.buildDirectory.get().asFile}/proguard-${name}")
     }
 
     private fun createArgs(): MutableList<String> {

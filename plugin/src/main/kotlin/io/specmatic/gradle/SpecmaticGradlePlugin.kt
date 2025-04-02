@@ -27,7 +27,6 @@ class SpecmaticGradlePlugin : Plugin<Project> {
         target.pluginInfo("Specmatic Gradle Plugin ${VersionInfo.describe()}")
 
         target.applyToRootProjectOrSubprojects { applyShadowConfigs() }
-        target.applyToRootProjectOrSubprojects { applyProguardConfigs() }
 
         target.rootProject.versionInfo()
 
@@ -53,14 +52,6 @@ class SpecmaticGradlePlugin : Plugin<Project> {
             plugins.apply(ConfigureExecTaskPlugin::class.java)
         }
     }
-
-    private fun Project.applyProguardConfigs() {
-        project.repositories.mavenCentral()
-        val proguard = project.configurations.create("proguard")
-        // since proguard is GPL, we avoid compile time dependencies on it
-        proguard.dependencies.add(project.dependencies.create("com.guardsquare:proguard-base:7.7.0"))
-    }
-
 
 }
 
