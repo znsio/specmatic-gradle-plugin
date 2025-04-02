@@ -58,7 +58,7 @@ class SpecmaticGradlePlugin : Plugin<Project> {
         project.repositories.mavenCentral()
         val proguard = project.configurations.create("proguard")
         // since proguard is GPL, we avoid compile time dependencies on it
-        proguard.dependencies.add(project.dependencies.create("com.guardsquare:proguard-base:7.6.1"))
+        proguard.dependencies.add(project.dependencies.create("com.guardsquare:proguard-base:7.7.0"))
     }
 
 
