@@ -40,7 +40,7 @@ internal class CustomLicenseImporter(private val allowedLicenses: MutableList<Mo
 
 class SpecmaticLicenseReportingPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        project.pluginInfo("Configuring license reporting on $project")
+        project.pluginInfo("Configuring license reporting")
         project.plugins.apply(LicenseReportPlugin::class.java)
         project.plugins.withType(LicenseReportPlugin::class.java) {
             val prettyPrintLicenseCheckFailuresTask = createPrettyPrintLicenseCheckFailuresTask(project)
@@ -129,9 +129,5 @@ class SpecmaticLicenseReportingPlugin : Plugin<Project> {
 }
 
 fun Project.pluginInfo(string: String) {
-    println("[Specmatic Gradle Plugin]: $string")
-}
-
-fun pluginInfo(string: String) {
-    println("[Specmatic Gradle Plugin]: $string")
+    println("[SGP - ${this.path}]: $string")
 }

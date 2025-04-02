@@ -25,7 +25,7 @@ class VersionInfoPlugin : Plugin<Project> {
                 throw GradleException("Set your project version in the `gradle.properties`, not in the `build.gradle.kts` file")
             }
 
-            project.pluginInfo("Configuring version properties file on $project")
+            project.pluginInfo("Configuring version properties file")
 
             val versionInfoForProject = project.versionInfo()
 

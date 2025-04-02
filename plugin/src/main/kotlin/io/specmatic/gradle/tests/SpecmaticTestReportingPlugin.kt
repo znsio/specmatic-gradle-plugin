@@ -11,7 +11,7 @@ import org.gradle.testing.jacoco.tasks.JacocoReport
 
 internal class SpecmaticTestReportingPlugin : Plugin<Project> {
     override fun apply(target: Project) {
-        target.pluginInfo("$target - wire test logger, jacoco, and junit")
+        target.pluginInfo("Apply test logger, jacoco and setup junit")
         target.plugins.apply(TestLoggerPlugin::class.java)
         target.plugins.apply(JacocoPlugin::class.java)
 

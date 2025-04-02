@@ -32,7 +32,7 @@ internal fun Project.configureSigning() {
 internal fun Project.configurePublishing() {
     plugins.apply(MavenPublishBasePlugin::class.java)
     plugins.withType(MavenPublishBasePlugin::class.java) {
-        pluginInfo("Configuring maven publishing on $project")
+        pluginInfo("Configuring maven publishing")
         setupPublishingTargets()
     }
 }
