@@ -71,7 +71,7 @@ private fun Project.bumpSpecmaticVersionInSampleProjectTask(
     commandLine = listOf(
         "../specmatic-github-workflows/bin/fetch-artifacts",
         "-a",
-        "$group:$name-min:${specmaticModuleVersion}",
+        "${project.group}:${project.name}-min:${specmaticModuleVersion}",
         "-r",
         "lib"
     )
