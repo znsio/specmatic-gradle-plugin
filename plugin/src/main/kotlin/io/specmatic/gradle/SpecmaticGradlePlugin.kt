@@ -10,6 +10,7 @@ import io.specmatic.gradle.jar.publishing.applyShadowConfigs
 import io.specmatic.gradle.license.SpecmaticLicenseReportingPlugin
 import io.specmatic.gradle.license.pluginInfo
 import io.specmatic.gradle.plugin.VersionInfo
+import io.specmatic.gradle.sampleprojects.SampleProjectIntegrationPlugin
 import io.specmatic.gradle.tests.SpecmaticTestReportingPlugin
 import io.specmatic.gradle.versioninfo.VersionInfoPlugin
 import io.specmatic.gradle.versioninfo.versionInfo
@@ -30,6 +31,8 @@ class SpecmaticGradlePlugin : Plugin<Project> {
         target.applyToRootProjectOrSubprojects { applyShadowConfigs() }
 
         target.rootProject.versionInfo()
+
+        target.plugins.apply(SampleProjectIntegrationPlugin::class.java)
 
         // apply whatever plugins we need to apply
         target.plugins.apply(SpecmaticLicenseReportingPlugin::class.java)
