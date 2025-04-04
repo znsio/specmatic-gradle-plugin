@@ -26,15 +26,7 @@ abstract class BaseDistribution(protected val project: Project) : DistributionFl
     }
 
     internal open fun applyToProject() {
-        project.plugins.apply(JavaPlugin::class.java)
-        project.plugins.withType(JavaPlugin::class.java) {
-            project.configurations.named("implementation") {
-                project.pluginInfo("Adding 'org.jetbrains.kotlin:kotlin-stdlib:${project.specmaticExtension().kotlinVersion}' to implementation configuration")
-                this.dependencies.add(project.dependencies.create("org.jetbrains.kotlin:kotlin-stdlib:${project.specmaticExtension().kotlinVersion}"))
-            }
-        }
-        project.configureSigning()
-        project.configurePublishing()
+        // hook for any common setup
     }
 
     protected open fun shadow(prefix: String?, action: Action<ShadowJar>?) {

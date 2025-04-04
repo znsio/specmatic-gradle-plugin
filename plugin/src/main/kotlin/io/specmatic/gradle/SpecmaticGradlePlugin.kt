@@ -5,6 +5,7 @@ import io.specmatic.gradle.artifacts.EnsureReproducibleArtifactsPlugin
 import io.specmatic.gradle.compiler.ConfigureCompilerOptionsPlugin
 import io.specmatic.gradle.exec.ConfigureExecTaskPlugin
 import io.specmatic.gradle.extensions.SpecmaticGradleExtension
+import io.specmatic.gradle.extensions.baseSetup
 import io.specmatic.gradle.jar.massage.applyToRootProjectOrSubprojects
 import io.specmatic.gradle.jar.publishing.applyShadowConfigs
 import io.specmatic.gradle.license.SpecmaticLicenseReportingPlugin
@@ -28,7 +29,10 @@ class SpecmaticGradlePlugin : Plugin<Project> {
 
         target.pluginInfo("Specmatic Gradle Plugin ${VersionInfo.describe()}")
 
-        target.applyToRootProjectOrSubprojects { applyShadowConfigs() }
+        target.applyToRootProjectOrSubprojects {
+            applyShadowConfigs()
+            baseSetup()
+        }
 
         target.rootProject.versionInfo()
 
