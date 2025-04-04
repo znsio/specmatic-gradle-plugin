@@ -27,6 +27,7 @@ abstract class BaseDistribution(protected val project: Project) : DistributionFl
 
     internal open fun applyToProject() {
         // hook for any common setup
+        project.plugins.apply(JavaPlugin::class.java)
     }
 
     protected open fun shadow(prefix: String?, action: Action<ShadowJar>?) {
