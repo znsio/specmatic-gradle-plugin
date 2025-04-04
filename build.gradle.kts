@@ -1,13 +1,13 @@
 plugins {
-    id("io.specmatic.gradle") version ("0.0.30")
+    id("io.specmatic.gradle") version ("0.1.1")
 }
 
 specmatic {
     publishToMavenCentral()
     publishTo("specmaticPrivate", "https://maven.pkg.github.com/znsio/specmatic-private-maven-repo")
-    withProject(project(":plugin")) {
+    withOSSLibrary(project(":plugin")) {
         // from com.gradle.publish.PublishPlugin#PUBLISH_TASK_NAME
-        publish("pluginMaven") {
+        publish {
             pom {
                 name = "Specmatic Gradle Plugin"
                 description = "For internal use by the specmatic team"
