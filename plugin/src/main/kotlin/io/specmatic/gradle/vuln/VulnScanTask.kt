@@ -29,7 +29,6 @@ import javax.inject.Inject
 
 @CacheableTask
 abstract class AbstractVulnScanTask @Inject constructor(private val execLauncher: ExecOperations) : DefaultTask() {
-
     @TaskAction
     fun vulnScan() {
         maybeDownloadOsvScanner()
@@ -175,13 +174,15 @@ open class ImageVulnScanTask @Inject constructor(execLauncher: ExecOperations) :
 internal fun Project.createJarVulnScanTask(): TaskProvider<JarVulnScanTask> {
     val scanTaskName = "vulnScanJar"
 
+    val thisProject = this
     val printTask = project.tasks.register("${scanTaskName}Print") {
         group = "vulnerability"
         description = "Print vulnerabilities in $scanTaskName"
 
         doFirst {
             printReportFile(
-                project, project.tasks.named(scanTaskName, JarVulnScanTask::class.java).get().getJsonReportFile()
+                thisProject,
+                thisProject.tasks.named(scanTaskName, JarVulnScanTask::class.java).get().getJsonReportFile()
             )
         }
     }
@@ -197,6 +198,8 @@ internal fun Project.createJarVulnScanTask(): TaskProvider<JarVulnScanTask> {
 
 internal fun Project.createDockerVulnScanTask(imageName: String): TaskProvider<ImageVulnScanTask> {
     val scanTaskName = "vulnScanDocker"
+
+    val rootProject = this.rootProject
 
     val printTask = rootProject.tasks.register("${scanTaskName}Print") {
         group = "vulnerability"

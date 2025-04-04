@@ -31,7 +31,9 @@ class SpecmaticGradlePlugin : Plugin<Project> {
 
         target.applyToRootProjectOrSubprojects {
             applyShadowConfigs()
-            baseSetup()
+            afterEvaluate {
+                baseSetup()
+            }
         }
 
         target.rootProject.versionInfo()

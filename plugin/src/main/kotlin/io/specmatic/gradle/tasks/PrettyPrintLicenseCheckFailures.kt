@@ -3,6 +3,7 @@ package io.specmatic.gradle.tasks
 import groovy.json.JsonSlurper
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
 
 open class PrettyPrintLicenseCheckFailures : DefaultTask() {
@@ -12,11 +13,12 @@ open class PrettyPrintLicenseCheckFailures : DefaultTask() {
         outputs.upToDateWhen { false }
     }
 
+    @InputFile
+    fun getCheckLicenseTaskOutputs() = project.tasks.named("checkLicense").get().outputs.files.singleFile
+
     @TaskAction
     fun executeAction() {
-        val checkLicenseTask = project.tasks.named("checkLicense")
-
-        val depsWithoutAllowedLicensesReportFile = checkLicenseTask.get().outputs.files.files.first()
+        val depsWithoutAllowedLicensesReportFile = getCheckLicenseTaskOutputs()
 
         if (!depsWithoutAllowedLicensesReportFile.exists()) {
             return
