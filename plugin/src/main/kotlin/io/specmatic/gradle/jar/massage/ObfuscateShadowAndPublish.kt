@@ -11,6 +11,7 @@ import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.tasks.Jar
+import org.gradle.plugins.signing.SigningExtension
 
 internal inline val ConfigurationContainer.shadow: NamedDomainObjectProvider<Configuration>
     get() = named(CONFIGURATION_NAME)
@@ -18,18 +19,15 @@ internal inline val ConfigurationContainer.shadow: NamedDomainObjectProvider<Con
 internal inline val Project.publishing: PublishingExtension
     get() = extensions.getByType(PublishingExtension::class.java)
 
+internal inline val Project.signing
+    get() = extensions.getByType(SigningExtension::class.java)
+
 internal fun Project.mavenPublications(action: Action<MavenPublication>) {
     publishing.publications.withType(MavenPublication::class.java).configureEach(action)
 }
 
 internal inline val TaskContainer.jar: TaskProvider<Jar>
     get() = named("jar", Jar::class.java)
-
-//internal inline val TaskContainer.obfuscateJarTask: TaskProvider<Jar>
-//    get() = named(OBFUSCATE_JAR_TASK, Jar::class.java)
-
-//internal inline val TaskContainer.unobfuscatedShadowJarTask: TaskProvider<ShadowJar>
-//    get() = named(UNOBFUSCATED_SHADOW_JAR, ShadowJar::class.java)
 
 internal fun Project.applyToRootProjectOrSubprojects(block: Project.() -> Unit) {
     if (subprojects.isEmpty()) {

@@ -1,6 +1,5 @@
 package io.specmatic.gradle.sampleprojects
 
-import com.github.javaparser.utils.Utils
 import io.specmatic.gradle.specmaticExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project

@@ -2,6 +2,7 @@ package io.specmatic.gradle.extensions
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.specmatic.gradle.dock.registerDockerTasks
+import io.specmatic.gradle.jar.massage.mavenPublications
 import io.specmatic.gradle.jar.publishing.*
 import org.gradle.api.Action
 import org.gradle.api.Project
@@ -57,6 +58,7 @@ open class OSSLibraryConfig(project: Project) : GithubReleaseFeature, BaseDistri
         super.applyToProject()
         project.plugins.withType(JavaPlugin::class.java) {
             project.forceJavadocAndSourcesJars()
+
             project.plugins.withType(MavenPublishPlugin::class.java) {
                 project.createUnobfuscatedJarPublication(publicationConfigurations, project.name)
             }
@@ -80,16 +82,19 @@ open class OSSApplicationConfig(project: Project) : ApplicationFeature, DockerBu
             project.forceJavadocAndSourcesJars()
             val unobfuscatedShadowJarTask = project.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, true)
             project.plugins.withType(MavenPublishPlugin::class.java) {
-
-                val publication = project.createShadowedUnobfuscatedJarPublication(
+                project.createShadowedUnobfuscatedJarPublication(
                     publicationConfigurations,
                     unobfuscatedShadowJarTask,
                     project.name,
                 )
 
-                publication.configure {
-                    artifact(project.tasks.named("sourcesJar"))
-                    artifact(project.tasks.named("javadocJar"))
+                project.mavenPublications {
+                    artifact(project.tasks.named("sourcesJar")) {
+                        classifier = "sources"
+                    }
+                    artifact(project.tasks.named("javadocJar")) {
+                        classifier = "javadoc"
+                    }
                 }
             }
         }
