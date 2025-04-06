@@ -8,10 +8,19 @@ import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
 import org.gradle.api.component.SoftwareComponent
+import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.get
+
+
+internal fun Project.forceJavadocAndSourcesJars() {
+    extensions.configure(JavaPluginExtension::class.java) {
+        withJavadocJar()
+        withSourcesJar()
+    }
+}
 
 internal fun Project.createUnobfuscatedJarPublication(
     publicationConfigurations: MutableList<Action<MavenPublication>>, artifactIdentifier: String
@@ -78,9 +87,11 @@ internal fun Project.createShadowedUnobfuscatedJarPublication(
     publicationConfigurations: MutableList<Action<MavenPublication>>,
     task: TaskProvider<out Jar>,
     artifactIdentifier: String
-) {
-    publishJar(publicationConfigurations, ArtifactPublishingConfigurer(project, artifactIdentifier, task))
+): NamedDomainObjectProvider<MavenPublication> {
+    val publication =
+        publishJar(publicationConfigurations, ArtifactPublishingConfigurer(project, artifactIdentifier, task))
     createConfigurationAndAddArtifacts(task)
+    return publication
 }
 
 private fun Project.createConfigurationAndAddArtifacts(configurationName: String, artifactTask: TaskProvider<out Jar>) {

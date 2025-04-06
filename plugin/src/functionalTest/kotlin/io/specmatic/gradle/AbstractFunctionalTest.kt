@@ -189,8 +189,30 @@ open class AbstractFunctionalTest {
             val groupId = it.groupId()
             val artifactId = it.artifactId()
             val version = it.version()
-            assertThat(artifactDir(groupId, artifactId, version).resolve("${artifactId}-${version}.jar")).exists()
+
+            val jarFiles = artifactDir(groupId, artifactId, version).listFiles { file -> file.extension == "jar" }
+            assertThat(jarFiles).containsExactly(
+                artifactDir(groupId, artifactId, version).resolve("${artifactId}-${version}.jar")
+            )
             assertThat(artifactDir(groupId, artifactId, version).resolve("${artifactId}-${version}.pom")).exists()
+        }
+    }
+
+    fun assertPublishedWithJavadocAndSources(vararg coordinates: String) {
+        assertThat(getPublishedArtifactCoordinates()).containsExactlyInAnyOrder(*coordinates)
+        coordinates.forEach {
+            val groupId = it.groupId()
+            val artifactId = it.artifactId()
+            val version = it.version()
+
+            val jarFiles = artifactDir(groupId, artifactId, version).listFiles { file -> file.extension == "jar" }
+
+            assertThat(artifactDir(groupId, artifactId, version).resolve("${artifactId}-${version}.pom")).exists()
+            assertThat(jarFiles).containsExactlyInAnyOrder(
+                artifactDir(groupId, artifactId, version).resolve("${artifactId}-${version}.jar"),
+                artifactDir(groupId, artifactId, version).resolve("${artifactId}-${version}-javadoc.jar"),
+                artifactDir(groupId, artifactId, version).resolve("${artifactId}-${version}-sources.jar"),
+            )
         }
     }
 

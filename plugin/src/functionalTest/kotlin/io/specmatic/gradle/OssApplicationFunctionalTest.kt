@@ -58,7 +58,7 @@ class OssApplicationFunctionalTest : AbstractFunctionalTest() {
             val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain")
             assertMainJarExecutes(result)
 
-            assertPublished("io.specmatic.example:example-project:1.2.3")
+            assertPublishedWithJavadocAndSources("io.specmatic.example:example-project:1.2.3")
             assertThat(getDependencies("io.specmatic.example:example-project:1.2.3")).isEmpty()
 
             assertThat(
@@ -127,7 +127,7 @@ class OssApplicationFunctionalTest : AbstractFunctionalTest() {
             val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain")
             assertMainJarExecutes(result)
 
-            assertPublished("io.specmatic.example:example-project:1.2.3")
+            assertPublishedWithJavadocAndSources("io.specmatic.example:example-project:1.2.3")
             assertThat(getDependencies("io.specmatic.example:example-project:1.2.3")).isEmpty()
 
             assertThat(
@@ -219,7 +219,7 @@ class OssApplicationFunctionalTest : AbstractFunctionalTest() {
             val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain")
             assertMainJarExecutes(result)
 
-            assertPublished(
+            assertPublishedWithJavadocAndSources(
                 "io.specmatic.example:executable:1.2.3", "io.specmatic.example:core:1.2.3"
             )
 
@@ -320,7 +320,7 @@ class OssApplicationFunctionalTest : AbstractFunctionalTest() {
             val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain")
             assertMainJarExecutes(result)
 
-            assertPublished(
+            assertPublishedWithJavadocAndSources(
                 "io.specmatic.example:executable:1.2.3", "io.specmatic.example:core:1.2.3"
             )
 
@@ -346,4 +346,3 @@ class OssApplicationFunctionalTest : AbstractFunctionalTest() {
         }
     }
 }
-

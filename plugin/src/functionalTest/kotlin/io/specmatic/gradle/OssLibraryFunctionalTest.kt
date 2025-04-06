@@ -49,7 +49,7 @@ class OssLibraryFunctionalTest : AbstractFunctionalTest() {
         fun `it publish jar with all dependencies declared in the pom to staging repository`() {
             runWithSuccess("publishAllPublicationsToStagingRepository")
 
-            assertPublished("io.specmatic.example:example-project:1.2.3")
+            assertPublishedWithJavadocAndSources("io.specmatic.example:example-project:1.2.3")
             assertThat(getDependencies("io.specmatic.example:example-project:1.2.3"))
                 .containsExactlyInAnyOrder(
                     "org.jetbrains.kotlin:kotlin-stdlib:1.9.20",
@@ -178,7 +178,7 @@ class OssLibraryFunctionalTest : AbstractFunctionalTest() {
         fun `it publish all jars with dependencies`() {
             runWithSuccess("publishAllPublicationsToStagingRepository")
 
-            assertPublished(
+            assertPublishedWithJavadocAndSources(
                 "io.specmatic.example:executable:1.2.3", "io.specmatic.example:core:1.2.3"
             )
 

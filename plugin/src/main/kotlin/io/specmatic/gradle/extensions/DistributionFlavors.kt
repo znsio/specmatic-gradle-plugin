@@ -3,8 +3,6 @@ package io.specmatic.gradle.extensions
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.specmatic.gradle.dock.registerDockerTasks
 import io.specmatic.gradle.jar.publishing.*
-import io.specmatic.gradle.license.pluginInfo
-import io.specmatic.gradle.specmaticExtension
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
@@ -58,6 +56,7 @@ open class OSSLibraryConfig(project: Project) : GithubReleaseFeature, BaseDistri
     override fun applyToProject() {
         super.applyToProject()
         project.plugins.withType(JavaPlugin::class.java) {
+            project.forceJavadocAndSourcesJars()
             project.plugins.withType(MavenPublishPlugin::class.java) {
                 project.createUnobfuscatedJarPublication(publicationConfigurations, project.name)
             }
@@ -78,13 +77,20 @@ open class OSSApplicationConfig(project: Project) : ApplicationFeature, DockerBu
         super.applyToProject()
 
         project.plugins.withType(JavaPlugin::class.java) {
+            project.forceJavadocAndSourcesJars()
             val unobfuscatedShadowJarTask = project.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, true)
             project.plugins.withType(MavenPublishPlugin::class.java) {
-                project.createShadowedUnobfuscatedJarPublication(
+
+                val publication = project.createShadowedUnobfuscatedJarPublication(
                     publicationConfigurations,
                     unobfuscatedShadowJarTask,
                     project.name,
                 )
+
+                publication.configure {
+                    artifact(project.tasks.named("sourcesJar"))
+                    artifact(project.tasks.named("javadocJar"))
+                }
             }
         }
     }
@@ -101,6 +107,7 @@ open class OSSApplicationConfig(project: Project) : ApplicationFeature, DockerBu
         super.dockerBuild(*dockerBuildArgs)
     }
 }
+
 
 class CommercialLibraryConfig(project: Project) : ObfuscationFeature, ShadowingFeature,
     GithubReleaseFeature, BaseDistribution(project) {
