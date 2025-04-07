@@ -13,15 +13,24 @@ import java.io.File
 class SampleProjectIntegrationPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         target.afterEvaluate {
-            target.defineTasks()
+            if (specmaticExtension().sampleProjects.isNotEmpty()) {
+                target.defineTasks()
+            }
         }
     }
 }
 
 private fun Project.defineTasks() {
     val specmaticExtension = specmaticExtension()
-    val validateSampleProjectTask = tasks.register("validateSampleProjects")
-    val bumpVersionsInSampleProjectGradlePropertiesTask = tasks.register("bumpVersionsInSampleProjects")
+    val validateSampleProjectTask = tasks.register("validateSampleProjects") {
+        group = "verification"
+        description = "Validate sample projects"
+    }
+
+    val bumpVersionsInSampleProjectGradlePropertiesTask = tasks.register("bumpVersionsInSampleProjects") {
+        group = "other"
+        description = "Bump versions in sample project"
+    }
 
     val cloneGithubWorkflowsRepo = cloneOrUpdateRepoTask("specmatic-github-workflows")
 
