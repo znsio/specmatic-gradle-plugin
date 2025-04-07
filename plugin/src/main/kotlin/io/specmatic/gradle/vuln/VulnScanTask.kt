@@ -12,6 +12,7 @@ import org.cyclonedx.gradle.CycloneDxTask
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.internal.logging.text.StyledTextOutput
 import org.gradle.internal.logging.text.StyledTextOutputFactory
@@ -33,7 +34,7 @@ abstract class AbstractVulnScanTask @Inject constructor(private val execLauncher
     fun vulnScan() {
         maybeDownloadOsvScanner()
 
-        getReportsDir().mkdirs()
+        reportsDir.get().mkdirs()
 
         val formats = mapOf(
             "table" to getTextTableReportFile(), "json" to getJsonReportFile(), "html" to getHtmlReportFile()
@@ -47,26 +48,25 @@ abstract class AbstractVulnScanTask @Inject constructor(private val execLauncher
     }
 
 
-    @OutputDirectory
-    abstract fun getReportsDir(): File
+    @get:OutputDirectory
+    abstract val reportsDir: Property<File>
 
     @OutputFile
-    fun getHtmlReportFile(): File = getReportsDir().resolve("report.html")
+    fun getHtmlReportFile(): File = reportsDir.get().resolve("report.html")
 
     @OutputFile
-    fun getJsonReportFile(): File = getReportsDir().resolve("report.json")
+    fun getJsonReportFile(): File = reportsDir.get().resolve("report.json")
 
     @OutputFile
-    fun getTextTableReportFile(): File = getReportsDir().resolve("report.txt")
+    fun getTextTableReportFile(): File = reportsDir.get().resolve("report.txt")
 
-    @InputFiles
-    @PathSensitive(PathSensitivity.ABSOLUTE)
-    fun getOsvScannerPath(): File =
-        project.gradle.gradleUserHomeDir.resolve("osv-scanner${if (getOS() == "windows") ".exe" else ""}")
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    abstract val osvScannerPath: Property<File>
 
-    @InputFiles
-    @PathSensitive(PathSensitivity.ABSOLUTE)
-    fun getOsvScannerVersionPath(): File = project.gradle.gradleUserHomeDir.resolve("osv-scanner.version")
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    abstract val osvScannerVersionPath: Property<File>
 
     private fun runOsvScan(format: String, output: File): Boolean {
         try {
@@ -91,7 +91,7 @@ abstract class AbstractVulnScanTask @Inject constructor(private val execLauncher
     abstract fun getCommandLine(format: String): List<String>
 
     private fun maybeDownloadOsvScanner() {
-        val lastModified = if (getOsvScannerPath().exists()) getOsvScannerPath().lastModified() else 0L
+        val lastModified = if (osvScannerPath.get().exists()) osvScannerPath.get().lastModified() else 0L
         val oneWeekInMillis = 7 * 24 * 60 * 60 * 1000L
         val isOlderThanOneWeek = System.currentTimeMillis() - lastModified > oneWeekInMillis
 
@@ -101,17 +101,18 @@ abstract class AbstractVulnScanTask @Inject constructor(private val execLauncher
             val repository = gitHub.getRepository("google/osv-scanner")
             val release = repository.latestRelease
 
-            val currentVersion = if (getOsvScannerVersionPath().exists()) getOsvScannerVersionPath().readText() else ""
+            val currentVersion =
+                if (osvScannerVersionPath.get().exists()) osvScannerVersionPath.get().readText() else ""
             if (currentVersion != release.name) {
-                project.pluginInfo("osv-scanner is not up to date. Downloading version ${release.name} to ${getOsvScannerPath()}")
+                project.pluginInfo("osv-scanner is not up to date. Downloading version ${release.name} to ${osvScannerPath.get()}")
                 val asset = release.listAssets().find {
                     it.name.contains(getOS()) && it.name.contains(getArch())
                 } ?: throw RuntimeException("No asset found for osv-scanner for ${getOS()} ${getArch()}")
 
                 val downloadUrl = asset.browserDownloadUrl
-                FileUtils.copyURLToFile(URL(downloadUrl), getOsvScannerPath())
-                getOsvScannerPath().setExecutable(true)
-                getOsvScannerVersionPath().writeText(release.name)
+                FileUtils.copyURLToFile(URL(downloadUrl), osvScannerPath.get())
+                osvScannerPath.get().setExecutable(true)
+                osvScannerVersionPath.get().writeText(release.name)
             }
         }
     }
@@ -139,36 +140,28 @@ abstract class AbstractVulnScanTask @Inject constructor(private val execLauncher
     }
 }
 
-open class JarVulnScanTask @Inject constructor(execLauncher: ExecOperations) : AbstractVulnScanTask(execLauncher) {
-
-    override fun getReportsDir(): File {
-        return project.layout.buildDirectory.get().asFile.resolve("reports/osv-scan/source")
-    }
+abstract class JarVulnScanTask @Inject constructor(execLauncher: ExecOperations) : AbstractVulnScanTask(execLauncher) {
 
     override fun getCommandLine(format: String): List<String> {
-        return listOf(getOsvScannerPath().path, "scan", "source", "--format", format, getSbomFile().path)
+        return listOf(osvScannerPath.get().path, "scan", "source", "--format", format, sbomFile.get().path)
     }
 
-    @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
-    fun getSbomFile(): File = project.layout.buildDirectory.get().asFile.resolve("reports/cyclonedx/bom.json")
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val sbomFile: Property<File>
 }
 
-open class ImageVulnScanTask @Inject constructor(execLauncher: ExecOperations) : AbstractVulnScanTask(execLauncher) {
+abstract class ImageVulnScanTask @Inject constructor(execLauncher: ExecOperations) :
+    AbstractVulnScanTask(execLauncher) {
     @get:Input
     var image: String? = null
-
-    override fun getReportsDir(): File {
-        return project.layout.buildDirectory.get().asFile.resolve("reports/osv-scan/image")
-    }
 
     override fun getCommandLine(format: String): List<String> {
         if (image == null) {
             throw GradleException("image property not set")
         }
-        return listOf(getOsvScannerPath().path, "scan", "image", "--format", format, image!!)
+        return listOf(osvScannerPath.get().path, "scan", "image", "--format", format, image!!)
     }
-
 }
 
 internal fun Project.createJarVulnScanTask(): TaskProvider<JarVulnScanTask> {
@@ -192,6 +185,12 @@ internal fun Project.createJarVulnScanTask(): TaskProvider<JarVulnScanTask> {
         finalizedBy(printTask)
         group = "vulnerability"
         description = "Scan for vulnerabilities in jars"
+
+        osvScannerVersionPath.set(project.gradle.gradleUserHomeDir.resolve("osv-scanner.version"))
+        osvScannerPath.set(project.gradle.gradleUserHomeDir.resolve("osv-scanner${if (getOS() == "windows") ".exe" else ""}"))
+        sbomFile.set(project.layout.buildDirectory.get().asFile.resolve("reports/cyclonedx/bom.json"))
+
+        reportsDir.set(project.layout.buildDirectory.get().asFile.resolve("reports/osv-scan/source"))
     }
 }
 
@@ -218,6 +217,10 @@ internal fun Project.createDockerVulnScanTask(imageName: String): TaskProvider<I
         group = "vulnerability"
         description = "Scan for vulnerabilities in jars"
         image = imageName
+
+        osvScannerVersionPath.set(project.gradle.gradleUserHomeDir.resolve("osv-scanner.version"))
+        osvScannerPath.set(project.gradle.gradleUserHomeDir.resolve("osv-scanner${if (getOS() == "windows") ".exe" else ""}"))
+        reportsDir.set(project.layout.buildDirectory.get().asFile.resolve("reports/osv-scan/image"))
     }
 }
 
@@ -282,7 +285,7 @@ private fun printReportFile(project: Project, reportFile: File) {
 
                 vulnerability.affected.flatMap { affected ->
                     affected.ranges.flatMap { range ->
-                        range.events.map { event ->
+                        range.events.map { _event ->
                             val maxSeverity =
                                 pkg.groups.maxBy { if (it.maxSeverity.isNullOrBlank()) 0.0.toFloat() else it.maxSeverity.toFloat() }.maxSeverity
                                     ?: "0.0"

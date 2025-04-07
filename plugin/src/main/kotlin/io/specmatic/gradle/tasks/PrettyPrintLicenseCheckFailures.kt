@@ -5,6 +5,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
+import java.io.File
 
 open class PrettyPrintLicenseCheckFailures : DefaultTask() {
     init {
@@ -13,23 +14,22 @@ open class PrettyPrintLicenseCheckFailures : DefaultTask() {
         outputs.upToDateWhen { false }
     }
 
-    @InputFile
-    fun getCheckLicenseTaskOutputs() = project.tasks.named("checkLicense").get().outputs.files.singleFile
+    @get:InputFile
+    var inputFile: File? = null
 
     @TaskAction
     fun executeAction() {
-        val depsWithoutAllowedLicensesReportFile = getCheckLicenseTaskOutputs()
-
-        if (!depsWithoutAllowedLicensesReportFile.exists()) {
+        if (inputFile?.exists() != true) {
             return
         }
 
-        val json = JsonSlurper().parse(depsWithoutAllowedLicensesReportFile) as Map<*, *>
+        val json = JsonSlurper().parse(inputFile) as Map<*, *>
 
         val unsupportedLicenses = json["dependenciesWithoutAllowedLicenses"] as List<*>
 
         if (unsupportedLicenses.isNotEmpty()) {
-            val unsupportedLicensesGroupedByLicense = unsupportedLicenses.groupBy { (it as Map<*, *>)["moduleLicense"] }
+            val unsupportedLicensesGroupedByLicense =
+                unsupportedLicenses.groupBy { (it as Map<*, *>)["moduleLicense"] }
             val messages = mutableListOf<String>()
 
             unsupportedLicensesGroupedByLicense.forEach { (license, modules) ->

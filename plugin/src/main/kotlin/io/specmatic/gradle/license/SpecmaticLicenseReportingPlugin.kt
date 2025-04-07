@@ -13,9 +13,7 @@ import com.github.jk1.license.render.SimpleHtmlReportRenderer
 import io.specmatic.gradle.SpecmaticGradlePlugin
 import io.specmatic.gradle.extensions.ModuleLicenseData
 import io.specmatic.gradle.specmaticExtension
-import io.specmatic.gradle.tasks.CreateAllowedLicensesFileTask
-import io.specmatic.gradle.tasks.PrettyPrintLicenseCheckFailures
-import io.specmatic.gradle.tasks.createDefaultAllowedLicensesFile
+import io.specmatic.gradle.tasks.*
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -59,7 +57,7 @@ class SpecmaticLicenseReportingPlugin : Plugin<Project> {
                 reportExtension.filters = filters()
                 reportExtension.importers = arrayOf(CustomLicenseImporter(specmaticExtension.licenseData))
                 reportExtension.renderers = renderers()
-                reportExtension.allowedLicensesFile = createDefaultAllowedLicensesFile(project)
+                reportExtension.allowedLicensesFile = project.createDefaultAllowedLicensesFile()
                 reportExtension.excludeGroups = arrayOf("io.specmatic.*")
 
                 configureTaskDependencies(project, prettyPrintLicenseCheckFailuresTask, createAllowedLicensesFileTask)
@@ -119,15 +117,20 @@ class SpecmaticLicenseReportingPlugin : Plugin<Project> {
             )
 
         private fun createPrettyPrintLicenseCheckFailuresTask(project: Project): TaskProvider<PrettyPrintLicenseCheckFailures> =
-            project.tasks.register("prettyPrintLicenseCheckFailures", PrettyPrintLicenseCheckFailures::class.java)
+            project.tasks.register("prettyPrintLicenseCheckFailures", PrettyPrintLicenseCheckFailures::class.java) {
+                inputFile = project.tasks.named("checkLicense").get().outputs.files.singleFile
+            }
 
 
         private fun createCreateAllowedLicensesFileTask(project: Project): TaskProvider<CreateAllowedLicensesFileTask> =
-            project.tasks.register("createAllowedLicensesFile", CreateAllowedLicensesFileTask::class.java)
-
+            project.tasks.register("createAllowedLicensesFile", CreateAllowedLicensesFileTask::class.java) {
+                outputFile = project.defaultAllowedLicensesFile()
+                allowedLicenses = project.allowedLicenses()
+            }
     }
 }
 
+
 fun Project.pluginInfo(string: String) {
-    println("[SGP - ${this.path}]: $string")
+    logger.info("[SGP - ${this.path}]: $string")
 }

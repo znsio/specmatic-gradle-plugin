@@ -2,11 +2,14 @@ package io.specmatic.gradle.tasks
 
 import groovy.json.JsonBuilder
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 
-private val ALLOWED_LICENSES = arrayOf(
+private val ALLOWED_LICENSES = setOf(
     "0BSD",
     "Apache-2.0",
     "BSD-2-Clause",
@@ -44,20 +47,29 @@ open class CreateAllowedLicensesFileTask : DefaultTask() {
     init {
         group = "verification"
         description = "Creates a file with the allowed licenses to be consumed by the gradle license plugin"
-        outputs.upToDateWhen { false }
     }
 
     @TaskAction
     fun get() {
-        createDefaultAllowedLicensesFile(project)
+        if (outputFile == null) {
+            throw GradleException("Output file is not specified")
+        }
+        createDefaultAllowedLicensesFile(outputFile!!, allowedLicenses)
     }
+
+    @get:OutputFile
+    var outputFile: File? = null
+
+    @get:Input
+    var allowedLicenses = setOf<String>()
 }
 
-fun createDefaultAllowedLicensesFile(project: Project): File {
-    val buildDir = project.layout.buildDirectory.get().asFile
-    buildDir.mkdirs()
-    val allowedLicensesFile = File(buildDir, "allowed-licenses.json")
-    val allowedLicensesDocument = allowedLicenses(project).map({ eachLicense ->
+internal fun Project.createDefaultAllowedLicensesFile(): File {
+    return createDefaultAllowedLicensesFile(project.defaultAllowedLicensesFile(), project.allowedLicenses())
+}
+
+fun createDefaultAllowedLicensesFile(allowedLicensesFile: File, allowedLicenses: Set<String>): File {
+    val allowedLicensesDocument = allowedLicenses.map({ eachLicense ->
         mapOf(
             "moduleLicense" to eachLicense, "moduleName" to ".*"
         )
@@ -69,10 +81,16 @@ fun createDefaultAllowedLicensesFile(project: Project): File {
     return allowedLicensesFile
 }
 
-private fun allowedLicenses(project: Project): Array<String> {
-    val extraAllowedLicenses = project.properties["extraAllowedLicenses"]
+internal fun Project.defaultAllowedLicensesFile(): File {
+    val buildDir = project.layout.buildDirectory.get().asFile
+    buildDir.mkdirs()
+    return File(buildDir, "allowed-licenses.json")
+}
+
+internal fun Project.allowedLicenses(): Set<String> {
+    val extraAllowedLicenses = this.properties["extraAllowedLicenses"]
     return if (extraAllowedLicenses != null) {
-        ALLOWED_LICENSES + extraAllowedLicenses.toString().split(",").map { it.trim() }
+        ALLOWED_LICENSES + extraAllowedLicenses.toString().split(",").map { it.trim() }.toSet()
     } else {
         ALLOWED_LICENSES
     }
