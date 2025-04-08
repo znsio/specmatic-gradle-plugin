@@ -113,6 +113,55 @@ open class OSSApplicationConfig(project: Project) : ApplicationFeature, DockerBu
     }
 }
 
+open class OSSApplicationLibraryConfig(project: Project) : ApplicationFeature, DockerBuildFeature, ShadowingFeature,
+    GithubReleaseFeature,
+    BaseDistribution(project) {
+    override var mainClass: String = ""
+
+    override fun applyToProject() {
+        super.applyToProject()
+
+        project.plugins.withType(JavaPlugin::class.java) {
+            project.forceJavadocAndSourcesJars()
+            val unobfuscatedShadowJarTask = project.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, true)
+            project.plugins.withType(MavenPublishPlugin::class.java) {
+
+                project.createUnobfuscatedJarPublication(
+                    publicationConfigurations,
+                    project.name
+                )
+
+                val shadowJarPublication = project.createShadowedUnobfuscatedJarPublication(
+                    publicationConfigurations,
+                    unobfuscatedShadowJarTask,
+                    "${project.name}-all",
+                )
+
+                shadowJarPublication.configure {
+                    artifact(project.tasks.named("sourcesJar")) {
+                        classifier = "sources"
+                    }
+                    artifact(project.tasks.named("javadocJar")) {
+                        classifier = "javadoc"
+                    }
+                }
+            }
+        }
+    }
+
+    override fun shadow(prefix: String?, action: Action<ShadowJar>?) {
+        super.shadow(prefix, action)
+    }
+
+    override fun githubRelease(block: GithubReleaseConfig.() -> Unit) {
+        super.githubRelease(block)
+    }
+
+    override fun dockerBuild(vararg dockerBuildArgs: String?) {
+        super.dockerBuild(*dockerBuildArgs)
+    }
+}
+
 
 class CommercialLibraryConfig(project: Project) : ObfuscationFeature, ShadowingFeature,
     GithubReleaseFeature, BaseDistribution(project) {

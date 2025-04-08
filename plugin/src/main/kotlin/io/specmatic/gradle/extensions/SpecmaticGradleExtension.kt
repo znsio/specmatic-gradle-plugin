@@ -43,14 +43,21 @@ open class SpecmaticGradleExtension {
         licenseData.add(ModuleLicenseData().apply(block))
     }
 
+
+    fun withOSSLibrary(project: Project, block: OSSLibraryConfig.() -> Unit) {
+        val projectConfig = OSSLibraryConfig(project).apply(block)
+        projectConfig.applyToProject()
+        projectConfigurations[project] = projectConfig
+    }
+
     fun withOSSApplication(project: Project, block: OSSApplicationConfig.() -> Unit) {
         val projectConfig = OSSApplicationConfig(project).apply(block)
         projectConfig.applyToProject()
         projectConfigurations[project] = projectConfig
     }
 
-    fun withOSSLibrary(project: Project, block: OSSLibraryConfig.() -> Unit) {
-        val projectConfig = OSSLibraryConfig(project).apply(block)
+    fun withOSSApplicationLibrary(project: Project, block: OSSApplicationLibraryConfig.() -> Unit) {
+        val projectConfig = OSSApplicationLibraryConfig(project).apply(block)
         projectConfig.applyToProject()
         projectConfigurations[project] = projectConfig
     }

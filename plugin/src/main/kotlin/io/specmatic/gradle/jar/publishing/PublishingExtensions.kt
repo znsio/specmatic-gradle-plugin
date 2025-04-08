@@ -24,12 +24,13 @@ internal fun Project.forceJavadocAndSourcesJars() {
 
 internal fun Project.createUnobfuscatedJarPublication(
     publicationConfigurations: MutableList<Action<MavenPublication>>, artifactIdentifier: String
-) {
+): NamedDomainObjectProvider<MavenPublication> {
     val jarTask = tasks.jar
     val publication = publishJar(
         publicationConfigurations, JavaComponentPublisher(project, artifactIdentifier, components["java"])
     )
     createConfigurationAndAddArtifacts(publication.name, jarTask)
+    return publication
 }
 
 internal fun Project.createObfuscatedOriginalJarPublication(
