@@ -33,6 +33,13 @@ abstract class BaseDistribution(protected val project: Project) : DistributionFl
     internal open fun applyToProject() {
         // hook for any common setup
         project.plugins.apply(JavaPlugin::class.java)
+        project.plugins.withType(MavenPublishPlugin::class.java) {
+            project.mavenPublications {
+                publicationConfigurations.forEach {
+                    it.execute(this)
+                }
+            }
+        }
     }
 
     protected open fun shadow(prefix: String?, action: Action<ShadowJar>?) {
@@ -70,7 +77,7 @@ open class OSSLibraryConfig(project: Project) : GithubReleaseFeature, BaseDistri
             project.forceJavadocAndSourcesJars()
 
             project.plugins.withType(MavenPublishPlugin::class.java) {
-                project.createUnobfuscatedJarPublication(publicationConfigurations, project.name)
+                project.createUnobfuscatedJarPublication(project.name)
             }
         }
     }
@@ -96,7 +103,6 @@ open class OSSApplicationConfig(project: Project) : ApplicationFeature, DockerBu
             val unobfuscatedShadowJarTask = project.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, true)
             project.plugins.withType(MavenPublishPlugin::class.java) {
                 project.createShadowedUnobfuscatedJarPublication(
-                    publicationConfigurations,
                     unobfuscatedShadowJarTask,
                     project.name,
                 )
@@ -143,12 +149,10 @@ open class OSSApplicationLibraryConfig(project: Project) : ApplicationFeature, D
             project.plugins.withType(MavenPublishPlugin::class.java) {
 
                 project.createUnobfuscatedJarPublication(
-                    publicationConfigurations,
                     project.name
                 )
 
                 val shadowJarPublication = project.createShadowedUnobfuscatedJarPublication(
-                    publicationConfigurations,
                     unobfuscatedShadowJarTask,
                     "${project.name}-all",
                 )
@@ -195,16 +199,16 @@ class CommercialLibraryConfig(project: Project) : ObfuscationFeature, ShadowingF
             )
             project.plugins.withType(MavenPublishPlugin::class.java) {
                 project.createUnobfuscatedJarPublication(
-                    publicationConfigurations, "${project.name}-dont-use-this-unless-you-know-what-you-are-doing"
+                    "${project.name}-dont-use-this-unless-you-know-what-you-are-doing"
                 )
                 project.createObfuscatedOriginalJarPublication(
-                    publicationConfigurations, obfuscatedOriginalJar, "${project.name}-min"
+                    obfuscatedOriginalJar, "${project.name}-min"
                 )
                 project.createShadowedUnobfuscatedJarPublication(
-                    publicationConfigurations, unobfuscatedShadowJar, "${project.name}-all-debug"
+                    unobfuscatedShadowJar, "${project.name}-all-debug"
                 )
                 project.createShadowedObfuscatedJarPublication(
-                    publicationConfigurations, obfuscatedShadowJar, project.name
+                    obfuscatedShadowJar, project.name
                 )
             }
         }
@@ -243,10 +247,10 @@ class CommercialApplicationConfig(project: Project) : ApplicationFeature, Shadow
 
             project.plugins.withType(MavenPublishPlugin::class.java) {
                 project.createShadowedObfuscatedJarPublication(
-                    publicationConfigurations, obfuscatedShadowJar, project.name
+                    obfuscatedShadowJar, project.name
                 )
                 project.createShadowedUnobfuscatedJarPublication(
-                    publicationConfigurations, unobfuscatedShadowJar, "${project.name}-all-debug"
+                    unobfuscatedShadowJar, "${project.name}-all-debug"
                 )
             }
         }
@@ -290,13 +294,13 @@ class CommercialApplicationAndLibraryConfig(project: Project) : ShadowingFeature
 
             project.plugins.withType(MavenPublishPlugin::class.java) {
                 project.createShadowedObfuscatedJarPublication(
-                    publicationConfigurations, obfuscatedShadowJar, project.name
+                    obfuscatedShadowJar, project.name
                 )
                 project.createObfuscatedOriginalJarPublication(
-                    publicationConfigurations, obfuscatedOriginalJar, "${project.name}-min"
+                    obfuscatedOriginalJar, "${project.name}-min"
                 )
                 project.createShadowedUnobfuscatedJarPublication(
-                    publicationConfigurations, unobfuscatedShadowJar, "${project.name}-all-debug"
+                    unobfuscatedShadowJar, "${project.name}-all-debug"
                 )
             }
         }

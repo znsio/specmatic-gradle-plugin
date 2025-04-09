@@ -4,7 +4,6 @@ import io.specmatic.gradle.jar.massage.jar
 import io.specmatic.gradle.jar.massage.publishing
 import io.specmatic.gradle.jar.massage.shadow
 import io.specmatic.gradle.license.pluginInfo
-import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
 import org.gradle.api.component.SoftwareComponent
@@ -23,22 +22,21 @@ internal fun Project.forceJavadocAndSourcesJars() {
 }
 
 internal fun Project.createUnobfuscatedJarPublication(
-    publicationConfigurations: MutableList<Action<MavenPublication>>, artifactIdentifier: String
+    artifactIdentifier: String
 ): NamedDomainObjectProvider<MavenPublication> {
     val jarTask = tasks.jar
     val publication = publishJar(
-        publicationConfigurations, JavaComponentPublisher(project, artifactIdentifier, components["java"])
+        JavaComponentPublisher(project, artifactIdentifier, components["java"])
     )
     createConfigurationAndAddArtifacts(publication.name, jarTask)
     return publication
 }
 
 internal fun Project.createObfuscatedOriginalJarPublication(
-    publicationConfigurations: MutableList<Action<MavenPublication>>,
     task: TaskProvider<out Jar>,
     artifactIdentifier: String
 ) {
-    val publication = publishJar(publicationConfigurations, object : PublishingConfigurer {
+    val publication = publishJar(object : PublishingConfigurer {
         override fun configure(publication: MavenPublication) {
             pluginInfo("Configuring publication named ${name()} for artifact '${publication.groupId}:${publication.artifactId}:${publication.version}' using task ${task.get().path}")
             publication.artifact(task) {
@@ -68,12 +66,10 @@ internal fun Project.createObfuscatedOriginalJarPublication(
 }
 
 internal fun Project.createShadowedObfuscatedJarPublication(
-    publicationConfigurations: MutableList<Action<MavenPublication>>,
     task: TaskProvider<out Jar>,
     artifactIdentifier: String
 ) {
     publishJar(
-        publicationConfigurations,
         ArtifactPublishingConfigurer(
             project,
             artifactIdentifier, task
@@ -85,12 +81,11 @@ internal fun Project.createShadowedObfuscatedJarPublication(
 
 
 internal fun Project.createShadowedUnobfuscatedJarPublication(
-    publicationConfigurations: MutableList<Action<MavenPublication>>,
     task: TaskProvider<out Jar>,
     artifactIdentifier: String
 ): NamedDomainObjectProvider<MavenPublication> {
     val publication =
-        publishJar(publicationConfigurations, ArtifactPublishingConfigurer(project, artifactIdentifier, task))
+        publishJar(ArtifactPublishingConfigurer(project, artifactIdentifier, task))
     createConfigurationAndAddArtifacts(task)
     return publication
 }
@@ -149,17 +144,12 @@ class ArtifactPublishingConfigurer(
 }
 
 private fun Project.publishJar(
-    publicationConfigurations: MutableList<Action<MavenPublication>>,
     configurer: PublishingConfigurer,
 ): NamedDomainObjectProvider<MavenPublication> {
     return publishing.publications.register(configurer.name(), MavenPublication::class.java) {
         pom.packaging = "jar"
 
         configurer.configure(this)
-
-        publicationConfigurations.forEach {
-            it.execute(this)
-        }
     }
 }
 
