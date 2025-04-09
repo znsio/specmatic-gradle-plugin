@@ -6,7 +6,6 @@ import org.gradle.api.Project
 
 class ForceVersionConstraintsPlugin : Plugin<Project> {
     override fun apply(target: Project) {
-        // replace javax.validation:validation-api with jakarta.validation:jakarta.validation-api
         target.configurations.all {
             resolutionStrategy.eachDependency {
 
