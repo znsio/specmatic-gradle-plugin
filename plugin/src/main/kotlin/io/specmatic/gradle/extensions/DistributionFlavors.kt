@@ -14,6 +14,7 @@ import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 interface DistributionFlavor
 
 abstract class BaseDistribution(protected val project: Project) : DistributionFlavor {
+    internal var isGradlePlugin = false
     internal var publicationConfigurations = mutableListOf<Action<MavenPublication>>()
     internal var githubRelease: GithubReleaseConfig = GithubReleaseConfig()
     internal var shadowActions = mutableListOf<Action<ShadowJar>>()
@@ -21,6 +22,11 @@ abstract class BaseDistribution(protected val project: Project) : DistributionFl
     internal var shadowPrefix = ""
 
     fun publish(configuration: Action<MavenPublication>) {
+        this.publicationConfigurations.add(configuration)
+    }
+
+    fun publishGradle(configuration: Action<MavenPublication>) {
+        this.isGradlePlugin = true
         this.publicationConfigurations.add(configuration)
     }
 
@@ -56,6 +62,10 @@ abstract class BaseDistribution(protected val project: Project) : DistributionFl
 open class OSSLibraryConfig(project: Project) : GithubReleaseFeature, BaseDistribution(project) {
     override fun applyToProject() {
         super.applyToProject()
+        if (this.isGradlePlugin) {
+            return
+        }
+
         project.plugins.withType(JavaPlugin::class.java) {
             project.forceJavadocAndSourcesJars()
 
@@ -77,6 +87,9 @@ open class OSSApplicationConfig(project: Project) : ApplicationFeature, DockerBu
 
     override fun applyToProject() {
         super.applyToProject()
+        if (this.isGradlePlugin) {
+            return
+        }
 
         project.plugins.withType(JavaPlugin::class.java) {
             project.forceJavadocAndSourcesJars()
@@ -120,6 +133,9 @@ open class OSSApplicationLibraryConfig(project: Project) : ApplicationFeature, D
 
     override fun applyToProject() {
         super.applyToProject()
+        if (this.isGradlePlugin) {
+            return
+        }
 
         project.plugins.withType(JavaPlugin::class.java) {
             project.forceJavadocAndSourcesJars()
@@ -167,6 +183,10 @@ class CommercialLibraryConfig(project: Project) : ObfuscationFeature, ShadowingF
     GithubReleaseFeature, BaseDistribution(project) {
     override fun applyToProject() {
         super.applyToProject()
+        if (this.isGradlePlugin) {
+            return
+        }
+
         project.plugins.withType(JavaPlugin::class.java) {
             val obfuscatedOriginalJar = project.createObfuscatedOriginalJar(proguardExtraArgs)
             val unobfuscatedShadowJar = project.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, false)
@@ -211,6 +231,9 @@ class CommercialApplicationConfig(project: Project) : ApplicationFeature, Shadow
     override var mainClass: String = ""
     override fun applyToProject() {
         super.applyToProject()
+        if (this.isGradlePlugin) {
+            return
+        }
 
         project.plugins.withType(JavaPlugin::class.java) {
             val obfuscatedOriginalJar = project.createObfuscatedOriginalJar(proguardExtraArgs)
@@ -255,6 +278,9 @@ class CommercialApplicationAndLibraryConfig(project: Project) : ShadowingFeature
 
     override fun applyToProject() {
         super.applyToProject()
+        if (this.isGradlePlugin) {
+            return
+        }
 
         project.plugins.withType(JavaPlugin::class.java) {
             val obfuscatedOriginalJar = project.createObfuscatedOriginalJar(proguardExtraArgs)

@@ -27,7 +27,7 @@ class SpecmaticGradlePlugin : Plugin<Project> {
     override fun apply(target: Project) {
         target.extensions.create("specmatic", SpecmaticGradleExtension::class.java)
 
-        target.pluginInfo("Specmatic Gradle Plugin ${VersionInfo.describe()}")
+        println("Specmatic Gradle Plugin ${VersionInfo.describe()}")
 
         target.applyToRootProjectOrSubprojects {
             applyShadowConfigs()
