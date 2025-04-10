@@ -1,7 +1,7 @@
 pluginManagement {
     val specmaticGradlePluginVersion = settings.extra["specmaticGradlePluginVersion"] as String
     plugins {
-        id("io.specmatic.gradle") version(specmaticGradlePluginVersion)
+        id("io.specmatic.gradle") version (specmaticGradlePluginVersion)
     }
     repositories {
         gradlePluginPortal()
@@ -31,14 +31,17 @@ pluginManagement {
             name = "specmaticPrivate"
             url = uri("https://maven.pkg.github.com/znsio/specmatic-private-maven-repo")
             credentials {
-                username =
-                    settings.extra.properties["github.actor"]?.toString()
-                        ?: System.getenv("SPECMATIC_GITHUB_USER")?.toString()
-                                ?: System.getenv("ORG_GRADLE_PROJECT_specmaticPrivateUsername")?.toString()
-                password =
-                    settings.extra.properties["github.token"]?.toString()
-                        ?: System.getenv("SPECMATIC_GITHUB_TOKEN")?.toString()
-                                ?: System.getenv("ORG_GRADLE_PROJECT_specmaticPrivatePassword")?.toString()
+                username = listOf(
+                    settings.extra.properties["github.actor"],
+                    System.getenv("SPECMATIC_GITHUB_USER"),
+                    System.getenv("ORG_GRADLE_PROJECT_specmaticPrivateUsername")
+                ).firstNotNullOfOrNull { it }.toString()
+
+                password = listOf(
+                    settings.extra.properties["github.token"],
+                    System.getenv("SPECMATIC_GITHUB_TOKEN"),
+                    System.getenv("ORG_GRADLE_PROJECT_specmaticPrivatePassword")
+                ).firstNotNullOfOrNull { it }.toString()
             }
         }
 

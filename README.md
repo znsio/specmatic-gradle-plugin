@@ -54,7 +54,7 @@ plugin will take care of the rest. Batteries included. Just provide the credenti
    | **Docker Hub**                                                                                                                              |                                                                                                                |
    | No variables are needed, but you are required to perform a docker login yourself. The plugin will simply execute a `docker push` equivalent |                                                                                                                |
 
-## Installation
+## Installation, usage and configuration
 
 1. Edit `build.gradle[.kts]`
    ```kotlin
@@ -68,21 +68,42 @@ plugin will take care of the rest. Batteries included. Just provide the credenti
 2. Edit `settings.gradle[.kts]`
    ```kotlin
    pluginManagement {
-      val specmaticGradlePluginVersion = settings.extra["specmaticGradlePluginVersion"] as String
-      plugins {
-          id("io.specmatic.gradle") version(specmaticGradlePluginVersion)
-      }
+       val specmaticGradlePluginVersion = settings.extra["specmaticGradlePluginVersion"] as String
+       plugins {
+           id("io.specmatic.gradle") version(specmaticGradlePluginVersion)
+       }
+       repositories {
+           gradlePluginPortal()
+           mavenCentral()
+           mavenLocal()
+           maven {
+               name = "specmaticPrivate"
+               url = uri("https://maven.pkg.github.com/znsio/specmatic-private-maven-repo")
+               credentials {
+                   username = listOf(
+                       settings.extra.properties["github.actor"],
+                       System.getenv("SPECMATIC_GITHUB_USER"),
+                       System.getenv("ORG_GRADLE_PROJECT_specmaticPrivateUsername")
+                   ).firstNotNullOfOrNull { it }.toString()
+   
+                   password = listOf(
+                       settings.extra.properties["github.token"],
+                       System.getenv("SPECMATIC_GITHUB_TOKEN"),
+                       System.getenv("ORG_GRADLE_PROJECT_specmaticPrivatePassword")
+                   ).firstNotNullOfOrNull { it }.toString()
+               }
+           }
+
+       }
    }
    ```
 
-3. Edit `gradle.properties`
+3. Edit `gradle.properties` and add the plugin version
    ```properties
-   specmaticGradlePluginVersion=0.1.4
+   specmaticGradlePluginVersion=<PLUGIN_VERSION_HERE>
    ```
-   
-## Usage/Configuration
 
-1. Add the following to your `build.gradle[.kts]` file
+4. Add the following to your `build.gradle[.kts]` file
     ```kotlin
     specmatic {
         // Set the JVM version. Currently defaults to 17
@@ -143,32 +164,14 @@ plugin will take care of the rest. Batteries included. Just provide the credenti
     }
     ```
 
-2. Setup your `.gitignore`
+5. Setup your `.gitignore`
     ```gitignore
     # Add the following to the .gitignore file
     gen-kt/
     gen-resources/
     ```
-3. Setup GitHub workflows. Best to copy/paste from existing workflows.
 
-## Some additional nuances to be aware of
-
-- The plugin will not work if the `specmatic` block is not present in the root project.
-- If a project is obfuscated and/or shadowed, the plugin will rename the default `jar` publication to be called
-  `original` instead. This is to avoid confusion between the original jar and the obfuscated/shadowed jars. To use this
-  dependency in another sibling project, you will need to use the `original` classifier. For example, if you have an
-  obfuscated project (with the name `core`), and you want to use it in another project, you will need to add the
-  following to the `dependencies` block in the sibling project:
-
-  ```groovy
-    dependencies {
-        // depend on the original jar of a sibling project
-        implementation project(":core")
-
-        // Other alternatives for the configuration are:
-        implementation "io.specmatic.blah:flux-capacitor-[original|obfuscated-original|shadow-obfuscated|shadow-original]:1.0.0"
-    }
-  ```
+6. Setup GitHub workflows. Best to copy/paste from existing workflows.
 
 ## Available tasks
 
