@@ -1,4 +1,8 @@
 pluginManagement {
+    val specmaticGradlePluginVersion = settings.extra["specmaticGradlePluginVersion"] as String
+    plugins {
+        id("io.specmatic.gradle") version(specmaticGradlePluginVersion)
+    }
     repositories {
         gradlePluginPortal()
         mavenCentral()

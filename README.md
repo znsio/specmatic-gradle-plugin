@@ -56,13 +56,30 @@ plugin will take care of the rest. Batteries included. Just provide the credenti
 
 ## Installation
 
-```kotlin
-// in the root project only
-plugins {
-    id("io.specmatic.gradle") version ("A.B.C") // specify version as appropriate
-}
-```
+1. Edit `build.gradle[.kts]`
+   ```kotlin
+   // in the root project only
+   plugins {
+      // version specified in settings.gradle & gradle.properties
+       id("io.specmatic.gradle")
+   }
+   ```
 
+2. Edit `settings.gradle[.kts]`
+   ```kotlin
+   pluginManagement {
+      val specmaticGradlePluginVersion = settings.extra["specmaticGradlePluginVersion"] as String
+      plugins {
+          id("io.specmatic.gradle") version(specmaticGradlePluginVersion)
+      }
+   }
+   ```
+
+3. Edit `gradle.properties`
+   ```properties
+   specmaticGradlePluginVersion=0.1.4
+   ```
+   
 ## Usage/Configuration
 
 1. Add the following to your `build.gradle[.kts]` file
@@ -75,7 +92,7 @@ plugins {
         // Set the kotlin compiler version. Currently defaults to 1.9
         kotlinApiVersion = KotlinVersion.KOTLIN_1_9
         // List of sample projects that need validation before release, and bumping post release
-        sampleProjects = listOf("project1", "project2")
+        downstreamDependentProjects = listOf("project1", "project2")
     
         // Publish this to some repositories. Can be invoked multiple times
         publishTo("internalRepo", "https://internal.repo.url/repository/maven-releases/")
@@ -179,9 +196,9 @@ Here is a list of available tasks
 | **Docker tasks**                                     |                                                                                                                                                               |
 | `dockerBuild`                                        | Builds the docker image (for local use)                                                                                                                       |
 | `dockerBuildxPublish`                                | Builds and publishes `linux/amd64,linux/arm64` variants of the docker image                                                                                   | 
-| **Sample Project Validation**                        |                                                                                                                                                               |
-| `validateSampleProjects`                             | Validate sample projects                                                                                                                                      |
-| `bumpVersionsInSampleProjects`                       | Bump versions in sample project`                                                                                                                              | 
+| **Downstream Project Validation**                    |                                                                                                                                                               |
+| `validateDownstreamProjects`                         | Validate downstream project(s)                                                                                                                                |
+| `bumpVersionsInDownstreamProjects`                   | Bump versions in downstream project(s)                                                                                                                        | 
 | **Internal tasks**                                   |                                                                                                                                                               |
 | `createGithubRelease`                                | Create a Github release. This is already wired up when publishing a release.                                                                                  |
 | `cyclonedxBom`                                       | Generates a CycloneDX compliant Software Bill of Materials (SBOM).                                                                                            |

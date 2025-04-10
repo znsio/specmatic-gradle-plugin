@@ -1,4 +1,4 @@
-package io.specmatic.gradle.sampleprojects
+package io.specmatic.gradle.downstreamprojects
 
 import io.specmatic.gradle.specmaticExtension
 import org.gradle.api.Plugin
@@ -10,10 +10,10 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.util.internal.GUtil
 import java.io.File
 
-class SampleProjectIntegrationPlugin : Plugin<Project> {
+class DownstreamProjectIntegrationPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         target.afterEvaluate {
-            if (specmaticExtension().sampleProjects.isNotEmpty()) {
+            if (specmaticExtension().downstreamDependentProjects.isNotEmpty()) {
                 target.defineTasks()
             }
         }
@@ -22,42 +22,42 @@ class SampleProjectIntegrationPlugin : Plugin<Project> {
 
 private fun Project.defineTasks() {
     val specmaticExtension = specmaticExtension()
-    val validateSampleProjectTask = tasks.register("validateSampleProjects") {
+    val validateDownstreamProjectTask = tasks.register("validateDownstreamProjects") {
         group = "verification"
-        description = "Validate sample projects"
+        description = "Validate downstream project(s)"
     }
 
-    val bumpVersionsInSampleProjectGradlePropertiesTask = tasks.register("bumpVersionsInSampleProjects") {
+    val bumpVersionsInDownstreamProjectGradlePropertiesTask = tasks.register("bumpVersionsInDownstreamProjects") {
         group = "other"
-        description = "Bump versions in sample project"
+        description = "Bump versions in downstream project(s)"
     }
 
     val cloneGithubWorkflowsRepo = cloneOrUpdateRepoTask("specmatic-github-workflows")
 
-    specmaticExtension.sampleProjects.map { eachSampleProject ->
-        val cloneSampleRepoIfNotExists = cloneOrUpdateRepoTask(eachSampleProject)
+    specmaticExtension.downstreamDependentProjects.map { eachProject ->
+        val cloneRepoIfNotExists = cloneOrUpdateRepoTask(eachProject)
 
-        val validateTask = validateSampleProjectTask(eachSampleProject, cloneSampleRepoIfNotExists)
+        val validateTask = this@defineTasks.validateDownstreamProjectTask(eachProject, cloneRepoIfNotExists)
         validateTask.configure {
             dependsOn(cloneGithubWorkflowsRepo)
         }
 
-        validateSampleProjectTask.configure {
+        validateDownstreamProjectTask.configure {
             dependsOn(validateTask)
         }
 
-        val bumpVersionTask = bumpSpecmaticVersionInSampleProjectTask(
-            eachSampleProject,
-            cloneSampleRepoIfNotExists,
+        val bumpVersionTask = bumpSpecmaticVersionInProjectTask(
+            eachProject,
+            cloneRepoIfNotExists,
         )
 
-        bumpVersionsInSampleProjectGradlePropertiesTask.configure {
+        bumpVersionsInDownstreamProjectGradlePropertiesTask.configure {
             dependsOn(bumpVersionTask)
         }
     }
 }
 
-private fun Project.getSampleProjectDir(eachSampleProject: String): File = file("../${eachSampleProject}")
+private fun Project.getDownstreamProjectDir(eachProject: String): File = file("../${eachProject}")
 
 private val Project.specmaticModulePropertyKey: String
     get() = GUtil.toLowerCamelCase(project.name) + "Version"
@@ -65,16 +65,15 @@ private val Project.specmaticModulePropertyKey: String
 private val Project.specmaticModuleVersion: Any?
     get() = project.findProperty(specmaticModulePropertyKey)
 
-private fun Project.bumpSpecmaticVersionInSampleProjectTask(
-    eachSampleProject: String,
-    cloneSampleRepoIfNotExists: TaskProvider<Task?>,
-): TaskProvider<Exec?> = tasks.register("bumpVersion-$eachSampleProject", Exec::class.java) {
+private fun Project.bumpSpecmaticVersionInProjectTask(
+    eachProject: String,
+    cloneRepoIfNotExists: TaskProvider<Task?>,
+): TaskProvider<Exec?> = tasks.register("bumpVersion-$eachProject", Exec::class.java) {
     onlyIf("$specmaticModulePropertyKey is set") {
         project.hasProperty(specmaticModulePropertyKey)
     }
-    dependsOn(cloneSampleRepoIfNotExists)
-    val sampleProjectDir = getSampleProjectDir(eachSampleProject)
-    workingDir = sampleProjectDir
+    dependsOn(cloneRepoIfNotExists)
+    workingDir = getDownstreamProjectDir(eachProject)
 
     commandLine = listOf(
         "../specmatic-github-workflows/bin/fetch-artifacts",
@@ -85,8 +84,8 @@ private fun Project.bumpSpecmaticVersionInSampleProjectTask(
     )
 
     doFirst {
-        println("Bumping $specmaticModulePropertyKey in $eachSampleProject")
-        val gradlePropertiesFile = file("../${eachSampleProject}/gradle.properties")
+        println("Bumping $specmaticModulePropertyKey in $eachProject")
+        val gradlePropertiesFile = file("../${eachProject}/gradle.properties")
         val content = gradlePropertiesFile.readLines().joinToString("\n") { line ->
             if (line.trim().startsWith("#")) {
                 line
@@ -101,37 +100,36 @@ private fun Project.bumpSpecmaticVersionInSampleProjectTask(
     }
 }
 
-private fun Project.validateSampleProjectTask(
-    eachSampleProject: String, cloneSampleRepoIfNotExists: TaskProvider<Task?>
-): TaskProvider<GradleBuild?> = tasks.register("validate-$eachSampleProject", GradleBuild::class.java) {
+private fun Project.validateDownstreamProjectTask(
+    eachRepo: String, cloneRepoIfNotExists: TaskProvider<Task?>
+): TaskProvider<GradleBuild?> = tasks.register("validate-$eachRepo", GradleBuild::class.java) {
     dependsOn("publishAllPublicationsToStagingRepository")
     dependsOn("publishToMavenLocal")
-    dependsOn(cloneSampleRepoIfNotExists)
+    dependsOn(cloneRepoIfNotExists)
 
-    val sampleProjectDir = getSampleProjectDir(eachSampleProject)
-    dir = sampleProjectDir
+    dir = getDownstreamProjectDir(eachRepo)
     tasks = listOf("check")
     startParameter.projectProperties.put(specmaticModulePropertyKey, version.toString())
     doFirst {
-        println("Validating $eachSampleProject using ./gradlew check -P$specmaticModulePropertyKey=$version")
+        println("Validating $eachRepo using ./gradlew check -P$specmaticModulePropertyKey=$version")
     }
 }
 
 
 private fun Project.cloneOrUpdateRepoTask(
-    eachSampleProject: String
-): TaskProvider<Task?> = tasks.register("clone-$eachSampleProject") {
+    eachRepo: String
+): TaskProvider<Task?> = tasks.register("clone-$eachRepo") {
     doFirst {
-        val sampleProjectDir = getSampleProjectDir(eachSampleProject)
-        if (!sampleProjectDir.exists()) {
+        val downstreamProjectDir = getDownstreamProjectDir(eachRepo)
+        if (!downstreamProjectDir.exists()) {
             project.providers.exec {
-                commandLine("git", "clone", "https://github.com/znsio/$eachSampleProject.git", sampleProjectDir)
+                commandLine("git", "clone", "https://github.com/znsio/$eachRepo.git", downstreamProjectDir)
             }
         } else {
             project.providers.exec {
                 // pull the latest changes if the repo already exists
                 commandLine("git", "pull", "--ff-only", "--no-rebase")
-                workingDir = sampleProjectDir
+                workingDir = downstreamProjectDir
             }
         }
     }
