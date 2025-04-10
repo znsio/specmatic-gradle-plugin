@@ -5,6 +5,19 @@ plugins {
 
 specmatic {
     publishToMavenCentral()
+    downstreamDependentProjects = listOf(
+        "specmatic",
+        "specmatic-arazzo",
+        "specmatic-async",
+        "specmatic-google-pubsub",
+        "specmatic-gradle-plugin",
+        "specmatic-graphql",
+        "specmatic-grpc",
+        "specmatic-kafka",
+        "specmatic-license",
+        "specmatic-openapi",
+        "specmatic-redis",
+    )
     publishTo("specmaticPrivate", "https://maven.pkg.github.com/znsio/specmatic-private-maven-repo")
     withOSSLibrary(project(":plugin")) {
         // from com.gradle.publish.PublishPlugin#PUBLISH_TASK_NAME

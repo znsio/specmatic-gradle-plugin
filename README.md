@@ -199,6 +199,7 @@ Here is a list of available tasks
 | **Downstream Project Validation**                    |                                                                                                                                                               |
 | `validateDownstreamProjects`                         | Validate downstream project(s)                                                                                                                                |
 | `bumpVersionsInDownstreamProjects`                   | Bump versions in downstream project(s)                                                                                                                        | 
+| `fetchArtifactsInDownstreamProjects`                 | Fetch artifacts downstream project(s)                                                                                                                         | 
 | **Internal tasks**                                   |                                                                                                                                                               |
 | `createGithubRelease`                                | Create a Github release. This is already wired up when publishing a release.                                                                                  |
 | `cyclonedxBom`                                       | Generates a CycloneDX compliant Software Bill of Materials (SBOM).                                                                                            |
