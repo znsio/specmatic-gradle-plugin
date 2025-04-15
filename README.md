@@ -114,6 +114,11 @@ plugin will take care of the rest. Batteries included. Just provide the credenti
         kotlinApiVersion = KotlinVersion.KOTLIN_1_9
         // List of sample projects that need validation before release, and bumping post release
         downstreamDependentProjects = listOf("project1", "project2")
+   
+        // replace certain dependencies with other dependencies
+        versionReplacements = mapOf(
+            "org.example.foo:deprecated" to "org.example.foo:shiny-thing:1.2.3"
+        )    
     
         // Publish this to some repositories. Can be invoked multiple times
         publishTo("internalRepo", "https://internal.repo.url/repository/maven-releases/")
