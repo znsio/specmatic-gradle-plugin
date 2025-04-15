@@ -37,7 +37,7 @@ class CommercialApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
                     
                     tasks.register("runMain", JavaExec::class.java) {
                         dependsOn("publishAllPublicationsToStagingRepository")
-                        classpath(rootProject.file("build/mvn-repo/io/specmatic/example/example-project/1.2.3/example-project-1.2.3.jar"))
+                        classpath(rootProject.file("build/mvn-repo/io/specmatic/example/example-project-all/1.2.3/example-project-all-1.2.3.jar"))
                         mainClass = "io.specmatic.example.Main"
                     }
                     
@@ -66,20 +66,20 @@ class CommercialApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
 
             val artifacts = arrayOf(
                 "io.specmatic.example:example-project-all-debug:1.2.3",
+                "io.specmatic.example:example-project-all:1.2.3",
                 "io.specmatic.example:example-project:1.2.3",
-                "io.specmatic.example:example-project-min:1.2.3",
             )
 
             assertPublished(*artifacts)
 
             assertThat(getDependencies("io.specmatic.example:example-project-all-debug:1.2.3")).isEmpty()
-            assertThat(getDependencies("io.specmatic.example:example-project:1.2.3")).isEmpty()
-            assertThat(getDependencies("io.specmatic.example:example-project-min:1.2.3")).containsExactlyInAnyOrder(
+            assertThat(getDependencies("io.specmatic.example:example-project-all:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:example-project:1.2.3")).containsExactlyInAnyOrder(
                 "org.jetbrains.kotlin:kotlin-stdlib:1.9.20",
                 "org.slf4j:slf4j-api:2.0.17",
             )
 
-            artifacts.filter { !it.contains("-min:") }.forEach {
+            artifacts.filter { it.contains("-all") }.forEach {
                 assertThat(
                     openJar(it).stream()
                         .map { it.name })
@@ -133,7 +133,7 @@ class CommercialApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
                     
                     tasks.register("runMain", JavaExec::class.java) {
                         dependsOn("publishAllPublicationsToStagingRepository")
-                        classpath(rootProject.file("build/mvn-repo/io/specmatic/example/example-project/1.2.3/example-project-1.2.3.jar"))
+                        classpath(rootProject.file("build/mvn-repo/io/specmatic/example/example-project-all/1.2.3/example-project-all-1.2.3.jar"))
                         mainClass = "io.specmatic.example.Main"
                     }
             
@@ -165,20 +165,20 @@ class CommercialApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
 
             val artifacts = arrayOf(
                 "io.specmatic.example:example-project-all-debug:1.2.3",
-                "io.specmatic.example:example-project:1.2.3",
-                "io.specmatic.example:example-project-min:1.2.3"
+                "io.specmatic.example:example-project-all:1.2.3",
+                "io.specmatic.example:example-project:1.2.3"
             )
 
             assertPublished(*artifacts)
 
             assertThat(getDependencies("io.specmatic.example:example-project-all-debug:1.2.3")).isEmpty()
-            assertThat(getDependencies("io.specmatic.example:example-project:1.2.3")).isEmpty()
-            assertThat(getDependencies("io.specmatic.example:example-project-min:1.2.3")).containsExactlyInAnyOrder(
+            assertThat(getDependencies("io.specmatic.example:example-project-all:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:example-project:1.2.3")).containsExactlyInAnyOrder(
                 "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
                 "org.slf4j:slf4j-api:2.0.17",
             )
 
-            artifacts.filter { !it.contains("-min:") }.forEach {
+            artifacts.filter { it.contains("-all") }.forEach {
                 assertThat(
                     openJar(it).stream()
                         .map { it.name })
@@ -189,16 +189,16 @@ class CommercialApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
                     .contains("example/org/intellij/lang/annotations/Language.class") // kotlin is also packaged
                     .contains("example/org/slf4j/Logger.class") // slf4j dependency is also packaged
 
-                assertThat(openJar(it).manifest.mainAttributes.getValue("Main-Class"))
+                assertThat(openJar("io.specmatic.example:example-project:1.2.3").manifest.mainAttributes.getValue("Main-Class"))
                     .isEqualTo("io.specmatic.example.Main")
             }
-        }
 
-        @Test
-        fun `it should obfuscate classes`() {
-            var result = runWithSuccess("runMain", "runMainOriginal")
-            assertMainObfuscatedJarExecutes(result, "io.specmatic.example.internal.fluxcapacitor")
-            assertMainJarExecutes(result, "io.specmatic.example.internal.fluxcapacitor")
+            @Test
+            fun `it should obfuscate classes`() {
+                var result = runWithSuccess("runMain", "runMainOriginal")
+                assertMainObfuscatedJarExecutes(result, "io.specmatic.example.internal.fluxcapacitor")
+                assertMainJarExecutes(result, "io.specmatic.example.internal.fluxcapacitor")
+            }
         }
     }
 
@@ -253,7 +253,7 @@ class CommercialApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
 
                         tasks.register("runMain", JavaExec::class.java) {
                             dependsOn("publishAllPublicationsToStagingRepository")
-                            classpath(rootProject.file("build/mvn-repo/io/specmatic/example/executable/1.2.3/executable-1.2.3.jar"))
+                            classpath(rootProject.file("build/mvn-repo/io/specmatic/example/executable-all/1.2.3/executable-all-1.2.3.jar"))
                             mainClass = "io.specmatic.example.executable.Main"
                         }
                         
@@ -298,10 +298,10 @@ class CommercialApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
         fun `it publish single fat jar for executable with no deps, and core jar with dependencies`() {
             runWithSuccess("publishAllPublicationsToStagingRepository")
 
-            assertPublished(
-                "io.specmatic.example:executable:1.2.3",
+            val artifacts = arrayOf(
+                "io.specmatic.example:executable-all:1.2.3",
                 "io.specmatic.example:executable-all-debug:1.2.3",
-                "io.specmatic.example:executable-min:1.2.3",
+                "io.specmatic.example:executable:1.2.3",
 
                 "io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3",
                 "io.specmatic.example:core:1.2.3",
@@ -309,9 +309,11 @@ class CommercialApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
                 "io.specmatic.example:core-min:1.2.3"
             )
 
-            assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).isEmpty()
+            assertPublished(*artifacts)
+
+            assertThat(getDependencies("io.specmatic.example:executable-all:1.2.3")).isEmpty()
             assertThat(getDependencies("io.specmatic.example:executable-all-debug:1.2.3")).isEmpty()
-            assertThat(getDependencies("io.specmatic.example:executable-min:1.2.3")).containsExactlyInAnyOrder(
+            assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).containsExactlyInAnyOrder(
                 "io.specmatic.example:core:1.2.3",
                 "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
                 "org.slf4j:slf4j-api:2.0.17",
@@ -335,34 +337,25 @@ class CommercialApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
             assertThat(getJar("io.specmatic.example:core-all-debug:1.2.3").length()).isGreaterThan(getJar("io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3").length())
             assertThat(getJar("io.specmatic.example:core-all-debug:1.2.3").length()).isGreaterThan(getJar("io.specmatic.example:core:1.2.3").length())
 
-            assertThat(
-                openJar("io.specmatic.example:executable-all-debug:1.2.3").stream()
-                    .map { it.name })
-                .contains("io/specmatic/example/core/VersionInfo.class") // from the core dependency
-                .contains("io/specmatic/example/core/version.properties") // from the core dependency
-                .contains("io/specmatic/example/executable/VersionInfo.class")
-                .contains("io/specmatic/example/executable/version.properties")
-                .contains("kotlin/Metadata.class") // kotlin is also packaged
-                .contains("org/jetbrains/annotations/Contract.class") // kotlin is also packaged
-                .contains("org/intellij/lang/annotations/Language.class") // kotlin is also packaged
-                .contains("org/slf4j/Logger.class") // slf4j dependency is also packaged
+            artifacts.filter { it.contains(":executable-all") }.forEach {
+                assertThat(
+                    openJar(it).stream()
+                        .map { it.name })
+                    .contains("io/specmatic/example/core/VersionInfo.class") // from the core dependency
+                    .contains("io/specmatic/example/core/version.properties") // from the core dependency
+                    .contains("io/specmatic/example/executable/VersionInfo.class")
+                    .contains("io/specmatic/example/executable/version.properties")
+                    .contains("kotlin/Metadata.class") // kotlin is also packaged
+                    .contains("org/jetbrains/annotations/Contract.class") // kotlin is also packaged
+                    .contains("org/intellij/lang/annotations/Language.class") // kotlin is also packaged
+                    .contains("org/slf4j/Logger.class") // slf4j dependency is also packaged
 
-            assertThat(
-                openJar("io.specmatic.example:executable:1.2.3").stream()
-                    .map { it.name })
-                .contains("io/specmatic/example/core/VersionInfo.class") // from the core dependency
-                .contains("io/specmatic/example/core/version.properties") // from the core dependency
-                .contains("io/specmatic/example/executable/VersionInfo.class")
-                .contains("io/specmatic/example/executable/version.properties")
-                .contains("kotlin/Metadata.class") // kotlin is also packaged
-                .contains("org/jetbrains/annotations/Contract.class") // kotlin is also packaged
-                .contains("org/intellij/lang/annotations/Language.class") // kotlin is also packaged
-                .contains("org/slf4j/Logger.class") // slf4j dependency is also packaged
-
-            assertThat(openJar("io.specmatic.example:executable:1.2.3").manifest.mainAttributes.getValue("Main-Class")).isEqualTo(
-                "io.specmatic.example.executable.Main"
-            )
+                assertThat(openJar(it).manifest.mainAttributes.getValue("Main-Class")).isEqualTo(
+                    "io.specmatic.example.executable.Main"
+                )
+            }
         }
+
     }
 
     @Nested
@@ -417,7 +410,7 @@ class CommercialApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
 
                         tasks.register("runMain", JavaExec::class.java) {
                             dependsOn("publishAllPublicationsToStagingRepository")
-                            classpath(rootProject.file("build/mvn-repo/io/specmatic/example/executable/1.2.3/executable-1.2.3.jar"))
+                            classpath(rootProject.file("build/mvn-repo/io/specmatic/example/executable-all/1.2.3/executable-all-1.2.3.jar"))
                             mainClass = "io.specmatic.example.executable.Main"
                         }
                         
@@ -462,9 +455,9 @@ class CommercialApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
             runWithSuccess("publishAllPublicationsToStagingRepository")
 
             assertPublished(
-                "io.specmatic.example:executable:1.2.3",
+                "io.specmatic.example:executable-all:1.2.3",
                 "io.specmatic.example:executable-all-debug:1.2.3",
-                "io.specmatic.example:executable-min:1.2.3",
+                "io.specmatic.example:executable:1.2.3",
 
                 "io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3",
                 "io.specmatic.example:core:1.2.3",
@@ -472,9 +465,9 @@ class CommercialApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
                 "io.specmatic.example:core-min:1.2.3"
             )
 
-            assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:executable-all:1.2.3")).isEmpty()
             assertThat(getDependencies("io.specmatic.example:executable-all-debug:1.2.3")).isEmpty()
-            assertThat(getDependencies("io.specmatic.example:executable-min:1.2.3")).containsExactlyInAnyOrder(
+            assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).containsExactlyInAnyOrder(
                 "io.specmatic.example:core:1.2.3",
                 "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
                 "org.slf4j:slf4j-api:2.0.17",
@@ -482,7 +475,7 @@ class CommercialApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
             assertThat(getDependencies("io.specmatic.example:core:1.2.3")).isEmpty()
 
             assertThat(
-                openJar("io.specmatic.example:executable:1.2.3").stream()
+                openJar("io.specmatic.example:executable-all:1.2.3").stream()
                     .map { it.name }).contains("example/io/specmatic/example/core/VersionInfo.class") // from the core dependency
                 .contains("example/io/specmatic/example/core/version.properties") // from the core dependency
                 .contains("io/specmatic/example/executable/VersionInfo.class")
@@ -492,7 +485,7 @@ class CommercialApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
                 .contains("example/org/intellij/lang/annotations/Language.class") // kotlin is also packaged
                 .contains("example/org/slf4j/Logger.class") // slf4j dependency is also packaged
 
-            assertThat(openJar("io.specmatic.example:executable:1.2.3").manifest.mainAttributes.getValue("Main-Class")).isEqualTo(
+            assertThat(openJar("io.specmatic.example:executable-all:1.2.3").manifest.mainAttributes.getValue("Main-Class")).isEqualTo(
                 "io.specmatic.example.executable.Main"
             )
         }

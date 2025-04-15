@@ -294,10 +294,10 @@ class CommercialApplicationAndLibraryConfig(project: Project) : ShadowingFeature
 
             project.plugins.withType(MavenPublishPlugin::class.java) {
                 project.createShadowedObfuscatedJarPublication(
-                    obfuscatedShadowJar, project.name
+                    obfuscatedShadowJar, "${project.name}-all"
                 )
                 project.createObfuscatedOriginalJarPublication(
-                    obfuscatedOriginalJar, "${project.name}-min"
+                    obfuscatedOriginalJar, project.name
                 )
                 project.createShadowedUnobfuscatedJarPublication(
                     unobfuscatedShadowJar, "${project.name}-all-debug"
