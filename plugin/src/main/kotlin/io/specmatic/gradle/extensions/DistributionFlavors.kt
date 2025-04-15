@@ -132,7 +132,7 @@ open class OSSApplicationConfig(project: Project) : ApplicationFeature, DockerBu
     }
 }
 
-open class OSSApplicationLibraryConfig(project: Project) : ApplicationFeature, DockerBuildFeature, ShadowingFeature,
+open class OSSApplicationAndLibraryConfig(project: Project) : ApplicationFeature, DockerBuildFeature, ShadowingFeature,
     GithubReleaseFeature,
     BaseDistribution(project) {
     override var mainClass: String = ""
@@ -182,7 +182,6 @@ open class OSSApplicationLibraryConfig(project: Project) : ApplicationFeature, D
     }
 }
 
-
 class CommercialLibraryConfig(project: Project) : ObfuscationFeature, ShadowingFeature,
     GithubReleaseFeature, BaseDistribution(project) {
     override fun applyToProject() {
@@ -226,7 +225,6 @@ class CommercialLibraryConfig(project: Project) : ObfuscationFeature, ShadowingF
         super.githubRelease(block)
     }
 }
-
 
 class CommercialApplicationConfig(project: Project) : ApplicationFeature, ShadowingFeature, ObfuscationFeature,
     GithubReleaseFeature,
@@ -294,10 +292,10 @@ class CommercialApplicationAndLibraryConfig(project: Project) : ShadowingFeature
 
             project.plugins.withType(MavenPublishPlugin::class.java) {
                 project.createShadowedObfuscatedJarPublication(
-                    obfuscatedShadowJar, project.name
+                    obfuscatedShadowJar, "${project.name}-all"
                 )
                 project.createObfuscatedOriginalJarPublication(
-                    obfuscatedOriginalJar, "${project.name}-min"
+                    obfuscatedOriginalJar, project.name
                 )
                 project.createShadowedUnobfuscatedJarPublication(
                     unobfuscatedShadowJar, "${project.name}-all-debug"

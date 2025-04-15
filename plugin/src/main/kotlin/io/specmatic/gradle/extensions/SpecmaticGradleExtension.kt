@@ -56,8 +56,8 @@ open class SpecmaticGradleExtension {
         projectConfigurations[project] = projectConfig
     }
 
-    fun withOSSApplicationLibrary(project: Project, block: OSSApplicationLibraryConfig.() -> Unit) {
-        val projectConfig = OSSApplicationLibraryConfig(project).apply(block)
+    fun withOSSApplicationLibrary(project: Project, block: OSSApplicationAndLibraryConfig.() -> Unit) {
+        val projectConfig = OSSApplicationAndLibraryConfig(project).apply(block)
         projectConfig.applyToProject()
         projectConfigurations[project] = projectConfig
     }
