@@ -25,6 +25,7 @@ open class SpecmaticGradleExtension {
     internal val publishTo = mutableListOf<PublishTarget>()
     internal val licenseData = mutableListOf<ModuleLicenseData>()
     internal val projectConfigurations: MutableMap<Project, DistributionFlavor> = mutableMapOf()
+    var versionReplacements = mutableMapOf<String, String>()
 
     fun publishToMavenCentral() {
         publishTo.add(MavenCentral())
