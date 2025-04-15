@@ -132,7 +132,7 @@ open class OSSApplicationConfig(project: Project) : ApplicationFeature, DockerBu
     }
 }
 
-open class OSSApplicationLibraryConfig(project: Project) : ApplicationFeature, DockerBuildFeature, ShadowingFeature,
+open class OSSApplicationAndLibraryConfig(project: Project) : ApplicationFeature, DockerBuildFeature, ShadowingFeature,
     GithubReleaseFeature,
     BaseDistribution(project) {
     override var mainClass: String = ""
@@ -182,7 +182,6 @@ open class OSSApplicationLibraryConfig(project: Project) : ApplicationFeature, D
     }
 }
 
-
 class CommercialLibraryConfig(project: Project) : ObfuscationFeature, ShadowingFeature,
     GithubReleaseFeature, BaseDistribution(project) {
     override fun applyToProject() {
@@ -226,7 +225,6 @@ class CommercialLibraryConfig(project: Project) : ObfuscationFeature, ShadowingF
         super.githubRelease(block)
     }
 }
-
 
 class CommercialApplicationConfig(project: Project) : ApplicationFeature, ShadowingFeature, ObfuscationFeature,
     GithubReleaseFeature,
