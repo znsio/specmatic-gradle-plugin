@@ -90,7 +90,7 @@ internal fun Project.defaultAllowedLicensesFile(): File {
 internal fun Project.allowedLicenses(): Set<String> {
     val extraAllowedLicenses = this.properties["extraAllowedLicenses"]
     return if (extraAllowedLicenses != null) {
-        ALLOWED_LICENSES + extraAllowedLicenses.toString().split(",").map { it.trim() }.toSet()
+        ALLOWED_LICENSES + extraAllowedLicenses.toString().split(";;").map { it.trim() }.toSet()
     } else {
         ALLOWED_LICENSES
     }
