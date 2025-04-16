@@ -17,31 +17,17 @@ pluginManagement {
         }
 
         maven {
-            url = uri("https://central.sonatype.com/repository/maven-snapshots/")
-            mavenContent {
-                snapshotsOnly()
-            }
-
-            content {
-                includeGroup("io.specmatic.gradle")
-            }
-        }
-
-        maven {
             name = "specmaticPrivate"
             url = uri("https://maven.pkg.github.com/znsio/specmatic-private-maven-repo")
             credentials {
-                username = listOf(
-                    settings.extra.properties["github.actor"],
-                    System.getenv("SPECMATIC_GITHUB_USER"),
-                    System.getenv("ORG_GRADLE_PROJECT_specmaticPrivateUsername")
-                ).firstNotNullOfOrNull { it }.toString()
-
-                password = listOf(
-                    settings.extra.properties["github.token"],
-                    System.getenv("SPECMATIC_GITHUB_TOKEN"),
-                    System.getenv("ORG_GRADLE_PROJECT_specmaticPrivatePassword")
-                ).firstNotNullOfOrNull { it }.toString()
+                username =
+                    settings.extra.properties["github.actor"]?.toString()
+                        ?: System.getenv("SPECMATIC_GITHUB_USER")?.toString()
+                                ?: System.getenv("ORG_GRADLE_PROJECT_specmaticPrivateUsername")?.toString()
+                password =
+                    settings.extra.properties["github.token"]?.toString()
+                        ?: System.getenv("SPECMATIC_GITHUB_TOKEN")?.toString()
+                                ?: System.getenv("ORG_GRADLE_PROJECT_specmaticPrivatePassword")?.toString()
             }
         }
 

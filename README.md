@@ -37,6 +37,10 @@ projects.
 12. Better integration with sample repositories
     - Run a build against sample projects and validate changes.
     - Bummp version of dependency in sample project. Ensure that the appropriate jar is checked into the sample repo.
+13. Conflict detection and resolution using a combination of `io.fuchs.gradle.classpath-collision-detector`,
+    `org.gradlex.jvm-dependency-conflict-detection`, `org.gradlex.jvm-dependency-conflict-resolution`.
+    See https://github.com/REPLicated/classpath-collision-detector
+    and https://gradlex.org/jvm-dependency-conflict-resolution/ for more details.
 
 ## Requirements for using this plugin
 
@@ -183,12 +187,53 @@ projects.
 
 6. Setup GitHub workflows. Best to copy/paste from existing workflows.
 
+## Handling conflict resolution
+
+To work around the dependency hell problem where multiple dependencies have the same class, but different versions, you
+can use the `detectCollisions` task to detect the collisions. This will print a report of all the dependencies that have
+collisions, and their versions. Additionally, this plugin wraps the `org.gradlex.jvm-dependency-conflict-resolution`
+plugin that addresses conflict resolution for some [popular
+dependencies](https://gradlex.org/jvm-dependency-conflict-resolution/#all-capabilities). For other dependencies, you can
+use the following snippet in your project:
+
+```kotlin
+jvmDependencyConflicts {
+    patch {
+        // attach capabilities to multiple modules that offer the same capability
+        module("org.example:old-name") {
+            addCapability("org.example:some-feature")
+        }
+
+        module("org.example.somepackage:new-name") {
+            addCapability("org.example:some-feature")
+        }
+    }
+
+    // resolve the conflicts by selecting the highest version of the dependency
+    conflictResolution {
+        selectHighestVersion("org.example:some-feature")
+    }
+}
+```
+
+## Logging
+
+This plugin ensures that the published application variants use slf4j and logback as the default logging mechanism.
+Logback dependencies are automatically added by the plugin. A default `logback.xml` is packaged that turns off all
+logging by default. You can override this by creating a `logback.xml` file and executing the application via:
+
+```bash
+java -Dlogback.configurationFile=logback.xml -jar <jar-file>
+```
+
 ## Available tasks
 
 Here is a list of available tasks
 
 | Task                                                 | Description                                                                                                                                                   |
 |------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Other checks**                                     |                                                                                                                                                               |
+| `detectCollisions`                                   | Detects dependency collisions and prints a report.                                                                                                            |
 | **License Checks**                                   |                                                                                                                                                               |
 | `checkLicense`                                       | Check if License could be used                                                                                                                                |
 | `generateLicenseReport`                              | Generates license report for all dependencies of this project and its subprojects.                                                                            |

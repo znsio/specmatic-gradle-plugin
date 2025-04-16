@@ -1,11 +1,12 @@
-package io.specmatic.gradle
+package io.specmatic.gradle.features
 
+import io.specmatic.gradle.AbstractFunctionalTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import kotlin.test.Test
 
-class OssLibraryFunctionalTest : AbstractFunctionalTest() {
+class OSSLibraryFeatureTest : AbstractFunctionalTest() {
     @Nested
     inner class RootModuleOnly {
         @BeforeEach
@@ -39,15 +40,8 @@ class OssLibraryFunctionalTest : AbstractFunctionalTest() {
         }
 
         @Test
-        fun `it should have publicationTasks`() {
-            val result = runWithSuccess("tasks")
-            assertThat(result.output).contains("publishToMavenLocal")
-            assertThat(result.output).contains("publishAllPublicationsToStagingRepository")
-        }
-
-        @Test
         fun `it publish jar with all dependencies declared in the pom to staging repository`() {
-            runWithSuccess("publishAllPublicationsToStagingRepository")
+            runWithSuccess("publishAllPublicationsToStagingRepository", "publishToMavenLocal")
 
             assertPublishedWithJavadocAndSources("io.specmatic.example:example-project:1.2.3")
             assertThat(getDependencies("io.specmatic.example:example-project:1.2.3"))
@@ -106,7 +100,7 @@ class OssLibraryFunctionalTest : AbstractFunctionalTest() {
         @Test
         fun `it fails`() {
             val result = runWithFailure("publishAllPublicationsToStagingRepository")
-            assertThat(result.output).contains("Cannot access 'shadow': it is protected in 'OSSLibraryConfig'")
+            assertThat(result.output).contains("Cannot access 'shadow': it is protected in 'OSSLibraryFeature'")
 
             assertNothingPublished()
         }
@@ -168,15 +162,8 @@ class OssLibraryFunctionalTest : AbstractFunctionalTest() {
         }
 
         @Test
-        fun `it should have publicationTasks`() {
-            val result = runWithSuccess("tasks")
-            assertThat(result.output).contains("publishToMavenLocal")
-            assertThat(result.output).contains("publishAllPublicationsToStagingRepository")
-        }
-
-        @Test
         fun `it publish all jars with dependencies`() {
-            runWithSuccess("publishAllPublicationsToStagingRepository")
+            runWithSuccess("publishAllPublicationsToStagingRepository", "publishToMavenLocal")
 
             assertPublishedWithJavadocAndSources(
                 "io.specmatic.example:executable:1.2.3", "io.specmatic.example:core:1.2.3"
@@ -266,7 +253,7 @@ class OssLibraryFunctionalTest : AbstractFunctionalTest() {
         @Test
         fun `it fails`() {
             val result = runWithFailure("publishAllPublicationsToStagingRepository")
-            assertThat(result.output).contains("Cannot access 'shadow': it is protected in 'OSSLibraryConfig'")
+            assertThat(result.output).contains("Cannot access 'shadow': it is protected in 'OSSLibraryFeature'")
             assertNothingPublished()
         }
     }

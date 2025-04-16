@@ -1,11 +1,12 @@
-package io.specmatic.gradle
+package io.specmatic.gradle.features
 
-import org.assertj.core.api.Assertions.assertThat
+import io.specmatic.gradle.AbstractFunctionalTest
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
-class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
+class CommercialApplicationFeatureTest : AbstractFunctionalTest() {
 
     @Nested
     inner class RootModuleOnly {
@@ -51,13 +52,7 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
 
             writeRandomClasses(projectDir, "io.specmatic.example.internal.fluxcapacitor")
             writeMainClass(projectDir, "io.specmatic.example.Main", "io.specmatic.example.internal.fluxcapacitor")
-        }
-
-        @Test
-        fun `it should have publicationTasks`() {
-            val result = runWithSuccess("tasks")
-            assertThat(result.output).contains("publishToMavenLocal")
-            assertThat(result.output).contains("publishAllPublicationsToStagingRepository")
+            writeLogbackXml(projectDir)
         }
 
         @Test
@@ -69,7 +64,7 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
 
         @Test
         fun `it publish single fat jar without any dependencies declared in the pom to staging repository`() {
-            runWithSuccess("publishAllPublicationsToStagingRepository")
+            runWithSuccess("publishAllPublicationsToStagingRepository", "publishToMavenLocal")
 
             val artifacts = arrayOf(
                 "io.specmatic.example:example-project-all-debug:1.2.3",
@@ -77,10 +72,10 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
             )
 
             assertPublished(*artifacts)
-            artifacts.forEach { assertThat(getDependencies(it)).isEmpty() }
+            artifacts.forEach { Assertions.assertThat(getDependencies(it)).isEmpty() }
 
             artifacts.forEach {
-                assertThat(
+                Assertions.assertThat(
                     openJar(it).stream()
                         .map { it.name })
                     .contains("io/specmatic/example/VersionInfo.class")
@@ -90,7 +85,7 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
                     .contains("org/intellij/lang/annotations/Language.class") // kotlin is also packaged
                     .contains("org/slf4j/Logger.class") // slf4j dependency is also packaged
 
-                assertThat(openJar(it).manifest.mainAttributes.getValue("Main-Class"))
+                Assertions.assertThat(openJar(it).manifest.mainAttributes.getValue("Main-Class"))
                     .isEqualTo("io.specmatic.example.Main")
             }
         }
@@ -143,19 +138,12 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
 
             writeRandomClasses(projectDir, "io.specmatic.example.internal.fluxcapacitor")
             writeMainClass(projectDir, "io.specmatic.example.Main", "io.specmatic.example.internal.fluxcapacitor")
+            writeLogbackXml(projectDir)
         }
-
-        @Test
-        fun `it should have publicationTasks`() {
-            val result = runWithSuccess("tasks")
-            assertThat(result.output).contains("publishToMavenLocal")
-            assertThat(result.output).contains("publishAllPublicationsToStagingRepository")
-        }
-
 
         @Test
         fun `it publish single fat jar without any dependencies declared in the pom to staging repository`() {
-            runWithSuccess("publishAllPublicationsToStagingRepository")
+            runWithSuccess("publishAllPublicationsToStagingRepository", "publishToMavenLocal")
 
             val artifacts = arrayOf(
                 "io.specmatic.example:example-project-all-debug:1.2.3",
@@ -163,10 +151,10 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
             )
 
             assertPublished(*artifacts)
-            artifacts.forEach { assertThat(getDependencies(it)).isEmpty() }
+            artifacts.forEach { Assertions.assertThat(getDependencies(it)).isEmpty() }
 
             artifacts.forEach {
-                assertThat(
+                Assertions.assertThat(
                     openJar(it).stream()
                         .map { it.name })
                     .contains("io/specmatic/example/VersionInfo.class")
@@ -176,7 +164,7 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
                     .contains("example/org/intellij/lang/annotations/Language.class") // kotlin is also packaged
                     .contains("example/org/slf4j/Logger.class") // slf4j dependency is also packaged
 
-                assertThat(openJar(it).manifest.mainAttributes.getValue("Main-Class"))
+                Assertions.assertThat(openJar(it).manifest.mainAttributes.getValue("Main-Class"))
                     .isEqualTo("io.specmatic.example.Main")
             }
         }
@@ -265,13 +253,7 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
                 "io.specmatic.example.executable.internal.fluxcapacitor"
             )
             writeRandomClasses(projectDir.resolve("core"), "io.specmatic.example.core.internal.chronocore")
-        }
-
-        @Test
-        fun `it should have publicationTasks`() {
-            val result = runWithSuccess("tasks")
-            assertThat(result.output).contains("publishToMavenLocal")
-            assertThat(result.output).contains("publishAllPublicationsToStagingRepository")
+            writeLogbackXml(projectDir.resolve("executable"))
         }
 
         @Test
@@ -283,7 +265,7 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
 
         @Test
         fun `it publish single fat jar for executable with no deps, and core jar with dependencies`() {
-                runWithSuccess("publishAllPublicationsToStagingRepository")
+            runWithSuccess("publishAllPublicationsToStagingRepository", "publishToMavenLocal")
 
             assertPublished(
                 "io.specmatic.example:executable:1.2.3",
@@ -295,28 +277,32 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
                 "io.specmatic.example:core-min:1.2.3"
             )
 
-            assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).isEmpty()
-            assertThat(getDependencies("io.specmatic.example:executable-all-debug:1.2.3")).isEmpty()
+            Assertions.assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).isEmpty()
+            Assertions.assertThat(getDependencies("io.specmatic.example:executable-all-debug:1.2.3")).isEmpty()
 
-            assertThat(getDependencies("io.specmatic.example:core:1.2.3")).isEmpty()
-            assertThat(getDependencies("io.specmatic.example:core-all-debug:1.2.3")).isEmpty()
-            assertThat(getDependencies("io.specmatic.example:core-min:1.2.3")).containsExactlyInAnyOrder(
+            Assertions.assertThat(getDependencies("io.specmatic.example:core:1.2.3")).isEmpty()
+            Assertions.assertThat(getDependencies("io.specmatic.example:core-all-debug:1.2.3")).isEmpty()
+            Assertions.assertThat(getDependencies("io.specmatic.example:core-min:1.2.3")).containsExactlyInAnyOrder(
                 "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
                 "org.slf4j:slf4j-api:2.0.17",
             )
-            assertThat(getDependencies("io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3")).containsExactlyInAnyOrder(
-                "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
-                "org.slf4j:slf4j-api:2.0.17",
-            )
+            Assertions.assertThat(getDependencies("io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3"))
+                .containsExactlyInAnyOrder(
+                    "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
+                    "org.slf4j:slf4j-api:2.0.17",
+                )
 
             // original jar should be larger than obfuscated jar
-            assertThat(getJar("io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3").length()).isGreaterThan(
-                getJar("io.specmatic.example:core-min:1.2.3").length()
-            )
-            assertThat(getJar("io.specmatic.example:core-all-debug:1.2.3").length()).isGreaterThan(getJar("io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3").length())
-            assertThat(getJar("io.specmatic.example:core-all-debug:1.2.3").length()).isGreaterThan(getJar("io.specmatic.example:core:1.2.3").length())
+            Assertions.assertThat(getJar("io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3").length())
+                .isGreaterThan(
+                    getJar("io.specmatic.example:core-min:1.2.3").length()
+                )
+            Assertions.assertThat(getJar("io.specmatic.example:core-all-debug:1.2.3").length())
+                .isGreaterThan(getJar("io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3").length())
+            Assertions.assertThat(getJar("io.specmatic.example:core-all-debug:1.2.3").length())
+                .isGreaterThan(getJar("io.specmatic.example:core:1.2.3").length())
 
-            assertThat(
+            Assertions.assertThat(
                 openJar("io.specmatic.example:executable-all-debug:1.2.3").stream()
                     .map { it.name })
                 .contains("io/specmatic/example/core/VersionInfo.class") // from the core dependency
@@ -328,7 +314,7 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
                 .contains("org/intellij/lang/annotations/Language.class") // kotlin is also packaged
                 .contains("org/slf4j/Logger.class") // slf4j dependency is also packaged
 
-            assertThat(
+            Assertions.assertThat(
                 openJar("io.specmatic.example:executable:1.2.3").stream()
                     .map { it.name })
                 .contains("io/specmatic/example/core/VersionInfo.class") // from the core dependency
@@ -340,9 +326,10 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
                 .contains("org/intellij/lang/annotations/Language.class") // kotlin is also packaged
                 .contains("org/slf4j/Logger.class") // slf4j dependency is also packaged
 
-            assertThat(openJar("io.specmatic.example:executable:1.2.3").manifest.mainAttributes.getValue("Main-Class")).isEqualTo(
-                "io.specmatic.example.executable.Main"
-            )
+            Assertions.assertThat(openJar("io.specmatic.example:executable:1.2.3").manifest.mainAttributes.getValue("Main-Class"))
+                .isEqualTo(
+                    "io.specmatic.example.executable.Main"
+                )
         }
     }
 
@@ -423,13 +410,7 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
                 "io.specmatic.example.executable.internal.fluxcapacitor"
             )
             writeRandomClasses(projectDir.resolve("core"), "io.specmatic.example.core.internal.chronocore")
-        }
-
-        @Test
-        fun `it should have publicationTasks`() {
-            val result = runWithSuccess("tasks")
-            assertThat(result.output).contains("publishToMavenLocal")
-            assertThat(result.output).contains("publishAllPublicationsToStagingRepository")
+            writeLogbackXml(projectDir.resolve("executable"))
         }
 
         @Test
@@ -441,7 +422,7 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
 
         @Test
         fun `it publish single fat jar for executable with no deps, and core jar with dependencies`() {
-            runWithSuccess("publishAllPublicationsToStagingRepository")
+            runWithSuccess("publishAllPublicationsToStagingRepository", "publishToMavenLocal")
 
             assertPublished(
                 "io.specmatic.example:executable:1.2.3",
@@ -453,12 +434,13 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
                 "io.specmatic.example:core-min:1.2.3"
             )
 
-            assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).isEmpty()
-            assertThat(getDependencies("io.specmatic.example:core:1.2.3")).isEmpty()
+            Assertions.assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).isEmpty()
+            Assertions.assertThat(getDependencies("io.specmatic.example:core:1.2.3")).isEmpty()
 
-            assertThat(
+            Assertions.assertThat(
                 openJar("io.specmatic.example:executable:1.2.3").stream()
-                    .map { it.name }).contains("example/io/specmatic/example/core/VersionInfo.class") // from the core dependency
+                    .map { it.name })
+                .contains("example/io/specmatic/example/core/VersionInfo.class") // from the core dependency
                 .contains("example/io/specmatic/example/core/version.properties") // from the core dependency
                 .contains("io/specmatic/example/executable/VersionInfo.class")
                 .contains("io/specmatic/example/executable/version.properties")
@@ -467,9 +449,10 @@ class CommercialApplicationFunctionalTest : AbstractFunctionalTest() {
                 .contains("example/org/intellij/lang/annotations/Language.class") // kotlin is also packaged
                 .contains("example/org/slf4j/Logger.class") // slf4j dependency is also packaged
 
-            assertThat(openJar("io.specmatic.example:executable:1.2.3").manifest.mainAttributes.getValue("Main-Class")).isEqualTo(
-                "io.specmatic.example.executable.Main"
-            )
+            Assertions.assertThat(openJar("io.specmatic.example:executable:1.2.3").manifest.mainAttributes.getValue("Main-Class"))
+                .isEqualTo(
+                    "io.specmatic.example.executable.Main"
+                )
         }
     }
 }

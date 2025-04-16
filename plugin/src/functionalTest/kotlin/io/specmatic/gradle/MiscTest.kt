@@ -66,7 +66,7 @@ class MiscTest : AbstractFunctionalTest() {
         )
         writeRandomClasses(projectDir.resolve("core"), "io.specmatic.example.core.internal.chronocore")
 
-        runWithSuccess("publishAllPublicationsToStagingRepository")
+        runWithSuccess("publishAllPublicationsToStagingRepository", "publishToMavenLocal")
 
         assertPublished(
             "io.specmatic.example:core:1.2.3",

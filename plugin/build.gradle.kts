@@ -22,12 +22,16 @@ dependencies {
     implementation("org.kohsuke:github-api:1.327")
     implementation("org.cyclonedx.bom:org.cyclonedx.bom.gradle.plugin:2.2.0")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.3")
+    implementation("org.gradlex.jvm-dependency-conflict-resolution:org.gradlex.jvm-dependency-conflict-resolution.gradle.plugin:2.2")
+    implementation("org.gradlex.java-ecosystem-capabilities:org.gradlex.java-ecosystem-capabilities.gradle.plugin:1.5.3")
+    implementation("io.fuchs.gradle.classpath-collision-detector:io.fuchs.gradle.classpath-collision-detector.gradle.plugin:1.0.0")
 
     testImplementation("org.apache.maven:maven-model:3.9.9")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.assertj:assertj-core:3.27.3")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.12.2")
-
+    testImplementation("io.mockk:mockk:1.14.0")
+//    testImplementation("org.mockito:mockito-core:5.17.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -49,12 +53,18 @@ gradlePlugin {
     vcsUrl = "https://github.com/znsio/specmatic-gradle-plugin"
 }
 
-val functionalTestSourceSet = sourceSets.create("functionalTest")
+val functionalTestSourceSet = sourceSets.create("functionalTest") {
+    compileClasspath += sourceSets["main"].output
+    runtimeClasspath += sourceSets["main"].output
+}
 
 configurations["functionalTestImplementation"].extendsFrom(configurations["testImplementation"])
 configurations["functionalTestRuntimeOnly"].extendsFrom(configurations["testRuntimeOnly"])
 
 val functionalTest by tasks.registering(Test::class) {
+    description = "Run functional tests"
+    group = "verification"
+
     testClassesDirs = functionalTestSourceSet.output.classesDirs
     classpath = functionalTestSourceSet.runtimeClasspath
     useJUnitPlatform()
@@ -68,7 +78,7 @@ tasks.named<Task>("check") {
 
 tasks.named<Test>("functionalTest") {
     useJUnitPlatform()
-    maxParallelForks = 3
+    maxParallelForks = 2
 }
 
 val stagingRepo = layout.buildDirectory.dir("mvn-repo").get()

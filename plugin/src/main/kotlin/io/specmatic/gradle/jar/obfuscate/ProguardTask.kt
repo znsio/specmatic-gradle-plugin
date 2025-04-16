@@ -5,6 +5,7 @@ import io.specmatic.gradle.exec.shellEscapedArgs
 import io.specmatic.gradle.license.pluginInfo
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
@@ -23,8 +24,8 @@ abstract class ProguardTask @Inject constructor(
     @get:Input
     val proguardVersion = "7.7.0"
 
-    private var javaLauncher: Property<JavaLauncher> = objectFactory.property<JavaLauncher?>(JavaLauncher::class.java)
-        .convention(javaToolchainService.launcherFor({}))
+    private var javaLauncher: Property<JavaLauncher> =
+        objectFactory.property<JavaLauncher?>(JavaLauncher::class.java).convention(javaToolchainService.launcherFor({}))
 
     @get:Input
     val proguardArgs = mutableListOf<String>()
@@ -38,11 +39,20 @@ abstract class ProguardTask @Inject constructor(
 
     @TaskAction
     fun exec() {
-        val proguard = project.configurations.create("proguard_${name}")
-        // since proguard is GPL, we avoid compile time dependencies on it
-        proguard.dependencies.add(project.dependencies.create("com.guardsquare:proguard-base:$proguardVersion"))
-
         project.repositories.mavenCentral()
+
+        val proguard =
+            (project as ProjectInternal).configurations.resolvableDependencyScopeUnlocked("proguard_${name}") {
+                isVisible = true
+                isTransitive = true
+//                isCanBeResolved = true
+//                isCanBeConsumed = false
+//                isCanBeDeclared = true
+                // since proguard is GPL, we avoid compile time dependencies on it
+                defaultDependencies {
+                    add(project.dependencies.create("com.guardsquare:proguard-base:$proguardVersion"))
+                }
+            }
 
         val args = mutableListOf<String>()
         args.add("-cp")

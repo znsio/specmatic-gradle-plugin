@@ -1,8 +1,9 @@
-package io.specmatic.gradle
+package io.specmatic.gradle.features
 
-import org.assertj.core.api.Assertions.assertThat
+import io.specmatic.gradle.AbstractFunctionalTest
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeEach
-import kotlin.test.Test
+import org.junit.jupiter.api.Test
 
 class ShadowConfigurationFunctionalTest : AbstractFunctionalTest() {
 
@@ -55,7 +56,6 @@ class ShadowConfigurationFunctionalTest : AbstractFunctionalTest() {
                         tasks.register("runMain", JavaExec::class.java) {
                             dependsOn("publishAllPublicationsToStagingRepository")
                             classpath(rootProject.file("build/mvn-repo/io/specmatic/example/executable/1.2.3/executable-1.2.3.jar"))
-                            classpath(configurations["runtimeClasspath"])
                             mainClass = "io.specmatic.example.executable.Main"
                         }
                         
@@ -85,7 +85,7 @@ class ShadowConfigurationFunctionalTest : AbstractFunctionalTest() {
     @Test
 
     fun `it should shadow packages`() {
-        runWithSuccess("publishAllPublicationsToStagingRepository")
+        runWithSuccess("publishAllPublicationsToStagingRepository", "publishToMavenLocal")
         assertPublished(
             "io.specmatic.example:core-all-debug:1.2.3",
             "io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3",
@@ -98,10 +98,10 @@ class ShadowConfigurationFunctionalTest : AbstractFunctionalTest() {
             "io.specmatic.example:executable:1.2.3",
         )
 
-        assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).isEmpty()
-        assertThat(getDependencies("io.specmatic.example:core:1.2.3")).isEmpty()
+        Assertions.assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).isEmpty()
+        Assertions.assertThat(getDependencies("io.specmatic.example:core:1.2.3")).isEmpty()
 
-        assertThat(
+        Assertions.assertThat(
             openJar("io.specmatic.example:executable:1.2.3").stream()
                 .map { it.name })
             .contains("io/specmatic/example/core/VersionInfo.class") // from the core dependency

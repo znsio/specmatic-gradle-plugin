@@ -2,6 +2,7 @@ package io.specmatic.gradle
 
 import io.specmatic.gradle.artifacts.EnsureJarsAreStampedPlugin
 import io.specmatic.gradle.artifacts.EnsureReproducibleArtifactsPlugin
+import io.specmatic.gradle.collissions.CollisionDetectorPluginWrapper
 import io.specmatic.gradle.compiler.ConfigureCompilerOptionsPlugin
 import io.specmatic.gradle.downstreamprojects.DownstreamProjectIntegrationPlugin
 import io.specmatic.gradle.exec.ConfigureExecTaskPlugin
@@ -58,6 +59,8 @@ class SpecmaticGradlePlugin : Plugin<Project> {
             plugins.apply(EnsureReproducibleArtifactsPlugin::class.java)
             plugins.apply(EnsureJarsAreStampedPlugin::class.java)
             plugins.apply(ConfigureExecTaskPlugin::class.java)
+
+            plugins.apply(CollisionDetectorPluginWrapper::class.java)
             plugins.apply(ForceVersionConstraintsPlugin::class.java)
         }
     }

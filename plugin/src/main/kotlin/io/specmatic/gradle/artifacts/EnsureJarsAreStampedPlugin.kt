@@ -1,6 +1,6 @@
 package io.specmatic.gradle.artifacts
 
-import io.specmatic.gradle.extensions.ApplicationFeature
+import io.specmatic.gradle.features.ApplicationFeature
 import io.specmatic.gradle.license.pluginInfo
 import io.specmatic.gradle.specmaticExtension
 import io.specmatic.gradle.versioninfo.versionInfo

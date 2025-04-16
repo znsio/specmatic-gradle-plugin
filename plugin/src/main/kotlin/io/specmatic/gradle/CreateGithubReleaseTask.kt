@@ -1,6 +1,6 @@
 package io.specmatic.gradle
 
-import io.specmatic.gradle.extensions.GithubReleaseConfig
+import io.specmatic.gradle.features.GithubReleaseConfig
 import io.specmatic.gradle.license.pluginInfo
 import org.apache.commons.codec.digest.DigestUtils
 import org.gradle.api.DefaultTask

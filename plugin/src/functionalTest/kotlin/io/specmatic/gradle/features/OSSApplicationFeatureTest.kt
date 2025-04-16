@@ -1,12 +1,12 @@
-package io.specmatic.gradle
+package io.specmatic.gradle.features
 
+import io.specmatic.gradle.AbstractFunctionalTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import kotlin.test.Test
 
-class OssApplicationFunctionalTest : AbstractFunctionalTest() {
-
+class OSSApplicationFeatureTest : AbstractFunctionalTest() {
     @Nested
     inner class RootModuleOnly {
         @BeforeEach
@@ -44,18 +44,12 @@ class OssApplicationFunctionalTest : AbstractFunctionalTest() {
             )
 
             writeMainClass(projectDir, "io.specmatic.example.Main")
-        }
-
-        @Test
-        fun `it should have publicationTasks`() {
-            val result = runWithSuccess("tasks")
-            assertThat(result.output).contains("publishToMavenLocal")
-            assertThat(result.output).contains("publishAllPublicationsToStagingRepository")
+            writeLogbackXml(projectDir)
         }
 
         @Test
         fun `it publish single fat jar without any dependencies declared in the pom to staging repository`() {
-            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain")
+            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain", "publishToMavenLocal")
             assertMainJarExecutes(result)
 
             assertPublishedWithJavadocAndSources("io.specmatic.example:example-project:1.2.3")
@@ -113,18 +107,12 @@ class OssApplicationFunctionalTest : AbstractFunctionalTest() {
             )
 
             writeMainClass(projectDir, "io.specmatic.example.Main")
-        }
-
-        @Test
-        fun `it should have publicationTasks`() {
-            val result = runWithSuccess("tasks")
-            assertThat(result.output).contains("publishToMavenLocal")
-            assertThat(result.output).contains("publishAllPublicationsToStagingRepository")
+            writeLogbackXml(projectDir)
         }
 
         @Test
         fun `it publish single fat jar without any dependencies declared in the pom to staging repository`() {
-            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain")
+            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain", "publishToMavenLocal")
             assertMainJarExecutes(result)
 
             assertPublishedWithJavadocAndSources("io.specmatic.example:example-project:1.2.3")
@@ -205,18 +193,12 @@ class OssApplicationFunctionalTest : AbstractFunctionalTest() {
             )
 
             writeMainClass(projectDir.resolve("executable"), "io.specmatic.example.executable.Main")
-        }
-
-        @Test
-        fun `it should have publicationTasks`() {
-            val result = runWithSuccess("tasks")
-            assertThat(result.output).contains("publishToMavenLocal")
-            assertThat(result.output).contains("publishAllPublicationsToStagingRepository")
+            writeLogbackXml(projectDir.resolve("executable"))
         }
 
         @Test
         fun `it publish single fat jar for executable with no deps, and core jar with dependencies`() {
-            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain")
+            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain", "publishToMavenLocal")
             assertMainJarExecutes(result)
 
             assertPublishedWithJavadocAndSources(
@@ -306,18 +288,12 @@ class OssApplicationFunctionalTest : AbstractFunctionalTest() {
             )
 
             writeMainClass(projectDir.resolve("executable"), "io.specmatic.example.executable.Main")
-        }
-
-        @Test
-        fun `it should have publicationTasks`() {
-            val result = runWithSuccess("tasks")
-            assertThat(result.output).contains("publishToMavenLocal")
-            assertThat(result.output).contains("publishAllPublicationsToStagingRepository")
+            writeLogbackXml(projectDir.resolve("executable"))
         }
 
         @Test
         fun `it publish single fat jar for executable with no deps, and core jar with dependencies`() {
-            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain")
+            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain", "publishToMavenLocal")
             assertMainJarExecutes(result)
 
             assertPublishedWithJavadocAndSources(
