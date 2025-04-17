@@ -100,6 +100,7 @@ abstract class ProguardTask @Inject constructor(
         appendProguardArgs("-printseeds", "${getProguardOutputDir().resolve("seeds.txt")}")
         appendProguardArgs("-printconfiguration", "${getProguardOutputDir().resolve("proguard.cfg")}")
         appendProguardArgs("-dump", "${getProguardOutputDir().resolve("proguard.dump.txt")}")
+        appendProguardArgs("-printmapping", "${getProguardOutputDir().resolve("proguard.mapping.txt")}")
         appendProguardArgs("-whyareyoukeeping", "class io.specmatic.** { *; }")
         appendProguardArgs("-dontoptimize")
         appendProguardArgs("-keepattributes", "!LocalVariableTable, !LocalVariableTypeTable")
