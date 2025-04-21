@@ -91,6 +91,31 @@ specmatic {
         projectUrl = "https://github.com/CycloneDX/cyclonedx-gradle-plugin"
         license = "Apache-2.0"
     }
+    licenseData {
+        name = "io.fuchs.gradle.classpath-collision-detector:classpath-collision-detector"
+        version = "1.0.0"
+        projectUrl = "https://github.com/REPLicated/classpath-collision-detector"
+        license = "Apache-2.0"
+    }
+    licenseData {
+        name = "io.fuchs.gradle.classpath-collision-detector:io.fuchs.gradle.classpath-collision-detector.gradle.plugin"
+        version = "1.0.0"
+        projectUrl = "https://github.com/REPLicated/classpath-collision-detector"
+        license = "Apache-2.0"
+    }
+    licenseData {
+        name = "org.gradlex.java-ecosystem-capabilities:org.gradlex.java-ecosystem-capabilities.gradle.plugin"
+        version = "1.5.3"
+        projectUrl = "https://github.com/gradlex-org/java-ecosystem-capabilities"
+        license = "Apache-2.0"
+    }
+    licenseData {
+        name =
+            "org.gradlex.jvm-dependency-conflict-resolution:org.gradlex.jvm-dependency-conflict-resolution.gradle.plugin"
+        version = "2.2"
+        projectUrl = "https://github.com/gradlex-org/jvm-dependency-conflict-resolution"
+        license = "Apache-2.0"
+    }
 }
 
 tasks.getByName("beforeReleaseBuild") {

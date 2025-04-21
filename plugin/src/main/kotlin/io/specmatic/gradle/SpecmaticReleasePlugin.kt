@@ -1,7 +1,7 @@
 package io.specmatic.gradle
 
-import io.specmatic.gradle.extensions.BaseDistribution
-import io.specmatic.gradle.extensions.GithubReleaseFeature
+import io.specmatic.gradle.features.BaseDistribution
+import io.specmatic.gradle.features.GithubReleaseFeature
 import io.specmatic.gradle.license.pluginInfo
 import net.researchgate.release.ReleasePlugin
 import org.gradle.api.Plugin

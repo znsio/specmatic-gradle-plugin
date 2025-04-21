@@ -1,4 +1,4 @@
-package io.specmatic.gradle.extensions
+package io.specmatic.gradle.features
 
 class GithubReleaseConfig {
     internal val files = mutableMapOf<String, String>()

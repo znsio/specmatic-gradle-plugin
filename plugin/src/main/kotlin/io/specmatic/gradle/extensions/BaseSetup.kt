@@ -15,7 +15,7 @@ internal fun Project.baseSetup() {
     project.plugins.withType(JavaPlugin::class.java) {
         project.configurations.named("implementation") {
             project.pluginInfo("Adding 'org.jetbrains.kotlin:kotlin-stdlib:${project.specmaticExtension().kotlinVersion}' to implementation configuration")
-            this.dependencies.add(project.dependencies.create("org.jetbrains.kotlin:kotlin-stdlib:${project.specmaticExtension().kotlinVersion}"))
+            dependencies.add(project.dependencies.create("org.jetbrains.kotlin:kotlin-stdlib:${project.specmaticExtension().kotlinVersion}"))
         }
     }
 

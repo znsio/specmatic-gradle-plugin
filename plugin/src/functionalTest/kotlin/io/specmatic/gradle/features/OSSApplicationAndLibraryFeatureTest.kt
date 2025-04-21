@@ -1,12 +1,12 @@
-package io.specmatic.gradle
+package io.specmatic.gradle.features
 
+import io.specmatic.gradle.AbstractFunctionalTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import kotlin.test.Test
 
-class OssApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
-
+class OSSApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
     @Nested
     inner class RootModuleOnly {
         @BeforeEach
@@ -44,18 +44,12 @@ class OssApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
             )
 
             writeMainClass(projectDir, "io.specmatic.example.Main")
-        }
-
-        @Test
-        fun `it should have publicationTasks`() {
-            val result = runWithSuccess("tasks")
-            assertThat(result.output).contains("publishToMavenLocal")
-            assertThat(result.output).contains("publishAllPublicationsToStagingRepository")
+            writeLogbackXml(projectDir)
         }
 
         @Test
         fun `it publish single fat jar without any dependencies declared in the pom to staging repository`() {
-            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain")
+            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain", "publishToMavenLocal")
             assertMainJarExecutes(result)
 
             assertPublishedWithJavadocAndSources(
@@ -64,7 +58,7 @@ class OssApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
             )
             assertThat(getDependencies("io.specmatic.example:example-project-all:1.2.3")).isEmpty()
             assertThat(getDependencies("io.specmatic.example:example-project:1.2.3")).containsExactlyInAnyOrder(
-                "org.slf4j:slf4j-api:2.0.17", "org.jetbrains.kotlin:kotlin-stdlib:1.9.25"
+                "org.slf4j:slf4j-api:2.0.17", "org.jetbrains.kotlin:kotlin-stdlib:1.9.25", *loggingDependencies
             )
 
             assertThat(
@@ -119,18 +113,12 @@ class OssApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
             )
 
             writeMainClass(projectDir, "io.specmatic.example.Main")
-        }
-
-        @Test
-        fun `it should have publicationTasks`() {
-            val result = runWithSuccess("tasks")
-            assertThat(result.output).contains("publishToMavenLocal")
-            assertThat(result.output).contains("publishAllPublicationsToStagingRepository")
+            writeLogbackXml(projectDir)
         }
 
         @Test
         fun `it publish single fat jar without any dependencies declared in the pom to staging repository`() {
-            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain")
+            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain", "publishToMavenLocal")
             assertMainJarExecutes(result)
 
             assertPublishedWithJavadocAndSources(
@@ -138,7 +126,7 @@ class OssApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
                 "io.specmatic.example:example-project-all:1.2.3"
             )
             assertThat(getDependencies("io.specmatic.example:example-project:1.2.3")).containsExactlyInAnyOrder(
-                "org.slf4j:slf4j-api:2.0.17", "org.jetbrains.kotlin:kotlin-stdlib:1.9.25"
+                "org.slf4j:slf4j-api:2.0.17", "org.jetbrains.kotlin:kotlin-stdlib:1.9.25", *loggingDependencies
             )
             assertThat(getDependencies("io.specmatic.example:example-project-all:1.2.3")).isEmpty()
 
@@ -217,31 +205,26 @@ class OssApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
             )
 
             writeMainClass(projectDir.resolve("executable"), "io.specmatic.example.executable.Main")
-        }
-
-        @Test
-        fun `it should have publicationTasks`() {
-            val result = runWithSuccess("tasks")
-            assertThat(result.output).contains("publishToMavenLocal")
-            assertThat(result.output).contains("publishAllPublicationsToStagingRepository")
+            writeLogbackXml(projectDir.resolve("executable"))
         }
 
         @Test
         fun `it publish single fat jar for executable with no deps, and core jar with dependencies`() {
-            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain")
+            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain", "publishToMavenLocal")
             assertMainJarExecutes(result)
 
             assertPublishedWithJavadocAndSources(
                 "io.specmatic.example:executable:1.2.3",
                 "io.specmatic.example:executable-all:1.2.3",
-                "io.specmatic.example:core:1.2.3"
+                "io.specmatic.example:core:1.2.3",
             )
 
             assertThat(getDependencies("io.specmatic.example:executable-all:1.2.3")).isEmpty()
             assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).containsExactlyInAnyOrder(
                 "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
                 "org.slf4j:slf4j-api:2.0.17",
-                "io.specmatic.example:core:1.2.3"
+                "io.specmatic.example:core:1.2.3",
+                *loggingDependencies
             )
             assertThat(getDependencies("io.specmatic.example:core:1.2.3")).containsExactlyInAnyOrder(
                 "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
@@ -326,18 +309,12 @@ class OssApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
             )
 
             writeMainClass(projectDir.resolve("executable"), "io.specmatic.example.executable.Main")
-        }
-
-        @Test
-        fun `it should have publicationTasks`() {
-            val result = runWithSuccess("tasks")
-            assertThat(result.output).contains("publishToMavenLocal")
-            assertThat(result.output).contains("publishAllPublicationsToStagingRepository")
+            writeLogbackXml(projectDir.resolve("executable"))
         }
 
         @Test
         fun `it publish single fat jar for executable with no deps, and core jar with dependencies`() {
-            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain")
+            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain", "publishToMavenLocal")
             assertMainJarExecutes(result)
 
             assertPublishedWithJavadocAndSources(
@@ -350,7 +327,8 @@ class OssApplicationLibraryFunctionalTest : AbstractFunctionalTest() {
             assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).containsExactlyInAnyOrder(
                 "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
                 "org.slf4j:slf4j-api:2.0.17",
-                "io.specmatic.example:core:1.2.3"
+                "io.specmatic.example:core:1.2.3",
+                *loggingDependencies
             )
             assertThat(getDependencies("io.specmatic.example:core:1.2.3")).containsExactlyInAnyOrder(
                 "org.jetbrains.kotlin:kotlin-stdlib:1.9.25", "org.slf4j:slf4j-api:2.0.17"

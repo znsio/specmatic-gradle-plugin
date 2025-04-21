@@ -1,5 +1,6 @@
 package io.specmatic.gradle.extensions
 
+import io.specmatic.gradle.features.*
 import org.gradle.api.Project
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
@@ -45,38 +46,38 @@ open class SpecmaticGradleExtension {
     }
 
 
-    fun withOSSLibrary(project: Project, block: OSSLibraryConfig.() -> Unit) {
-        val projectConfig = OSSLibraryConfig(project).apply(block)
+    fun withOSSLibrary(project: Project, block: OSSLibraryFeature.() -> Unit) {
+        val projectConfig = OSSLibraryFeature(project).apply(block)
         projectConfig.applyToProject()
         projectConfigurations[project] = projectConfig
     }
 
-    fun withOSSApplication(project: Project, block: OSSApplicationConfig.() -> Unit) {
-        val projectConfig = OSSApplicationConfig(project).apply(block)
+    fun withOSSApplication(project: Project, block: OSSApplicationFeature.() -> Unit) {
+        val projectConfig = OSSApplicationFeature(project).apply(block)
         projectConfig.applyToProject()
         projectConfigurations[project] = projectConfig
     }
 
-    fun withOSSApplicationLibrary(project: Project, block: OSSApplicationAndLibraryConfig.() -> Unit) {
-        val projectConfig = OSSApplicationAndLibraryConfig(project).apply(block)
+    fun withOSSApplicationLibrary(project: Project, block: OSSApplicationAndLibraryFeature.() -> Unit) {
+        val projectConfig = OSSApplicationAndLibraryFeature(project).apply(block)
         projectConfig.applyToProject()
         projectConfigurations[project] = projectConfig
     }
 
-    fun withCommercialApplication(project: Project, block: CommercialApplicationConfig.() -> Unit) {
-        val projectConfig = CommercialApplicationConfig(project).apply(block)
+    fun withCommercialApplication(project: Project, block: CommercialApplicationFeature.() -> Unit) {
+        val projectConfig = CommercialApplicationFeature(project).apply(block)
         projectConfig.applyToProject()
         projectConfigurations[project] = projectConfig
     }
 
-    fun withCommercialApplicationLibrary(project: Project, block: CommercialApplicationAndLibraryConfig.() -> Unit) {
-        val projectConfig = CommercialApplicationAndLibraryConfig(project).apply(block)
+    fun withCommercialApplicationLibrary(project: Project, block: CommercialApplicationAndLibraryFeature.() -> Unit) {
+        val projectConfig = CommercialApplicationAndLibraryFeature(project).apply(block)
         projectConfig.applyToProject()
         projectConfigurations[project] = projectConfig
     }
 
-    fun withCommercialLibrary(project: Project, block: CommercialLibraryConfig.() -> Unit) {
-        val projectConfig = CommercialLibraryConfig(project).apply(block)
+    fun withCommercialLibrary(project: Project, block: CommercialLibraryFeature.() -> Unit) {
+        val projectConfig = CommercialLibraryFeature(project).apply(block)
         projectConfig.applyToProject()
         projectConfigurations[project] = projectConfig
     }

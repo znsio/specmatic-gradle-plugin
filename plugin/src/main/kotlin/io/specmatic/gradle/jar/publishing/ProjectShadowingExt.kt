@@ -3,8 +3,9 @@ package io.specmatic.gradle.jar.publishing
 import com.github.jengelman.gradle.plugins.shadow.ShadowBasePlugin
 import com.github.jengelman.gradle.plugins.shadow.ShadowJavaPlugin.Companion.SHADOW_RUNTIME_ELEMENTS_CONFIGURATION_NAME
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer
 import com.github.jengelman.gradle.plugins.shadow.transformers.PropertiesFileTransformer
-import io.specmatic.gradle.extensions.ApplicationFeature
+import io.specmatic.gradle.features.ApplicationFeature
 import io.specmatic.gradle.jar.massage.jar
 import io.specmatic.gradle.jar.massage.shadow
 import io.specmatic.gradle.license.pluginInfo
@@ -148,10 +149,13 @@ private fun ShadowJar.maybeRelocateIfConfigured(project: Project, shadowPrefix: 
     excludePackages.forEach { exclude("${it}/**") }
 
     if (shadowPrefix.isNotBlank()) {
-
         // we do this in doFirst so that we can lazily evaluate the runtimeClasspath
         doFirst {
-            val runtimeClasspathFiles = runtimeClasspath?.files.orEmpty()
+//            val runtimeClasspathFiles = runtimeClasspath?.files.orEmpty()
+
+            val runtimeClasspathFiles = runtimeClasspath?.incoming?.artifacts?.filter {
+                !it.variant.owner.displayName.startsWith("ch.qos.logback:")
+            }?.map { it.file }.orEmpty().toSet()
 
             val packagesToRelocate = extractPackagesInJars(runtimeClasspathFiles, excludePackages)
 
@@ -217,6 +221,7 @@ internal fun ShadowJar.configureCommonShadowConfigs(
     append("META-INF/spring/aot.factories")
     append("META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports")
     append("META-INF/spring/org.springframework.boot.actuate.autoconfigure.web.ManagementContextConfiguration.imports")
+    transform(Log4j2PluginsCacheFileTransformer::class.java) {}
 
     transform(PropertiesFileTransformer::class.java) {
         paths.set(listOf("META-INF/spring.factories"))

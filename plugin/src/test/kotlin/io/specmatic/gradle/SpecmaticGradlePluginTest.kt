@@ -1,6 +1,8 @@
 package io.specmatic.gradle
 
 import com.github.jk1.license.LicenseReportPlugin
+import io.mockk.every
+import io.mockk.mockk
 import io.specmatic.gradle.extensions.SpecmaticGradleExtension
 import net.researchgate.release.ReleasePlugin
 import org.assertj.core.api.Assertions.assertThat
@@ -9,13 +11,22 @@ import org.barfuin.gradle.taskinfo.GradleTaskInfoPlugin
 import org.eclipse.jgit.api.Git
 import org.gradle.api.Project
 import org.gradle.api.UnknownDomainObjectException
+import org.gradle.api.initialization.resolve.RulesMode
+import org.gradle.api.internal.SettingsInternal
+import org.gradle.api.internal.project.DefaultProject
 import org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestFramework
 import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.api.plugins.PluginContainer
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.bundling.AbstractArchiveTask
+import org.gradle.groovy.scripts.ScriptSource
+import org.gradle.initialization.SettingsState
+import org.gradle.internal.management.DependencyResolutionManagementInternal
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.the
 import org.gradle.testfixtures.ProjectBuilder
+import org.gradlex.jvm.dependency.conflict.detection.JvmDependencyConflictDetectionPlugin
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -29,9 +40,7 @@ class SpecmaticGradlePluginTest {
     inner class LicenseReporting {
         @Test
         fun `jar, build, assemble tasks will invoke checkLicense task`() {
-            val project = ProjectBuilder.builder().build()
-            project.group = "org.example"
-            project.version = "1.2.3"
+            val project = createProject("org.example", "1.2.3")
 
             project.plugins.apply("java")
             project.plugins.apply("io.specmatic.gradle")
@@ -50,9 +59,7 @@ class SpecmaticGradlePluginTest {
 
         @Test
         fun `checkLicense task should invoke createAllowedLicensesFileTask and be finalized by prettyPrintLicenseCheckFailuresTask`() {
-            val project = ProjectBuilder.builder().build()
-            project.group = "org.example"
-            project.version = "1.2.3"
+            val project = createProject("org.example", "1.2.3")
             project.plugins.apply("java")
             project.plugins.apply("io.specmatic.gradle")
             project.evaluationDependsOn(":") // force execution of `afterEvaluate` block
@@ -70,18 +77,14 @@ class SpecmaticGradlePluginTest {
     inner class Testing {
         @Test
         fun `should add jacoco plugin`() {
-            val project = ProjectBuilder.builder().build()
-            project.group = "org.example"
-            project.version = "1.2.3"
+            val project = createProject("org.example", "1.2.3")
             project.plugins.apply("io.specmatic.gradle")
             assertThat(project.plugins.hasPlugin("jacoco")).isTrue()
         }
 
         @Test
         fun `test tasks should be finalized by jacocoTestReport task`() {
-            val project = ProjectBuilder.builder().build()
-            project.group = "org.example"
-            project.version = "1.2.3"
+            val project = createProject("org.example", "1.2.3")
             project.plugins.apply("java")
             project.plugins.apply("io.specmatic.gradle")
             project.evaluationDependsOn(":") // force execution of `afterEvaluate` block
@@ -94,9 +97,7 @@ class SpecmaticGradlePluginTest {
 
         @Test
         fun `configures junit platform extension`() {
-            val project = ProjectBuilder.builder().build()
-            project.group = "org.example"
-            project.version = "1.2.3"
+            val project = createProject("org.example", "1.2.3")
             project.plugins.apply("java")
             project.plugins.apply("io.specmatic.gradle")
             project.evaluationDependsOn(":") // force execution of `afterEvaluate` block
@@ -107,7 +108,7 @@ class SpecmaticGradlePluginTest {
 
         @Test
         fun `should configure test logger plugin`() {
-            val project = ProjectBuilder.builder().build()
+            val project = createProject()
             project.plugins.apply("io.specmatic.gradle")
             assertThat(project.plugins.hasPlugin("com.adarshr.test-logger")).isTrue()
         }
@@ -115,21 +116,21 @@ class SpecmaticGradlePluginTest {
 
     @Test
     fun `adds SpecmaticGradleExtension`() {
-        val project = ProjectBuilder.builder().build()
+        val project = createProject()
         project.plugins.apply("io.specmatic.gradle")
         assertThat(project.extensions.findByType(SpecmaticGradleExtension::class.java)).isNotNull()
     }
 
     @Test
     fun `should configure releases plugin`() {
-        val project = ProjectBuilder.builder().build()
+        val project = createProject()
         project.plugins.apply("io.specmatic.gradle")
         assertThat(project.plugins.hasPlugin(ReleasePlugin::class.java)).isTrue()
     }
 
     @Test
     fun `should configure task info plugin`() {
-        val project = ProjectBuilder.builder().build()
+        val project = createProject()
         project.plugins.apply("io.specmatic.gradle")
         assertThat(project.plugins.hasPlugin(GradleTaskInfoPlugin::class.java)).isTrue()
     }
@@ -138,9 +139,7 @@ class SpecmaticGradlePluginTest {
     inner class CompilerOptions {
         @Test
         fun `it should apply jvm options to java plugin if java plugin is applied`() {
-            val project = ProjectBuilder.builder().build()
-            project.group = "org.example"
-            project.version = "1.2.3"
+            val project = createProject("org.example", "1.2.3")
             project.plugins.apply("java")
             project.plugins.apply("io.specmatic.gradle")
             project.evaluationDependsOn(":") // force execution of `afterEvaluate` block
@@ -154,9 +153,7 @@ class SpecmaticGradlePluginTest {
 
         @Test
         fun `it should apply jvm options to kotlin and java if kotlin plugin is applied`() {
-            val project = ProjectBuilder.builder().build()
-            project.group = "org.example"
-            project.version = "1.2.3"
+            val project = createProject("org.example", "1.2.3")
             project.plugins.apply("kotlin")
             project.plugins.apply("io.specmatic.gradle")
             project.evaluationDependsOn(":") // force execution of `afterEvaluate` block
@@ -170,9 +167,7 @@ class SpecmaticGradlePluginTest {
     inner class ReproducibleArtifacts {
         @Test
         fun `should configure reproducible artifacts plugin`() {
-            val project = ProjectBuilder.builder().build()
-            project.group = "org.example"
-            project.version = "1.2.3"
+            val project = createProject("org.example", "1.2.3")
             project.plugins.apply("java")
             project.plugins.apply("io.specmatic.gradle")
             project.evaluationDependsOn(":") // force execution of `afterEvaluate` block
@@ -192,6 +187,7 @@ class SpecmaticGradlePluginTest {
         @Test
         fun `should stamp jar files with version, group, name and unknown git sha when repo is not initialized`() {
             val project = ProjectBuilder.builder().withName("test-project").build()
+            setupSettingsMock(project)
             project.version = "1.2.3"
             project.group = "test-group"
 
@@ -217,6 +213,7 @@ class SpecmaticGradlePluginTest {
             val headCommit = git.commit().setMessage("Second commit").call()
 
             val project = ProjectBuilder.builder().withProjectDir(tempDir).withName("test-project").build()
+            setupSettingsMock(project)
             project.version = "1.2.3"
             project.group = "test-group"
 
@@ -241,9 +238,7 @@ class SpecmaticGradlePluginTest {
     inner class Sourcesets {
         @Test
         fun `should add generated resources dir to main resources if project is root project, and no subprojects exist`() {
-            val project = ProjectBuilder.builder().build()
-            project.group = "org.example"
-            project.version = "1.2.3"
+            val project = createProject("org.example", "1.2.3")
 
             project.plugins.apply("java")
             project.plugins.apply("io.specmatic.gradle")
@@ -255,6 +250,7 @@ class SpecmaticGradlePluginTest {
         @Test
         fun `should add generated resources dir to main resources on java subprojects`() {
             val rootProject = ProjectBuilder.builder().withName("root").build()
+            setupSettingsMock(rootProject)
             rootProject.group = "org.example"
             rootProject.version = "1.2.3"
 
@@ -290,6 +286,41 @@ class SpecmaticGradlePluginTest {
                 project.the<SourceSetContainer>()["main"].java
             }.isInstanceOf(UnknownDomainObjectException::class.java)
         }
+    }
+
+    private fun createProject(group: String? = null, version: String? = null): Project {
+        val project = ProjectBuilder.builder().build()
+        setupSettingsMock(project)
+
+        if (group != null) {
+            project.group = "org.example"
+        }
+        if (version != null) {
+            project.version = "1.2.3"
+        }
+        return project
+    }
+
+    private fun setupSettingsMock(project: Project) {
+        val settingsInternal = mockk<SettingsInternal>()
+        val settingState = mockk<SettingsState>()
+        val dependencyResolutionManagementInternal = mockk<DependencyResolutionManagementInternal>()
+        val settingsScript = mockk<ScriptSource>()
+        val property = mockk<Property<RulesMode>>()
+        val pluginContainer = mockk<PluginContainer>()
+
+        every { property.get() } returns RulesMode.PREFER_PROJECT
+
+        every { dependencyResolutionManagementInternal.rulesMode } returns property
+        every { settingsScript.fileName } returns "mock-settings.gradle.kts"
+
+        every { pluginContainer.hasPlugin(JvmDependencyConflictDetectionPlugin::class.java) } returns false
+        every { settingsInternal.plugins } returns pluginContainer
+        every { settingsInternal.settingsScript } returns settingsScript
+        every { settingsInternal.dependencyResolutionManagement } returns dependencyResolutionManagementInternal
+
+        every { settingState.settings } returns settingsInternal
+        (project as DefaultProject).gradle.attachSettings(settingState)
     }
 
 }
