@@ -7,7 +7,13 @@ import org.gradle.api.tasks.Exec
 import java.text.SimpleDateFormat
 import java.util.*
 
-internal fun Project.registerDockerTasks(vararg dockerBuildArgs: String?) {
+internal fun Project.registerDockerTasks(providedImageName: String?, vararg dockerBuildArgs: String?) {
+
+    val imageName = if (providedImageName.isNullOrEmpty()) {
+        this.name
+    } else {
+        providedImageName
+    }
 
     pluginInfo("Adding docker tasks on $this")
 
@@ -17,7 +23,7 @@ internal fun Project.registerDockerTasks(vararg dockerBuildArgs: String?) {
         "--annotation",
         "org.opencontainers.image.authors=Specmatic Team <info@specmatic.io>",
         "--annotation",
-        "org.opencontainers.image.url=https://hub.docker.com/u/znsio/${this.name}",
+        "org.opencontainers.image.url=https://hub.docker.com/u/znsio/${imageName}",
         "--annotation",
         "org.opencontainers.image.version=${this.version}",
         "--annotation",
@@ -25,8 +31,8 @@ internal fun Project.registerDockerTasks(vararg dockerBuildArgs: String?) {
     )
 
     val dockerTags = listOf(
-        "znsio/${this.name}:${this.version}",
-        "znsio/${this.name}:latest"
+        "znsio/${imageName}:${this.version}",
+        "znsio/${imageName}:latest"
     )
 
     val scanLocalDockerImageTask = createDockerVulnScanTask(dockerTags.first())
