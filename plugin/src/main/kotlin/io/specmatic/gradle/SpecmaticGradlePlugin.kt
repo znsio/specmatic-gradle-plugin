@@ -3,6 +3,7 @@ package io.specmatic.gradle
 import io.specmatic.gradle.artifacts.EnsureJarsAreStampedPlugin
 import io.specmatic.gradle.artifacts.EnsureReproducibleArtifactsPlugin
 import io.specmatic.gradle.compiler.ConfigureCompilerOptionsPlugin
+import io.specmatic.gradle.downstreamprojects.DownstreamProjectIntegrationPlugin
 import io.specmatic.gradle.exec.ConfigureExecTaskPlugin
 import io.specmatic.gradle.extensions.SpecmaticGradleExtension
 import io.specmatic.gradle.extensions.baseSetup
@@ -10,7 +11,6 @@ import io.specmatic.gradle.jar.massage.applyToRootProjectOrSubprojects
 import io.specmatic.gradle.jar.publishing.applyShadowConfigs
 import io.specmatic.gradle.license.SpecmaticLicenseReportingPlugin
 import io.specmatic.gradle.plugin.VersionInfo
-import io.specmatic.gradle.downstreamprojects.DownstreamProjectIntegrationPlugin
 import io.specmatic.gradle.tests.SpecmaticTestReportingPlugin
 import io.specmatic.gradle.versioninfo.VersionInfoPlugin
 import io.specmatic.gradle.versioninfo.versionInfo
@@ -48,13 +48,12 @@ class SpecmaticGradlePlugin : Plugin<Project> {
 
         target.plugins.apply(GradleTaskInfoPlugin::class.java)
 
-        target.plugins.apply(SpecmaticVulnScanPlugin::class.java)
-
-        target.applyToRootProjectOrSubprojects {
-            plugins.apply(VersionInfoPlugin::class.java)
+        target.allprojects {
+            plugins.apply(SpecmaticVulnScanPlugin::class.java)
         }
 
         target.applyToRootProjectOrSubprojects {
+            plugins.apply(VersionInfoPlugin::class.java)
             plugins.apply(ConfigureCompilerOptionsPlugin::class.java)
             plugins.apply(EnsureReproducibleArtifactsPlugin::class.java)
             plugins.apply(EnsureJarsAreStampedPlugin::class.java)

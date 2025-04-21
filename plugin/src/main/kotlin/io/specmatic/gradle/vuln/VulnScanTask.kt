@@ -1,11 +1,11 @@
 package io.specmatic.gradle.vuln
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.specmatic.gradle.exec.shellEscapedArgs
 import io.specmatic.gradle.license.pluginInfo
+import io.specmatic.gradle.vuln.dto.VulnerabilityReport
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.SystemUtils
 import org.cyclonedx.gradle.CycloneDxTask
@@ -21,6 +21,7 @@ import org.gradle.process.ExecOperations
 import org.kohsuke.github.GitHubBuilder
 import java.io.File
 import java.io.FileOutputStream
+import java.io.RandomAccessFile
 import java.net.URL
 import java.text.SimpleDateFormat
 import java.time.Instant
@@ -32,27 +33,20 @@ import javax.inject.Inject
 abstract class AbstractVulnScanTask @Inject constructor(private val execLauncher: ExecOperations) : DefaultTask() {
     @TaskAction
     fun vulnScan() {
-        maybeDownloadOsvScanner()
+        maybeDownloadTrivy()
 
         reportsDir.get().mkdirs()
 
         val formats = mapOf(
-            "table" to getTextTableReportFile(), "json" to getJsonReportFile(), "html" to getHtmlReportFile()
+            "table" to getTextTableReportFile(),
+            "json" to getJsonReportFile(),
         )
 
-        formats.map { (format, output) -> runOsvScan(format, output) }
-
-//        if (scanResults.any { !it }) {
-//            throw GradleException("osv-scanner failed")
-//        }
+        formats.map { (format, output) -> runScan(format, output) }
     }
-
 
     @get:OutputDirectory
     abstract val reportsDir: Property<File>
-
-    @OutputFile
-    fun getHtmlReportFile(): File = reportsDir.get().resolve("report.html")
 
     @OutputFile
     fun getJsonReportFile(): File = reportsDir.get().resolve("report.json")
@@ -60,15 +54,10 @@ abstract class AbstractVulnScanTask @Inject constructor(private val execLauncher
     @OutputFile
     fun getTextTableReportFile(): File = reportsDir.get().resolve("report.txt")
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
-    abstract val osvScannerPath: Property<File>
+    @get:OutputDirectory
+    abstract val trivyHomeDir: Property<File>
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
-    abstract val osvScannerVersionPath: Property<File>
-
-    private fun runOsvScan(format: String, output: File): Boolean {
+    private fun runScan(format: String, output: File): Boolean {
         try {
             output.outputStream().use { outputStream: FileOutputStream ->
                 val cliArgs = getCommandLine(format)
@@ -82,7 +71,7 @@ abstract class AbstractVulnScanTask @Inject constructor(private val execLauncher
                 }
             }
         } catch (e: Exception) {
-            project.pluginInfo("osv-scanner failed with error: ${e.message} (ignoring error)")
+            project.pluginInfo("trivy failed with error: ${e.message} (ignoring error)")
             return false
         }
         return true
@@ -90,60 +79,100 @@ abstract class AbstractVulnScanTask @Inject constructor(private val execLauncher
 
     abstract fun getCommandLine(format: String): List<String>
 
-    private fun maybeDownloadOsvScanner() {
-        val lastModified = if (osvScannerPath.get().exists()) osvScannerPath.get().lastModified() else 0L
-        val oneWeekInMillis = 7 * 24 * 60 * 60 * 1000L
-        val isOlderThanOneWeek = System.currentTimeMillis() - lastModified > oneWeekInMillis
+    private fun maybeDownloadTrivy() {
+        trivyHomeDir.get().mkdirs()
 
-        if (isOlderThanOneWeek) {
-            project.pluginInfo("Checking if osv-scanner is up to date")
-            val gitHub = GitHubBuilder().build()
-            val repository = gitHub.getRepository("google/osv-scanner")
-            val release = repository.latestRelease
-
-            val currentVersion =
-                if (osvScannerVersionPath.get().exists()) osvScannerVersionPath.get().readText() else ""
-            if (currentVersion != release.name) {
-                project.pluginInfo("osv-scanner is not up to date. Downloading version ${release.name} to ${osvScannerPath.get()}")
-                val asset = release.listAssets().find {
-                    it.name.contains(getOS()) && it.name.contains(getArch())
-                } ?: throw RuntimeException("No asset found for osv-scanner for ${getOS()} ${getArch()}")
-
-                val downloadUrl = asset.browserDownloadUrl
-                FileUtils.copyURLToFile(URL(downloadUrl), osvScannerPath.get())
-                osvScannerPath.get().setExecutable(true)
-                osvScannerVersionPath.get().writeText(release.name)
+        // acquire a file lock to prevent multiple tasks from trying to download trivy at the same time
+        val lockFile = trivyHomeDir.get().resolve("trivy-download.lock")
+        RandomAccessFile(lockFile, "rw").channel.use { channel ->
+            channel.lock().use {
+                val lastModified = if (trivyInstallDir().exists()) trivyInstallDir().lastModified() else 0L
+                val oneWeekInMillis = 7 * 24 * 60 * 60 * 1000L
+                val isOlderThanOneWeek = System.currentTimeMillis() - lastModified > oneWeekInMillis
+                if (isOlderThanOneWeek) {
+                    downloadTrivy()
+                }
             }
         }
     }
 
-    @Input
-    fun getOS(): String {
-        if (SystemUtils.IS_OS_WINDOWS) {
-            return "windows"
-        } else if (SystemUtils.IS_OS_MAC) {
-            return "darwin"
-        } else if (SystemUtils.IS_OS_LINUX) {
-            return "linux"
+    private fun trivyInstallDir(): File = trivyHomeDir.get().resolve("trivy")
+    private fun trivyVersionFile(): File = trivyHomeDir.get().resolve("trivy.version")
+
+    private fun downloadTrivy() {
+        project.pluginInfo("Checking if trivy is up to date")
+        val gitHub = GitHubBuilder().build()
+        val repository = gitHub.getRepository("aquasecurity/trivy")
+        val release = repository.latestRelease
+
+        val currentVersion = if (trivyVersionFile().exists()) trivyVersionFile().readText() else "unknown"
+
+        if (currentVersion != release.name) {
+            val asset = release.listAssets().find {
+                it.name.lowercase().contains("_${os}-${arch}") && (it.name.lowercase()
+                    .endsWith(".zip") || it.name.lowercase().endsWith(".tar.gz"))
+            } ?: throw RuntimeException("No asset found for trivy for $os $arch")
+            val trivyCompressedDownloadPath = temporaryDir.resolve(asset.name)
+            val downloadUrl = asset.browserDownloadUrl
+
+            project.pluginInfo("Currently installed trivy version($currentVersion) is not up-to-date. Downloading version ${release.name} from $downloadUrl to $trivyCompressedDownloadPath")
+            FileUtils.copyURLToFile(URL(downloadUrl), trivyCompressedDownloadPath)
+            project.delete(trivyInstallDir())
+            trivyInstallDir().mkdirs()
+            project.copy {
+                if (trivyCompressedDownloadPath.endsWith(".zip")) {
+                    from(project.zipTree(trivyCompressedDownloadPath))
+                } else {
+                    from(project.tarTree(trivyCompressedDownloadPath))
+                }
+                into(trivyInstallDir())
+            }
+
+            trivyVersionFile().writeText(release.name)
         }
-        throw RuntimeException("Unsupported operating system for osv-scanner: ${SystemUtils.OS_NAME}")
     }
 
-    @Input
-    fun getArch(): String {
-        val osArch = SystemUtils.OS_ARCH
-        return if (osArch.equals("x86_64", ignoreCase = true) || osArch.equals("amd64", ignoreCase = true)) {
-            "amd64"
-        } else {
-            "arm64"
+    @get:Input
+    val os: String
+        get() = when {
+            SystemUtils.IS_OS_WINDOWS -> "windows"
+            SystemUtils.IS_OS_MAC -> "macos"
+            SystemUtils.IS_OS_LINUX -> "linux"
+            else -> throw RuntimeException("Unsupported operating system for trivy: ${SystemUtils.OS_NAME}")
         }
+
+    @get:Input
+    val arch: String
+        get() {
+            val osArch = SystemUtils.OS_ARCH.lowercase()
+
+            return when {
+                (osArch.contains("x86") || osArch.contains("amd64")) && osArch.contains("64") -> "64bit"
+                osArch.contains("aarch") && osArch.contains("64") -> "arm64"
+                else -> throw GradleException("Unsupported architecture for trivy: $osArch")
+            }
+        }
+
+    protected fun trivyExecutable(): String {
+        val extension = if (os == "windows") ".exe" else ""
+
+        return trivyInstallDir().resolve("trivy$extension").path
     }
+
+    @get:Input
+    protected val commonArgs: Array<String>
+        get() = arrayOf(
+            "--quiet",
+            "--no-progress",
+        )
 }
 
-abstract class JarVulnScanTask @Inject constructor(execLauncher: ExecOperations) : AbstractVulnScanTask(execLauncher) {
+abstract class SBOMVulnScanTask @Inject constructor(execLauncher: ExecOperations) : AbstractVulnScanTask(execLauncher) {
 
     override fun getCommandLine(format: String): List<String> {
-        return listOf(osvScannerPath.get().path, "scan", "source", "--format", format, sbomFile.get().path)
+        return listOf(
+            trivyExecutable(), "sbom", "--format", format, *commonArgs, sbomFile.get().path
+        )
     }
 
     @get:InputFile
@@ -160,11 +189,11 @@ abstract class ImageVulnScanTask @Inject constructor(execLauncher: ExecOperation
         if (image == null) {
             throw GradleException("image property not set")
         }
-        return listOf(osvScannerPath.get().path, "scan", "image", "--format", format, image!!)
+        return listOf(trivyExecutable(), "image", "--format", format, *commonArgs, image!!)
     }
 }
 
-internal fun Project.createJarVulnScanTask(): TaskProvider<JarVulnScanTask> {
+internal fun Project.createJarVulnScanTask(): TaskProvider<SBOMVulnScanTask> {
     val scanTaskName = "vulnScanJar"
 
     val thisProject = this
@@ -175,25 +204,25 @@ internal fun Project.createJarVulnScanTask(): TaskProvider<JarVulnScanTask> {
         doFirst {
             printReportFile(
                 thisProject,
-                thisProject.tasks.named(scanTaskName, JarVulnScanTask::class.java).get().getJsonReportFile()
+                thisProject.tasks.named(scanTaskName, SBOMVulnScanTask::class.java).get().getTextTableReportFile()
             )
         }
     }
 
-    return tasks.register(scanTaskName, JarVulnScanTask::class.java) {
+    return tasks.register(scanTaskName, SBOMVulnScanTask::class.java) {
         dependsOn(tasks.withType(CycloneDxTask::class.java))
         finalizedBy(printTask)
         group = "vulnerability"
         description = "Scan for vulnerabilities in jars"
 
-        osvScannerVersionPath.set(project.gradle.gradleUserHomeDir.resolve("osv-scanner.version"))
-        osvScannerPath.set(project.gradle.gradleUserHomeDir.resolve("osv-scanner${if (getOS() == "windows") ".exe" else ""}"))
+        trivyHomeDir.set(trivyHomeDir())
         sbomFile.set(project.layout.buildDirectory.get().asFile.resolve("reports/cyclonedx/bom.json"))
 
-        reportsDir.set(project.layout.buildDirectory.get().asFile.resolve("reports/osv-scan/source"))
+        reportsDir.set(project.layout.buildDirectory.get().asFile.resolve("reports/vulnerabilities/source"))
     }
 }
 
+private fun trivyHomeDir(): File = SystemUtils.getUserHome().resolve(".specmatic-trivy")
 
 internal fun Project.createDockerVulnScanTask(imageName: String): TaskProvider<ImageVulnScanTask> {
     val scanTaskName = "vulnScanDocker"
@@ -206,7 +235,7 @@ internal fun Project.createDockerVulnScanTask(imageName: String): TaskProvider<I
 
         doFirst {
             val reportFile =
-                rootProject.tasks.named(scanTaskName, ImageVulnScanTask::class.java).get().getJsonReportFile()
+                rootProject.tasks.named(scanTaskName, ImageVulnScanTask::class.java).get().getTextTableReportFile()
             printReportFile(rootProject, reportFile)
         }
     }
@@ -218,33 +247,33 @@ internal fun Project.createDockerVulnScanTask(imageName: String): TaskProvider<I
         description = "Scan for vulnerabilities in jars"
         image = imageName
 
-        osvScannerVersionPath.set(project.gradle.gradleUserHomeDir.resolve("osv-scanner.version"))
-        osvScannerPath.set(project.gradle.gradleUserHomeDir.resolve("osv-scanner${if (getOS() == "windows") ".exe" else ""}"))
-        reportsDir.set(project.layout.buildDirectory.get().asFile.resolve("reports/osv-scan/image"))
+        trivyHomeDir.set(trivyHomeDir())
+        reportsDir.set(project.layout.buildDirectory.get().asFile.resolve("reports/vulnerabilities/image"))
     }
 }
 
-
 data class TableRow(
+    val type: String,
     val packageName: String,
     val maxSeverity: String,
     val version: String,
-    val vulnerability: String,
+    val vulnerabilityURL: String,
     val modified: Date,
     val published: Date,
     val summary: String?,
 ) {
     val formattedModified: String = formatDate(modified)
-    val formattedSeverity: String =
-        if (maxSeverity.isBlank()) {
-            "(unknown)"
-        } else if (maxSeverity.toFloat() in 0.0..3.9) "$maxSeverity (low) 🟢"
-        else if (maxSeverity.toFloat() in 4.0..6.9) "$maxSeverity (medium) 🟡"
-        else if (maxSeverity.toFloat() in 7.0..8.9) "$maxSeverity (high) 🟠"
-        else "$maxSeverity (critical) 🔴"
+    val formattedSeverity: String = when (maxSeverity.lowercase()) {
+        "unknown" -> "(unknown)"
+        "low" -> "$maxSeverity 🟢"
+        "medium" -> "$maxSeverity 🟡"
+        "high" -> "$maxSeverity 🟠"
+        "critical" -> "$maxSeverity 🔴"
+        else -> "(invalid severity)"
+
+    }
     val formattedPublished: String = formatDate(published)
     val formattedSummary: String = summary?.replace("\n", " ") ?: ""
-    val formattedVulnerability: String = "https://osv.dev/${vulnerability}"
     val formattedPackageName: String = packageName
     val formattedVersion: String = version
 
@@ -262,58 +291,43 @@ data class TableRow(
         return modifiedColor
     }
 
-    val severityColor: StyledTextOutput.Style =
-        if (maxSeverity.isBlank()) StyledTextOutput.Style.UserInput// Whilte
-        else if (maxSeverity.toFloat() in 0.0..3.9) StyledTextOutput.Style.UserInput// Whilte
-        else if (maxSeverity.toFloat() in 4.0..6.9) StyledTextOutput.Style.ProgressStatus// Amber
-        else if (maxSeverity.toFloat() in 7.0..8.9) StyledTextOutput.Style.Failure // Red
-        else StyledTextOutput.Style.Failure //Red
-
+    val severityColor: StyledTextOutput.Style = when (maxSeverity.lowercase()) {
+        "unknown", "low" -> StyledTextOutput.Style.UserInput // White
+        "medium" -> StyledTextOutput.Style.ProgressStatus // Amber
+        "high", "critical" -> StyledTextOutput.Style.Failure // Red
+        else -> StyledTextOutput.Style.Failure // Red
+    }
 }
 
 private fun printReportFile(project: Project, reportFile: File) {
+    project.logger.warn(reportFile.readText())
+    project.logger.warn("Vulnerability report file: ${reportFile.toURI()}")
+}
+
+private fun printReportFileJSON(project: Project, reportFile: File) {
+
     val mapper = jacksonObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         .configure(JsonParser.Feature.INCLUDE_SOURCE_IN_LOCATION, true)
-    val report: Report = mapper.readValue(
-        reportFile, Report::class.java
+
+    val report: VulnerabilityReport = mapper.readValue(
+        reportFile, VulnerabilityReport::class.java
     )
 
-
     val tableRows = report.results.flatMap { result ->
-        result.packages.flatMap { pkg ->
-            pkg.vulnerabilities.flatMap { vulnerability ->
-
-                vulnerability.affected.flatMap { affected ->
-                    affected.ranges.flatMap { range ->
-                        range.events.map { _event ->
-                            val maxSeverity =
-                                pkg.groups.maxBy { if (it.maxSeverity.isNullOrBlank()) 0.0.toFloat() else it.maxSeverity.toFloat() }.maxSeverity
-                                    ?: "0.0"
-
-
-                            TableRow(
-                                packageName = pkg.packageInfo.name,
-                                maxSeverity = maxSeverity,
-                                version = pkg.packageInfo.version,
-                                vulnerability = vulnerability.id,
-                                modified = vulnerability.modified,
-                                published = vulnerability.published,
-                                summary = vulnerability.summary
-                            )
-
-                        }
-                    }
-                }
-
-            }
+        result.vulnerabilities.map { eachVulnerability ->
+            TableRow(
+                type = "${result.target} (${result.type})",
+                packageName = eachVulnerability.pkgName,
+                maxSeverity = eachVulnerability.severity,
+                version = eachVulnerability.installedVersion,
+                vulnerabilityURL = eachVulnerability.primaryUrl,
+                modified = Date.from(Instant.parse(eachVulnerability.lastModifiedDate)),
+                published = Date.from(Instant.parse(eachVulnerability.publishedDate)),
+                summary = eachVulnerability.title
+            )
         }
     }
 
-
-    val uniqueTableRows = tableRows.distinctBy { it.packageName + it.version + it.vulnerability }
-    if (uniqueTableRows.isEmpty()) {
-        return
-    }
 
     val columnWidths = mutableMapOf(
         "Package" to "Package".length,
@@ -326,20 +340,17 @@ private fun printReportFile(project: Project, reportFile: File) {
         "Summary" to "Summary".length
     )
 
-    uniqueTableRows.forEach { row ->
+    tableRows.forEach { row ->
         columnWidths["Package"] = maxOf(columnWidths["Package"]!!, row.formattedPackageName.length)
         columnWidths["Max Severity"] = maxOf(columnWidths["Max Severity"]!!, row.formattedSeverity.length)
         columnWidths["Version"] = maxOf(columnWidths["Version"]!!, row.formattedVersion.length)
-        columnWidths["Vulnerability"] = maxOf(columnWidths["Vulnerability"]!!, row.formattedVulnerability.length)
+        columnWidths["Vulnerability"] = maxOf(columnWidths["Vulnerability"]!!, row.vulnerabilityURL.length)
         columnWidths["Modified"] = maxOf(columnWidths["Modified"]!!, row.formattedModified.length)
         columnWidths["Published"] = maxOf(columnWidths["Published"]!!, row.formattedPublished.length)
         columnWidths["Summary"] = maxOf(columnWidths["Summary"]!!, row.formattedSummary.length)
     }
 
     val output: StyledTextOutput = project.serviceOf<StyledTextOutputFactory>().create("vulnScan")
-//    StyledTextOutput.Style.values().forEach {
-//        output.style(it).text("hello world - ${it.name}\n").style(StyledTextOutput.Style.Normal)
-//    }
 
     output.style(StyledTextOutput.Style.Header).text(
         String.format(
@@ -380,7 +391,7 @@ private fun printReportFile(project: Project, reportFile: File) {
         )
     )
 
-    uniqueTableRows.forEach { row ->
+    tableRows.forEach { row ->
         output.style(StyledTextOutput.Style.Normal).text("║ ")
         output.style(StyledTextOutput.Style.Normal).text(row.formattedPackageName.padEnd(columnWidths["Package"]!!))
 
@@ -391,8 +402,7 @@ private fun printReportFile(project: Project, reportFile: File) {
         output.style(StyledTextOutput.Style.Normal).text(row.formattedVersion.padEnd(columnWidths["Version"]!!))
 
         output.style(StyledTextOutput.Style.Normal).text(" ║ ")
-        output.style(StyledTextOutput.Style.Normal)
-            .text(row.formattedVulnerability.padEnd(columnWidths["Vulnerability"]!!))
+        output.style(StyledTextOutput.Style.Normal).text(row.vulnerabilityURL.padEnd(columnWidths["Vulnerability"]!!))
 
         output.style(StyledTextOutput.Style.Normal).text(" ║ ")
         output.style(row.dateColor(row.modified)).text(row.formattedModified.padEnd(columnWidths["Modified"]!!))
@@ -418,78 +428,4 @@ private fun printReportFile(project: Project, reportFile: File) {
             "═".repeat(2 + columnWidths["Summary"]!!)
         )
     )
-
-
-//    if (uniqueTableRows.isNotEmpty()) {
-//        throw GradleException("Vulnerabilities found in the scan")
-//    }
 }
-
-
-private data class Report(
-    @field:JsonProperty("results") val results: List<Result>,
-)
-
-private data class Result(
-    @field:JsonProperty("source") val source: Source,
-    @field:JsonProperty("packages") val packages: List<Package>
-)
-
-private data class Source(
-    @field:JsonProperty("path") val path: String, @field:JsonProperty("type") val type: String
-)
-
-private data class Package(
-    @field:JsonProperty("package") val packageInfo: PackageInfo,
-    @field:JsonProperty("vulnerabilities") val vulnerabilities: List<Vulnerability>,
-    @field:JsonProperty("groups") val groups: List<Group>
-)
-
-private data class PackageInfo(
-    @field:JsonProperty("name") val name: String,
-    @field:JsonProperty("version") val version: String,
-    @field:JsonProperty("ecosystem") val ecosystem: String
-)
-
-private data class Vulnerability(
-    @field:JsonProperty("modified") val modified: Date,
-    @field:JsonProperty("published") val published: Date,
-    @field:JsonProperty("id") val id: String,
-    @field:JsonProperty("summary") val summary: String? = "[none]",
-    @field:JsonProperty("severity") val severity: List<Severity>?,
-    @field:JsonProperty("affected") val affected: List<Affected>,
-)
-
-private data class Severity(
-    @field:JsonProperty("type") val type: String,
-    @field:JsonProperty("score") val score: String,
-)
-
-private data class Affected(
-    @field:JsonProperty("package") val packageInfo: AffectedPackageInfo?,
-    @field:JsonProperty("ranges") val ranges: List<Range>,
-    @field:JsonProperty("versions") val versions: List<String>,
-)
-
-private data class AffectedPackageInfo(
-    @field:JsonProperty("name") val name: String,
-    @field:JsonProperty("ecosystem") val ecosystem: String,
-    @field:JsonProperty("purl") val purl: String
-)
-
-private data class Range(
-    @field:JsonProperty("type") val type: String,
-    @field:JsonProperty("events") val events: List<Event>,
-)
-
-private data class Event(
-    @field:JsonProperty("introduced") val introduced: String?,
-    @field:JsonProperty("fixed") val fixed: String?,
-    @field:JsonProperty("last_affected") val lastAffected: String?
-)
-
-private data class Group(
-    @field:JsonProperty("ids") val ids: List<String>,
-    @field:JsonProperty("aliases") val aliases: List<String>,
-    @field:JsonProperty("max_severity") val maxSeverity: String?
-)
