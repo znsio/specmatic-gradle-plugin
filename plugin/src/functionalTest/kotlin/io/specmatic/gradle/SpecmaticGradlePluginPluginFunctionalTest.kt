@@ -342,7 +342,7 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
             val result = runWithSuccess("jar")
             assertThat(result.output).matches(
                 Pattern.compile(
-                    ".* com.google.code.gson:gson .* 2.8.8 .* https://osv.dev/GHSA-4jrv-ppp4-jm57 .*",
+                    ".* com.google.code.gson:gson .* CVE-2022-25647 .* 2.8.8 .*",
                     Pattern.MULTILINE or Pattern.DOTALL or Pattern.CASE_INSENSITIVE
                 )
             )
