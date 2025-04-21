@@ -84,6 +84,7 @@ tasks.withType<Test> {
     systemProperty("java.io.tmpdir", tempDir)
 
     doFirst {
+        project.delete(tempDir)
         tempDir.mkdirs()
     }
 }

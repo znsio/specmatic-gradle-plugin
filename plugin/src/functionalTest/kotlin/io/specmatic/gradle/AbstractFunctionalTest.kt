@@ -48,7 +48,7 @@ open class AbstractFunctionalTest {
     }
 
     fun writeLogbackXml(projectDir: File) {
-        projectDir.resolve("src/main/resources/logback.xml").also {
+        projectDir.resolve("src/main/resources/logback-test.xml").also {
             it.parentFile.mkdirs()
             it.writeText(
                 """
