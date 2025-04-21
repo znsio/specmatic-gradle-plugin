@@ -9,6 +9,7 @@ import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
+import org.gradle.api.publish.maven.tasks.AbstractPublishToMaven
 
 // just a marker interface
 interface DistributionFlavor
@@ -165,6 +166,11 @@ open class OSSApplicationAndLibraryConfig(project: Project) : ApplicationFeature
                         classifier = "javadoc"
                     }
                 }
+
+                project.tasks.withType(AbstractPublishToMaven::class.java) {
+                    dependsOn(project.tasks.withType(org.gradle.jvm.tasks.Jar::class.java).filter { it.name.lowercase().endsWith("sourcesjar") })
+                }
+
             }
         }
     }
