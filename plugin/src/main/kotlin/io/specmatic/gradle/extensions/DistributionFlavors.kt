@@ -62,7 +62,11 @@ abstract class BaseDistribution(protected val project: Project) : DistributionFl
     }
 
     protected open fun dockerBuild(vararg dockerBuildArgs: String?) {
-        this.project.registerDockerTasks(*dockerBuildArgs)
+        this.project.registerDockerTasks(null, *dockerBuildArgs)
+    }
+
+    protected open fun dockerBuild(imageName: String?, vararg dockerBuildArgs: String?) {
+        this.project.registerDockerTasks(imageName, *dockerBuildArgs)
     }
 }
 
@@ -130,6 +134,10 @@ open class OSSApplicationConfig(project: Project) : ApplicationFeature, DockerBu
     override fun dockerBuild(vararg dockerBuildArgs: String?) {
         super.dockerBuild(*dockerBuildArgs)
     }
+
+    override fun dockerBuild(imageName: String?, vararg dockerBuildArgs: String?) {
+        super.dockerBuild(imageName = imageName, *dockerBuildArgs)
+    }
 }
 
 open class OSSApplicationAndLibraryConfig(project: Project) : ApplicationFeature, DockerBuildFeature, ShadowingFeature,
@@ -179,6 +187,10 @@ open class OSSApplicationAndLibraryConfig(project: Project) : ApplicationFeature
 
     override fun dockerBuild(vararg dockerBuildArgs: String?) {
         super.dockerBuild(*dockerBuildArgs)
+    }
+
+    override fun dockerBuild(imageName: String?, vararg dockerBuildArgs: String?) {
+        super.dockerBuild(imageName = imageName, *dockerBuildArgs)
     }
 }
 
@@ -269,6 +281,10 @@ class CommercialApplicationConfig(project: Project) : ApplicationFeature, Shadow
     override fun dockerBuild(vararg dockerBuildArgs: String?) {
         super.dockerBuild(*dockerBuildArgs)
     }
+
+    override fun dockerBuild(imageName: String?, vararg dockerBuildArgs: String?) {
+        super.dockerBuild(imageName = imageName, *dockerBuildArgs)
+    }
 }
 
 class CommercialApplicationAndLibraryConfig(project: Project) : ShadowingFeature, ObfuscationFeature,
@@ -318,5 +334,9 @@ class CommercialApplicationAndLibraryConfig(project: Project) : ShadowingFeature
 
     override fun dockerBuild(vararg dockerBuildArgs: String?) {
         super.dockerBuild(*dockerBuildArgs)
+    }
+
+    override fun dockerBuild(imageName: String?, vararg dockerBuildArgs: String?) {
+        super.dockerBuild(imageName = imageName, *dockerBuildArgs)
     }
 }
