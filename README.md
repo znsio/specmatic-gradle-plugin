@@ -1,8 +1,13 @@
-# Specmatic gradle obfuscation and fatjar plugin
+# Specmatic gradle convention plugin
 
-Obfuscation and shadowing plugin for dummies! Setting up obfuscation, getting the shadow jar, and publishing to maven
-central is now a breeze! Just add this plugin, configure your intent using the `specmatic` block (more below), and the
-plugin will take care of the rest. Batteries included. Just provide the credentials for signing and publishing.
+> **NOTE:** This plugin contains plugin conventions for building specmatic tools. This is only to be used by the
+> specmatic core
+> team to build tools under the `io.specmatic` namespace.
+
+The Specmatic Gradle Plugin provides an all-in-one solution for automating obfuscation, creating shadow JARs, and
+publishing artifacts to Maven repositories. By configuring the specmatic block, specmatic developers can streamline
+their build process without manually handling these steps. Ideal for simplifying deployment pipelines in JVM-based
+projects.
 
 ## Features
 
@@ -40,7 +45,7 @@ plugin will take care of the rest. Batteries included. Just provide the credenti
    help you upload the relevant secrets by scanning your github workflows.
 
    | Variable(s)                                                                                                                                 | Purpose                                                                                                        | 
-   |---------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
+                                 |---------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
    | **Maven Central**                                                                                                                           |                                                                                                                |
    | `ORG_GRADLE_PROJECT_mavenCentralUsername`                                                                                                   | Username for Maven Central                                                                                     |
    | `ORG_GRADLE_PROJECT_mavenCentralPassword`                                                                                                   | Password for Maven Central                                                                                     |
