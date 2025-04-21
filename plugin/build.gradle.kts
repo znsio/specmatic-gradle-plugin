@@ -31,7 +31,6 @@ dependencies {
     testImplementation("org.assertj:assertj-core:3.27.3")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.12.2")
     testImplementation("io.mockk:mockk:1.14.0")
-//    testImplementation("org.mockito:mockito-core:5.17.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -76,9 +75,17 @@ tasks.named<Task>("check") {
     dependsOn(functionalTest)
 }
 
-tasks.named<Test>("functionalTest") {
+tasks.withType<Test> {
     useJUnitPlatform()
     maxParallelForks = 2
+
+    val tempDir = project.layout.buildDirectory.dir("reports/tmpdir").get().asFile
+    environment("TMPDIR", tempDir)
+    systemProperty("java.io.tmpdir", tempDir)
+
+    doFirst {
+        tempDir.mkdirs()
+    }
 }
 
 val stagingRepo = layout.buildDirectory.dir("mvn-repo").get()
