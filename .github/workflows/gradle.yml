@@ -17,7 +17,7 @@ jobs:
 
       - name: Publish Snapshot
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
-        run: ./gradlew publishAllPublicationsToMavenCentralRepository publishPluginMavenPublicationToSpecmaticPrivateRepository
+        run: ./gradlew publishAllPublicationsToMavenCentralRepository publishAllPublicationsToSpecmaticPrivateRepository
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: "${{ secrets.SPECMATIC_MAVEN_CENTRAL_USERNAME }}"
           ORG_GRADLE_PROJECT_mavenCentralPassword: "${{ secrets.SPECMATIC_MAVEN_CENTRAL_PASSWORD }}"
