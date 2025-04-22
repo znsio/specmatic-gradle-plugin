@@ -2,7 +2,7 @@ package io.specmatic.gradle
 
 import io.specmatic.gradle.artifacts.EnsureJarsAreStampedPlugin
 import io.specmatic.gradle.artifacts.EnsureReproducibleArtifactsPlugin
-import io.specmatic.gradle.collissions.CollisionDetectorPluginWrapper
+import io.specmatic.gradle.collision.CollisionDetectorPluginWrapper
 import io.specmatic.gradle.compiler.ConfigureCompilerOptionsPlugin
 import io.specmatic.gradle.downstreamprojects.DownstreamProjectIntegrationPlugin
 import io.specmatic.gradle.exec.ConfigureExecTaskPlugin

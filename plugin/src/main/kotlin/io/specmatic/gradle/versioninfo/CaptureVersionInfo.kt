@@ -8,12 +8,13 @@ import java.time.format.DateTimeFormatter
 
 fun Project.versionInfo(): ProjectVersionInfo {
     return ProjectVersionInfo(
-        this.version.toString(),
-        project.gitSha(),
-        this.group.toString(),
-        this.name,
-        this == this.rootProject,
-        project.maybeBuildTimestampIfEnabled()
+        version = this.version.toString(),
+        gitCommit = project.gitSha(),
+        group = this.group.toString(),
+        name = this.name,
+        kotlinPackageName = kotlinPackage(),
+        isRootProject = this == this.rootProject,
+        timestamp = project.maybeBuildTimestampIfEnabled()
     )
 }
 

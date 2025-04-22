@@ -37,18 +37,19 @@ class LoggingTest : AbstractFunctionalTest() {
                     }
                     
                     dependencies {
+                        // a library that simply logs messages using all logging frameworks
                         implementation("io.specmatic.logger:log-all:3.4.5-SNAPSHOT")
                     }
                     
                     specmatic {
-                        withOSSApplication(rootProject) {
+                        withOSSApplicationLibrary(rootProject) {
                             mainClass = "io.specmatic.example.Main"
                         }
                     }
                     
                     tasks.register("runMain", JavaExec::class.java) {
                         dependsOn("publishAllPublicationsToStagingRepository")
-                        classpath(rootProject.file("build/mvn-repo/io/specmatic/example/example-project/1.2.3/example-project-1.2.3.jar"))
+                        classpath(rootProject.file("build/mvn-repo/io/specmatic/example/example-project-all/1.2.3/example-project-all-1.2.3.jar"))
                         mainClass = "io.specmatic.example.Main"
                     }
                 """.trimIndent()
@@ -73,12 +74,8 @@ class LoggingTest : AbstractFunctionalTest() {
                         object Main {
                             @JvmStatic
                             fun main(args: Array<String>) {
-                                // ensure that JUL forwards logs to slf4j
-                                org.slf4j.bridge.SLF4JBridgeHandler.removeHandlersForRootLogger()
-                                org.slf4j.bridge.SLF4JBridgeHandler.install()
-                                
-                                //org.apache.logging.log4j.jul.Log4jBridgeHandler.install(true, null, true)
-                                
+                                // auto generated class
+                                io.specmatic.example.JULForwarder.forward()
                                 // try all the logging frameworks via a 3rd party dependency
                                 io.specmatic.example.LogAll.logAll(VersionInfo.describe())
                             }
@@ -90,7 +87,12 @@ class LoggingTest : AbstractFunctionalTest() {
     @Test
     fun `it renders logs from all log frameworks using logback`() {
         val result = runWithSuccess("runMain", "-xvulnScanJar")
-        assertThat(getDependencies("io.specmatic.example:example-project:1.2.3")).isEmpty()
+        assertThat(getDependencies("io.specmatic.example:example-project:1.2.3")).containsExactlyInAnyOrder(
+            "io.specmatic.logger:log-all:3.4.5-SNAPSHOT",
+            *loggingDependencies,
+            "org.jetbrains.kotlin:kotlin-stdlib:1.9.25"
+        )
+        assertThat(getDependencies("io.specmatic.example:example-project-all:1.2.3")).isEmpty()
 
         val logLines = result.output.lines().filter { it.contains("[this will only show via logback]") }
         assertThat(logLines).containsExactlyInAnyOrder(
@@ -176,7 +178,7 @@ class LoggingTest : AbstractFunctionalTest() {
                 
                 class LogAll {
                     companion object {
-                        fun logAll(suffix: String) {
+                        fun logAll(suffix: String) {                                
                             // try all the logging frameworks
                             java.util.logging.Logger.getLogger("jul").info("jul - Hello, world! Version: " + suffix)
                             org.apache.commons.logging.LogFactory.getLog("commons-logging").info("commons-logging - Hello, world! Version: " + suffix)

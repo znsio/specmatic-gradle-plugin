@@ -1,0 +1,16 @@
+<configuration>
+    <!--
+        Improve performance of JUL logging.
+        See also:
+          * https://www.slf4j.org/legacy.html#jul-to-slf4j
+          * https://logback.qos.ch/manual/configuration.html#LevelChangePropagator
+    -->
+    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator"/>
+
+
+    <!--
+        turn off all logging by default
+    -->
+    <root level="OFF">
+    </root>
+</configuration>

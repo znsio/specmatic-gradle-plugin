@@ -1,4 +1,4 @@
-package io.specmatic.gradle.collissions
+package io.specmatic.gradle.collision
 
 import io.fuchs.gradle.collisiondetector.CollisionDetectorPlugin
 import io.fuchs.gradle.collisiondetector.DetectCollisionsTask

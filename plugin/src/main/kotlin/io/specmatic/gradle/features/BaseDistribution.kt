@@ -1,11 +1,13 @@
 package io.specmatic.gradle.features
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import io.specmatic.gradle.autogen.createJULLogForwarderClassTask
+import io.specmatic.gradle.autogen.createLogbackXMLFileTask
 import io.specmatic.gradle.dock.registerDockerTasks
 import io.specmatic.gradle.jar.massage.mavenPublications
-import io.specmatic.gradle.license.pluginInfo
 import org.gradle.api.Action
 import org.gradle.api.Project
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
@@ -70,7 +72,6 @@ abstract class BaseDistribution(protected val project: Project) : DistributionFl
     }
 
     protected fun setupLogging() {
-        project.pluginInfo("Setting up logging on $project")
         project.configurations.named("implementation") {
             // add logback classic
             dependencies.add(project.dependencies.create("ch.qos.logback:logback-classic:1.5.18"))
@@ -82,10 +83,11 @@ abstract class BaseDistribution(protected val project: Project) : DistributionFl
             dependencies.add(project.dependencies.create("org.slf4j:jcl-over-slf4j:2.0.17"))
             dependencies.add(project.dependencies.create("org.slf4j:log4j-over-slf4j:2.0.17"))
 
-            // exclude the logging frameworks from any transitive dependencies
-            exclude(group = "org.apache.logging.log4j", module = "log4j-core")
-            exclude(group = "log4j", module = "log4j")
-            exclude(group = "commons-logging", module = "commons-logging")
+            excludeLoggingFrameworks()
+        }
+
+        project.configurations.named("testImplementation") {
+            excludeLoggingFrameworks()
         }
 
         project.plugins.withType(JvmDependencyConflictResolutionPlugin::class.java) {
@@ -96,5 +98,15 @@ abstract class BaseDistribution(protected val project: Project) : DistributionFl
             }
         }
 
+        project.createLogbackXMLFileTask()
+        project.createJULLogForwarderClassTask()
+    }
+
+    private fun Configuration.excludeLoggingFrameworks() {
+        // exclude the logging frameworks from any transitive dependencies
+        exclude(group = "org.apache.logging.log4j", module = "log4j-core")
+        exclude(group = "log4j", module = "log4j")
+        exclude(group = "commons-logging", module = "commons-logging")
+        exclude(group = "org.springframework", module = "spring-jcl")
     }
 }
