@@ -220,7 +220,22 @@ jvmDependencyConflicts {
 
 This plugin ensures that the published application variants use slf4j and logback as the default logging mechanism.
 Logback dependencies are automatically added by the plugin. A default `logback.xml` is packaged that turns off all
-logging by default. You can override this by creating a `logback.xml` file and executing the application via:
+logging by default. In addition, you should setup your application's `main()` function to call `JULForwarder.forward()`
+to setup appropriate forwarding of JUL logging to SLF4J.
+
+```kotlin
+import io.specmatic.yourpackage.JULForwarder
+
+object Main {
+    @JvmStatic
+    fun main(args: Array<String>) {
+        JULForwarder.forward()
+        // your application code here
+    }
+}
+```
+
+You may override the default logback configuration by creating a `logback.xml` file and executing the application via:
 
 ```bash
 java -Dlogback.configurationFile=logback.xml -jar <jar-file>
