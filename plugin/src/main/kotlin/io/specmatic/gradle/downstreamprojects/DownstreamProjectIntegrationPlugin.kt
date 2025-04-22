@@ -135,8 +135,12 @@ private fun Project.fetchLibsInProjectTask(
 private fun Project.validateDownstreamProjectTask(
     eachRepo: String, cloneRepoIfNotExists: TaskProvider<out Task>
 ): TaskProvider<GradleBuild?> = tasks.register("validate-$eachRepo", GradleBuild::class.java) {
-    dependsOn("publishAllPublicationsToStagingRepository")
-    dependsOn("publishToMavenLocal")
+
+    subprojects.forEach { subproject ->
+        dependsOn("${subproject.path}:publishAllPublicationsToStagingRepository")
+        dependsOn("${subproject.path}:publishToMavenLocal")
+    }
+
     dependsOn(cloneRepoIfNotExists)
 
     dir = getDownstreamProjectDir(eachRepo)
