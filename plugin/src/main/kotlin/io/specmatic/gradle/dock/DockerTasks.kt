@@ -1,63 +1,77 @@
 package io.specmatic.gradle.dock
 
+import io.specmatic.gradle.SpecmaticGradlePlugin
+import io.specmatic.gradle.features.DockerBuildConfig
 import io.specmatic.gradle.license.pluginInfo
+import io.specmatic.gradle.versioninfo.versionInfo
 import io.specmatic.gradle.vuln.createDockerVulnScanTask
 import org.gradle.api.Project
 import org.gradle.api.tasks.Exec
 import java.text.SimpleDateFormat
 import java.util.*
 
-internal fun Project.registerDockerTasks(providedImageName: String?, vararg dockerBuildArgs: String?) {
-
-    val imageName = if (providedImageName.isNullOrEmpty()) {
-        this.name
-    } else {
-        providedImageName
+internal fun Project.registerDockerTasks(dockerBuildConfig: DockerBuildConfig) {
+    if (rootProject.file("Dockerfile").exists()) {
+        pluginInfo("WARN: Dockerfile already exists in the root project. Please remove it.")
     }
+
+    val imageName = dockerImage(dockerBuildConfig)
+    val dockerFile = project.layout.buildDirectory.get().asFile.resolve("docker/Dockerfile.tmp")
+
+    val dockerfileTask = tasks.register("createDockerFile") {
+        group = "docker"
+        description = "Creates a Dockerfile for the project"
+        outputs.file(dockerFile)
+
+        doFirst {
+            dockerFile.also {
+                it.parentFile.mkdirs()
+                val templateStream =
+                    SpecmaticGradlePlugin::class.java.classLoader.getResourceAsStream("Dockerfile.template")
+                        ?: throw IllegalStateException("Unable to find Dockerfile.template in classpath")
+                it.writeBytes(templateStream.readBytes())
+            }
+        }
+    }
+
 
     pluginInfo("Adding docker tasks on $this")
 
-    val annotations = listOf(
-        "--annotation",
-        "org.opencontainers.image.created=${SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(Date())}",
-        "--annotation",
-        "org.opencontainers.image.authors=Specmatic Team <info@specmatic.io>",
-        "--annotation",
-        "org.opencontainers.image.url=https://hub.docker.com/u/znsio/${imageName}",
-        "--annotation",
-        "org.opencontainers.image.version=${this.version}",
-        "--annotation",
-        "org.opencontainers.image.vendor=specmatic.io",
+    val annotations = annotationArgs(imageName)
+
+    val dockerTags = arrayOf(
+        "znsio/${imageName}:${this.version}", "znsio/${imageName}:latest"
     )
 
-    val dockerTags = listOf(
-        "znsio/${imageName}:${this.version}",
-        "znsio/${imageName}:latest"
+    val commonDockerArgs = arrayOf(
+        *annotations,
+        "--build-arg",
+        "SOURCE_JAR=${rootProject.relativePath(dockerBuildConfig.jar!!)}",
+        "--build-arg",
+        "APPLICATION_NAME=${imageName}",
+        *dockerTags.flatMap { listOf("--tag", it) }.toTypedArray(),
+        "--file",
+        rootProject.relativePath(dockerFile),
+        "."
     )
 
     val scanLocalDockerImageTask = createDockerVulnScanTask(dockerTags.first())
 
-    this.tasks.register("dockerBuild", Exec::class.java) {
+    tasks.register("dockerBuild", Exec::class.java) {
         this.finalizedBy(scanLocalDockerImageTask)
-        this.dependsOn("assemble")
+        this.dependsOn("assemble", dockerfileTask)
         this.group = "docker"
         this.description = "Builds the docker image"
         this.workingDir = rootProject.projectDir
 
         this.commandLine(
-            "docker",
-            "build",
-            *annotations.toTypedArray(),
-            "--build-arg",
-            "VERSION=${this.project.version}",
-            *dockerTags.flatMap { listOf("-t", it) }.toTypedArray(),
-            "."
+            "docker", "build", *commonDockerArgs
         )
-        this.args(dockerBuildArgs.filterNotNull())
+        this.args(dockerBuildConfig.extraDockerArgs)
     }
 
     this.tasks.register("dockerBuildxPublish", Exec::class.java) {
-        this.dependsOn("assemble")
+        this.dependsOn("assemble", dockerfileTask)
         this.group = "docker"
         this.description = "Publishes the multivariant docker image"
         this.workingDir = rootProject.projectDir
@@ -66,15 +80,27 @@ internal fun Project.registerDockerTasks(providedImageName: String?, vararg dock
             "docker",
             "buildx",
             "build",
-            *annotations.toTypedArray(),
             "--platform",
             "linux/amd64,linux/arm64",
-            "--build-arg",
-            "VERSION=${this.project.version}",
+            *commonDockerArgs,
             "--push",
-            *dockerTags.flatMap { listOf("-t", it) }.toTypedArray(),
-            "."
         )
-        this.args(dockerBuildArgs.filterNotNull())
+        this.args(dockerBuildConfig.extraDockerArgs)
     }
 }
+
+private fun Project.dockerImage(dockerBuildConfig: DockerBuildConfig): String =
+    if (dockerBuildConfig.imageName.isNullOrBlank()) {
+        this.name
+    } else {
+        dockerBuildConfig.imageName!!
+    }
+
+private fun Project.annotationArgs(imageName: String): Array<String> = arrayOf(
+    "org.opencontainers.image.created=${SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(Date())}",
+    "org.opencontainers.image.authors=Specmatic Team <info@specmatic.io>",
+    "org.opencontainers.image.url=https://hub.docker.com/u/znsio/${imageName}",
+    "org.opencontainers.image.version=${this.version}",
+    "org.opencontainers.image.revision=${project.versionInfo().gitCommit}",
+    "org.opencontainers.image.vendor=specmatic.io",
+).flatMap { listOf("--annotation", it) }.toTypedArray()

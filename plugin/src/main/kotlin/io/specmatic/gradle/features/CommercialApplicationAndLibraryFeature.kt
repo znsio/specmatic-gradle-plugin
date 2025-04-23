@@ -51,11 +51,8 @@ class CommercialApplicationAndLibraryFeature(project: Project) : ShadowingFeatur
         super.githubRelease(block)
     }
 
-    override fun dockerBuild(vararg dockerBuildArgs: String?) {
-        super.dockerBuild(*dockerBuildArgs)
+    override fun dockerBuild(block: DockerBuildConfig.() -> Unit) {
+        super.dockerBuild(block)
     }
 
-    override fun dockerBuild(imageName: String?, vararg dockerBuildArgs: String?) {
-        super.dockerBuild(imageName = imageName, *dockerBuildArgs)
-    }
 }

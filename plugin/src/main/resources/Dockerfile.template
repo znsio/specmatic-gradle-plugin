@@ -1,0 +1,17 @@
+FROM alpine:3.21
+
+WORKDIR /usr/src/app
+
+# Install OpenJDK 17, git, and curl in a single RUN command
+RUN apk update && \
+    apk add --no-cache openjdk17-jre git curl && \
+    rm -rf /var/cache/apk/*
+
+ARG SOURCE_JAR
+ARG APPLICATION_NAME
+
+# Copy the Specmatic JAR file into the container
+COPY ${SOURCE_JAR} /usr/local/share/${APPLICATION_NAME}.jar
+
+# Set the entrypoint to run the Specmatic JAR
+ENTRYPOINT ["java", "-jar", "/usr/local/share/${APPLICATION_NAME}.jar"]

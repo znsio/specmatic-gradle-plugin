@@ -63,12 +63,8 @@ abstract class BaseDistribution(protected val project: Project) : DistributionFl
         githubRelease = GithubReleaseConfig().apply(block)
     }
 
-    protected open fun dockerBuild(vararg dockerBuildArgs: String?) {
-        this.project.registerDockerTasks(null, *dockerBuildArgs)
-    }
-
-    protected open fun dockerBuild(imageName: String?, vararg dockerBuildArgs: String?) {
-        this.project.registerDockerTasks(imageName, *dockerBuildArgs)
+    protected open fun dockerBuild(block: DockerBuildConfig.() -> Unit) {
+        this.project.registerDockerTasks(DockerBuildConfig().apply(block))
     }
 
     protected fun setupLogging() {
