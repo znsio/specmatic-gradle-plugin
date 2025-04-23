@@ -57,14 +57,13 @@ internal fun Project.createObfuscatedShadowJar(
 ): TaskProvider<ShadowJar> {
     val jarTask = project.tasks.jar
 
-    return project.tasks.register(SHADOW_OBFUSCATED_JAR, ShadowJar::class.java) {
+    val shadowJarTask = project.tasks.register(SHADOW_OBFUSCATED_JAR, ShadowJar::class.java) {
         project.pluginInfo("Created task $path")
         group = "build"
         description = "Shadow the obfuscated jar"
 
         dependsOn(obfuscateJarTask)
         dependsOn(jarTask) // since we use manifest from jarTask, we make this explicit, although obfuscateJarTask depends on jarTask
-        project.tasks.getByName("assemble").dependsOn(this)
 
         archiveClassifier.set("all-obfuscated")
 
@@ -73,6 +72,10 @@ internal fun Project.createObfuscatedShadowJar(
         configureCommonShadowConfigs(jarTask, project, shadowPrefix, isApplication)
         applyProjectSpecifiedConfigurations(this, shadowActions)
     }
+
+    project.tasks.named("assemble") { dependsOn(shadowJarTask) }
+
+    return shadowJarTask
 
 }
 
