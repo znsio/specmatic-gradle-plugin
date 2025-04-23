@@ -108,7 +108,7 @@ abstract class AbstractVulnScanTask @Inject constructor(private val execLauncher
             project.delete(trivyInstallDir())
             trivyInstallDir().mkdirs()
             project.copy {
-                if (trivyCompressedDownloadPath.endsWith(".zip")) {
+                if (trivyCompressedDownloadPath.extension == ".zip") {
                     from(project.zipTree(trivyCompressedDownloadPath))
                 } else {
                     from(project.tarTree(trivyCompressedDownloadPath))
