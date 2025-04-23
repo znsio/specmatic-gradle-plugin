@@ -315,7 +315,7 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
     }
 
     @Nested
-    inner class JarOsvScan {
+    inner class JarVulnScan {
         @Test
         fun `should flag vulnerable dependencies in jars`() {
             // Set up the test build
@@ -339,7 +339,7 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
                 """.trimIndent()
             )
 
-            val result = runWithSuccess("jar")
+            val result = runWithSuccess("check")
             assertThat(result.output).matches(
                 Pattern.compile(
                     ".* com.google.code.gson:gson .* CVE-2022-25647 .* 2.8.8 .*",

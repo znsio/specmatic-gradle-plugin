@@ -21,6 +21,7 @@ import org.barfuin.gradle.taskinfo.GradleTaskInfoPlugin
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.language.base.plugins.LifecycleBasePlugin
 
 @Suppress("unused")
 class SpecmaticGradlePlugin : Plugin<Project> {
@@ -49,11 +50,10 @@ class SpecmaticGradlePlugin : Plugin<Project> {
 
         target.plugins.apply(GradleTaskInfoPlugin::class.java)
 
-        target.allprojects {
-            plugins.apply(SpecmaticVulnScanPlugin::class.java)
-        }
-
         target.applyToRootProjectOrSubprojects {
+            plugins.apply(LifecycleBasePlugin::class.java)
+            plugins.apply(SpecmaticVulnScanPlugin::class.java)
+
             plugins.apply(VersionInfoPlugin::class.java)
             plugins.apply(ConfigureCompilerOptionsPlugin::class.java)
             plugins.apply(EnsureReproducibleArtifactsPlugin::class.java)

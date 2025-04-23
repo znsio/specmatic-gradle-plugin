@@ -71,7 +71,7 @@ val functionalTest by tasks.registering(Test::class) {
 
 gradlePlugin.testSourceSets.add(functionalTestSourceSet)
 
-tasks.named<Task>("check") {
+tasks.named("check") {
     dependsOn(functionalTest)
 }
 

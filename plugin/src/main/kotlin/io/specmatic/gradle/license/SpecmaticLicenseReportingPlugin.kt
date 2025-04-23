@@ -89,14 +89,6 @@ class SpecmaticLicenseReportingPlugin : Plugin<Project> {
             prettyPrintLicenseCheckFailuresTask: TaskProvider<PrettyPrintLicenseCheckFailures>,
             createAllowedLicensesFileTask: TaskProvider<CreateAllowedLicensesFileTask>
         ) {
-
-            project.allprojects {
-                // Configure all Jar tasks in subprojects to be finalized by the checkLicense task
-                tasks.withType(Jar::class.java) {
-                    finalizedBy(project.tasks.named("checkLicense"))
-                }
-            }
-
             project.tasks.named("checkLicense") {
                 // always regenerate. because caching on this task is broken
                 outputs.upToDateWhen { false }
@@ -108,6 +100,10 @@ class SpecmaticLicenseReportingPlugin : Plugin<Project> {
             project.tasks.named("generateLicenseReport") {
                 // always regenerate. because caching on this task is broken
                 outputs.upToDateWhen { false }
+            }
+
+            project.tasks.named("check") {
+                dependsOn(project.tasks.named("generateLicenseReport"))
             }
         }
 
@@ -132,5 +128,5 @@ class SpecmaticLicenseReportingPlugin : Plugin<Project> {
 
 
 fun Project.pluginInfo(string: String) {
-    logger.warn("[SGP - ${this.path}]: $string")
+    logger.info("[SGP - ${this.path}]: $string")
 }

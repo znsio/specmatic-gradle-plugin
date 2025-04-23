@@ -52,8 +52,8 @@ class SpecmaticGradlePluginTest {
 
 
             assertThat(
-                project.tasks.named("jar").get().finalizedBy.getDependencies(null)
-            ).contains(project.tasks.named("checkLicense").get())
+                project.tasks.named("check").get().taskDependencies.getDependencies(null)
+            ).contains(project.tasks.named("generateLicenseReport").get())
         }
 
 

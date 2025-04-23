@@ -35,10 +35,7 @@ internal fun Project.registerDockerTasks(providedImageName: String?, vararg dock
         "znsio/${imageName}:latest"
     )
 
-    val scanLocalDockerImageTask = createDockerVulnScanTask(dockerTags.first())
-
     this.tasks.register("dockerBuild", Exec::class.java) {
-        this.finalizedBy(scanLocalDockerImageTask)
         this.dependsOn("assemble")
         this.group = "docker"
         this.description = "Builds the docker image"
@@ -55,6 +52,8 @@ internal fun Project.registerDockerTasks(providedImageName: String?, vararg dock
         )
         this.args(dockerBuildArgs.filterNotNull())
     }
+
+    createDockerVulnScanTask(dockerTags.first())
 
     this.tasks.register("dockerBuildxPublish", Exec::class.java) {
         this.dependsOn("assemble")
