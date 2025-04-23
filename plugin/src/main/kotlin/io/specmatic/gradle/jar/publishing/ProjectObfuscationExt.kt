@@ -36,7 +36,7 @@ internal fun Project.createObfuscatedOriginalJar(proguardExtraArgs: MutableList<
     }
 
     obfuscateJarInternalTask.get().finalizedBy(obfuscateJarTask)
-    project.tasks.getByName("assemble").dependsOn(obfuscateJarTask)
+    project.tasks.named("assemble") { dependsOn(obfuscateJarTask) }
 
     return obfuscateJarTask
 }
