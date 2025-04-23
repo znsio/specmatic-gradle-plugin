@@ -15,6 +15,8 @@ class SpecmaticVulnScanPlugin : Plugin<Project> {
                 includeBomSerialNumber.set(false)
                 // https://github.com/CycloneDX/cyclonedx-gradle-plugin/issues/271
                 destination.set(project.layout.buildDirectory.get().asFile.resolve("reports/cyclonedx"))
+                outputName.set("bom")
+                outputFormat.set("all")
             }
 
             // use a separate task to print, since the scan task is cacheable -- if the inputs/outputs don't change, the task won't run, and won't print the output
