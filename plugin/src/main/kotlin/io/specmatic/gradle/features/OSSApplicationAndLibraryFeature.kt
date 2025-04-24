@@ -11,6 +11,7 @@ import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.api.publish.maven.tasks.AbstractPublishToMaven
 import org.gradle.api.publish.tasks.GenerateModuleMetadata
+import org.gradle.plugins.signing.Sign
 
 open class OSSApplicationAndLibraryFeature(project: Project) : ApplicationFeature, DockerBuildFeature, ShadowingFeature,
     GithubReleaseFeature, BaseDistribution(project) {
@@ -45,6 +46,12 @@ open class OSSApplicationAndLibraryFeature(project: Project) : ApplicationFeatur
                     artifact(project.tasks.named("javadocJar")) {
                         classifier = "javadoc"
                     }
+                }
+
+                project.tasks.withType(Sign::class.java) {
+                    dependsOn(
+                        project.tasks.withType(org.gradle.jvm.tasks.Jar::class.java)
+                            .filter { it.name.lowercase().endsWith("sourcesjar") })
                 }
 
                 project.tasks.withType(AbstractPublishToMaven::class.java) {
