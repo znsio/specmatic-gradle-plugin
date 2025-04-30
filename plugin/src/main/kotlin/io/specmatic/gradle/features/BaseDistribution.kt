@@ -3,7 +3,7 @@ package io.specmatic.gradle.features
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.specmatic.gradle.autogen.createJULLogForwarderClassTask
 import io.specmatic.gradle.autogen.createLogbackXMLFileTask
-import io.specmatic.gradle.dock.registerDockerTasks
+import io.specmatic.gradle.docker.registerDockerTasks
 import io.specmatic.gradle.jar.massage.mavenPublications
 import org.gradle.api.Action
 import org.gradle.api.Project

@@ -1,4 +1,4 @@
-package io.specmatic.gradle.dock
+package io.specmatic.gradle.docker
 
 import io.specmatic.gradle.license.pluginInfo
 import io.specmatic.gradle.vuln.createDockerVulnScanTask
@@ -8,7 +8,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 internal fun Project.registerDockerTasks(providedImageName: String?, vararg dockerBuildArgs: String?) {
-
     val imageName = if (providedImageName.isNullOrEmpty()) {
         this.name
     } else {
