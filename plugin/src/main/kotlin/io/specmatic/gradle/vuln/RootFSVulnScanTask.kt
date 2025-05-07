@@ -3,6 +3,8 @@ package io.specmatic.gradle.vuln
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.InputDirectory
+import org.gradle.jvm.tasks.Jar
+import org.gradle.plugins.signing.Sign
 import org.gradle.process.ExecOperations
 import java.io.File
 import javax.inject.Inject
@@ -22,6 +24,8 @@ internal fun Project.createJarVulnScanTask() {
 
     val scanTask = tasks.register("${scanTaskName}Scan", RootFSVulnScanTask::class.java) {
         dependsOn("assemble")
+        dependsOn(project.tasks.withType(Jar::class.java))
+        dependsOn(project.tasks.withType(Sign::class.java))
 
         trivyHomeDir.set(trivyHomeDir())
         inputDir.set(project.layout.buildDirectory.file("libs").get().asFile)
