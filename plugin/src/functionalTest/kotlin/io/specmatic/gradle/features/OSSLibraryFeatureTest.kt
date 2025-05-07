@@ -51,9 +51,7 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
                 )
 
             assertThat(
-                openJar("io.specmatic.example:example-project:1.2.3")
-                    .stream()
-                    .map { it.name })
+                listJarContents("io.specmatic.example:example-project:1.2.3"))
                 .contains("io/specmatic/example/VersionInfo.class")
                 .contains("io/specmatic/example/version.properties")
                 .doesNotContain("kotlin/Metadata.class") // kotlin is also packaged
@@ -61,7 +59,7 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
                 .doesNotContain("org/intellij/lang/annotations/Language.class") // kotlin is also packaged
                 .doesNotContain("org/slf4j/Logger.class") // slf4j dependency is also packaged
 
-            assertThat(openJar("io.specmatic.example:example-project:1.2.3").manifest.mainAttributes.getValue("Main-Class")).isNull()
+            assertThat(mainClass("io.specmatic.example:example-project:1.2.3")).isNull()
         }
     }
 
@@ -182,8 +180,7 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
                 )
 
             assertThat(
-                openJar("io.specmatic.example:executable:1.2.3").stream()
-                    .map { it.name })
+                listJarContents("io.specmatic.example:executable:1.2.3"))
                 .contains("io/specmatic/example/executable/VersionInfo.class")
                 .contains("io/specmatic/example/executable/version.properties")
                 .doesNotContain("io/specmatic/example/core/VersionInfo.class") // from the core dependency
@@ -193,7 +190,7 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
                 .doesNotContain("org/intellij/lang/annotations/Language.class") // kotlin is also packaged
                 .doesNotContain("org/slf4j/Logger.class") // slf4j dependency is also packaged
 
-            assertThat(openJar("io.specmatic.example:executable:1.2.3").manifest.mainAttributes.getValue("Main-Class")).isNull()
+            assertThat(mainClass("io.specmatic.example:executable:1.2.3")).isNull()
         }
     }
 

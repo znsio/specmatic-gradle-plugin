@@ -56,15 +56,15 @@ class OSSApplicationFeatureTest : AbstractFunctionalTest() {
             assertThat(getDependencies("io.specmatic.example:example-project:1.2.3")).isEmpty()
 
             assertThat(
-                openJar("io.specmatic.example:example-project:1.2.3").stream()
-                    .map { it.name }).contains("io/specmatic/example/VersionInfo.class")
+                listJarContents("io.specmatic.example:example-project:1.2.3"))
+                .contains("io/specmatic/example/VersionInfo.class")
                 .contains("io/specmatic/example/version.properties")
                 .contains("kotlin/Metadata.class") // kotlin is also packaged
                 .contains("org/jetbrains/annotations/Contract.class") // kotlin is also packaged
                 .contains("org/intellij/lang/annotations/Language.class") // kotlin is also packaged
                 .contains("org/slf4j/Logger.class") // slf4j dependency is also packaged
 
-            assertThat(openJar("io.specmatic.example:example-project:1.2.3").manifest.mainAttributes.getValue("Main-Class")).isEqualTo(
+            assertThat(mainClass("io.specmatic.example:example-project:1.2.3")).isEqualTo(
                 "io.specmatic.example.Main"
             )
         }
@@ -119,15 +119,15 @@ class OSSApplicationFeatureTest : AbstractFunctionalTest() {
             assertThat(getDependencies("io.specmatic.example:example-project:1.2.3")).isEmpty()
 
             assertThat(
-                openJar("io.specmatic.example:example-project:1.2.3").stream()
-                    .map { it.name }).contains("io/specmatic/example/VersionInfo.class")
+                listJarContents("io.specmatic.example:example-project:1.2.3"))
+                .contains("io/specmatic/example/VersionInfo.class")
                 .contains("io/specmatic/example/version.properties")
                 .contains("example/kotlin/Metadata.class") // kotlin is also packaged
                 .contains("example/org/jetbrains/annotations/Contract.class") // kotlin is also packaged
                 .contains("example/org/intellij/lang/annotations/Language.class") // kotlin is also packaged
                 .contains("example/org/slf4j/Logger.class") // slf4j dependency is also packaged
 
-            assertThat(openJar("io.specmatic.example:example-project:1.2.3").manifest.mainAttributes.getValue("Main-Class")).isEqualTo(
+            assertThat(mainClass("io.specmatic.example:example-project:1.2.3")).isEqualTo(
                 "io.specmatic.example.Main"
             )
         }
@@ -211,8 +211,8 @@ class OSSApplicationFeatureTest : AbstractFunctionalTest() {
             )
 
             assertThat(
-                openJar("io.specmatic.example:executable:1.2.3").stream()
-                    .map { it.name }).contains("io/specmatic/example/core/VersionInfo.class") // from the core dependency
+                listJarContents("io.specmatic.example:executable:1.2.3"))
+                .contains("io/specmatic/example/core/VersionInfo.class") // from the core dependency
                 .contains("io/specmatic/example/core/version.properties") // from the core dependency
                 .contains("io/specmatic/example/executable/VersionInfo.class")
                 .contains("io/specmatic/example/executable/version.properties")
@@ -221,7 +221,7 @@ class OSSApplicationFeatureTest : AbstractFunctionalTest() {
                 .contains("org/intellij/lang/annotations/Language.class") // kotlin is also packaged
                 .contains("org/slf4j/Logger.class") // slf4j dependency is also packaged
 
-            assertThat(openJar("io.specmatic.example:executable:1.2.3").manifest.mainAttributes.getValue("Main-Class")).isEqualTo(
+            assertThat(mainClass("io.specmatic.example:executable:1.2.3")).isEqualTo(
                 "io.specmatic.example.executable.Main"
             )
         }
@@ -306,8 +306,8 @@ class OSSApplicationFeatureTest : AbstractFunctionalTest() {
             )
 
             assertThat(
-                openJar("io.specmatic.example:executable:1.2.3").stream()
-                    .map { it.name }).contains("example/io/specmatic/example/core/VersionInfo.class") // from the core dependency
+                listJarContents("io.specmatic.example:executable:1.2.3"))
+                .contains("example/io/specmatic/example/core/VersionInfo.class") // from the core dependency
                 .contains("example/io/specmatic/example/core/version.properties") // from the core dependency
                 .contains("io/specmatic/example/executable/VersionInfo.class")
                 .contains("io/specmatic/example/executable/version.properties")
@@ -316,7 +316,7 @@ class OSSApplicationFeatureTest : AbstractFunctionalTest() {
                 .contains("example/org/intellij/lang/annotations/Language.class") // kotlin is also packaged
                 .contains("example/org/slf4j/Logger.class") // slf4j dependency is also packaged
 
-            assertThat(openJar("io.specmatic.example:executable:1.2.3").manifest.mainAttributes.getValue("Main-Class")).isEqualTo(
+            assertThat(mainClass("io.specmatic.example:executable:1.2.3")).isEqualTo(
                 "io.specmatic.example.executable.Main"
             )
         }

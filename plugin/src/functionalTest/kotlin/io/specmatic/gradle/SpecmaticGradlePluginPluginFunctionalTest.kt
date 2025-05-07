@@ -260,11 +260,11 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
             val jarFile = projectDir.resolve("build/libs/fooBar-1.2.3.jar")
             assertThat(jarFile).exists()
 
-            assertThat(JarFile(jarFile).manifest.mainAttributes.getValue("Main-Class")).isEqualTo("org.example.Main")
+            assertThat(mainClass(jarFile)).isEqualTo("org.example.Main")
 
             val customJar = projectDir.resolve("build/libs/customJar-1.2.3.jar")
             assertThat(customJar).exists()
-            assertThat(JarFile(customJar).manifest.mainAttributes.getValue("Main-Class")).isEqualTo("org.example.Main")
+            assertThat(mainClass(customJar)).isEqualTo("org.example.Main")
         }
 
         @Test
@@ -306,11 +306,11 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
             val jarFile = projectDir.resolve("build/libs/fooBar-1.2.3.jar")
             assertThat(jarFile).exists()
 
-            assertThat(JarFile(jarFile).manifest.mainAttributes.containsValue("Main-Class")).isFalse()
+            assertThat(mainClass(jarFile)).isNull()
 
             val customJar = projectDir.resolve("build/libs/customJar-1.2.3.jar")
             assertThat(customJar).exists()
-            assertThat(JarFile(customJar).manifest.mainAttributes.containsValue("Main-Class")).isFalse()
+            assertThat(mainClass(customJar)).isNull()
         }
     }
 

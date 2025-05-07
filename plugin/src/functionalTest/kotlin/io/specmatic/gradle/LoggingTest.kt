@@ -31,7 +31,7 @@ class LoggingTest : AbstractFunctionalTest() {
                     repositories {
                         mavenCentral()
                         maven {
-                            url = file("${logAllProjectDir}/build/mvn-repo").toURI()
+                            url = uri("${logAllProjectDir.resolve("build/mvn-repo").toURI()}")
                             name = "log-all-repo"
                         }
                     }

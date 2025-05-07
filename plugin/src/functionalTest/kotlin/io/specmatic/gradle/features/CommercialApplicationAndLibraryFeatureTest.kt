@@ -2,6 +2,7 @@ package io.specmatic.gradle.features
 
 import io.specmatic.gradle.AbstractFunctionalTest
 import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -66,9 +67,9 @@ class CommercialApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
 
             assertPublished(*artifacts)
 
-            Assertions.assertThat(getDependencies("io.specmatic.example:example-project-all-debug:1.2.3")).isEmpty()
-            Assertions.assertThat(getDependencies("io.specmatic.example:example-project-all:1.2.3")).isEmpty()
-            Assertions.assertThat(getDependencies("io.specmatic.example:example-project:1.2.3"))
+            assertThat(getDependencies("io.specmatic.example:example-project-all-debug:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:example-project-all:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:example-project:1.2.3"))
                 .containsExactlyInAnyOrder(
                     "org.jetbrains.kotlin:kotlin-stdlib:1.9.20",
                     "org.slf4j:slf4j-api:2.0.17",
@@ -76,9 +77,9 @@ class CommercialApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
                 )
 
             artifacts.filter { it.contains("-all") }.forEach {
-                Assertions.assertThat(
-                    openJar(it).stream()
-                        .map { it.name })
+                assertThat(
+                    listJarContents(it)
+                )
                     .contains("io/specmatic/example/VersionInfo.class")
                     .contains("io/specmatic/example/version.properties")
                     .contains("kotlin/Metadata.class") // kotlin is also packaged
@@ -86,7 +87,7 @@ class CommercialApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
                     .contains("org/intellij/lang/annotations/Language.class") // kotlin is also packaged
                     .contains("org/slf4j/Logger.class") // slf4j dependency is also packaged
 
-                Assertions.assertThat(openJar(it).manifest.mainAttributes.getValue("Main-Class"))
+                assertThat(mainClass(it))
                     .isEqualTo("io.specmatic.example.Main")
             }
         }
@@ -160,9 +161,9 @@ class CommercialApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
 
             assertPublished(*artifacts)
 
-            Assertions.assertThat(getDependencies("io.specmatic.example:example-project-all-debug:1.2.3")).isEmpty()
-            Assertions.assertThat(getDependencies("io.specmatic.example:example-project-all:1.2.3")).isEmpty()
-            Assertions.assertThat(getDependencies("io.specmatic.example:example-project:1.2.3"))
+            assertThat(getDependencies("io.specmatic.example:example-project-all-debug:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:example-project-all:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:example-project:1.2.3"))
                 .containsExactlyInAnyOrder(
                     "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
                     "org.slf4j:slf4j-api:2.0.17",
@@ -170,9 +171,9 @@ class CommercialApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
                 )
 
             artifacts.filter { it.contains("-all") }.forEach {
-                Assertions.assertThat(
-                    openJar(it).stream()
-                        .map { it.name })
+                assertThat(
+                    listJarContents(it)
+                )
                     .contains("io/specmatic/example/VersionInfo.class")
                     .contains("io/specmatic/example/version.properties")
                     .contains("example/kotlin/Metadata.class") // kotlin is also packaged
@@ -180,11 +181,7 @@ class CommercialApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
                     .contains("example/org/intellij/lang/annotations/Language.class") // kotlin is also packaged
                     .contains("example/org/slf4j/Logger.class") // slf4j dependency is also packaged
 
-                Assertions.assertThat(
-                    openJar("io.specmatic.example:example-project:1.2.3").manifest.mainAttributes.getValue(
-                        "Main-Class"
-                    )
-                )
+                assertThat(mainClass("io.specmatic.example:example-project:1.2.3"))
                     .isEqualTo("io.specmatic.example.Main")
             }
 
@@ -300,41 +297,41 @@ class CommercialApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
 
             assertPublished(*artifacts)
 
-            Assertions.assertThat(getDependencies("io.specmatic.example:executable-all:1.2.3")).isEmpty()
-            Assertions.assertThat(getDependencies("io.specmatic.example:executable-all-debug:1.2.3")).isEmpty()
-            Assertions.assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).containsExactlyInAnyOrder(
+            assertThat(getDependencies("io.specmatic.example:executable-all:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:executable-all-debug:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).containsExactlyInAnyOrder(
                 "io.specmatic.example:core:1.2.3",
                 "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
                 "org.slf4j:slf4j-api:2.0.17",
                 *loggingDependencies
             )
 
-            Assertions.assertThat(getDependencies("io.specmatic.example:core:1.2.3")).isEmpty()
-            Assertions.assertThat(getDependencies("io.specmatic.example:core-all-debug:1.2.3")).isEmpty()
-            Assertions.assertThat(getDependencies("io.specmatic.example:core-min:1.2.3")).containsExactlyInAnyOrder(
+            assertThat(getDependencies("io.specmatic.example:core:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:core-all-debug:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:core-min:1.2.3")).containsExactlyInAnyOrder(
                 "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
                 "org.slf4j:slf4j-api:2.0.17",
             )
-            Assertions.assertThat(getDependencies("io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3"))
+            assertThat(getDependencies("io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3"))
                 .containsExactlyInAnyOrder(
                     "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
                     "org.slf4j:slf4j-api:2.0.17",
                 )
 
             // original jar should be larger than obfuscated jar
-            Assertions.assertThat(getJar("io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3").length())
+            assertThat(getJar("io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3").length())
                 .isGreaterThan(
                     getJar("io.specmatic.example:core-min:1.2.3").length()
                 )
-            Assertions.assertThat(getJar("io.specmatic.example:core-all-debug:1.2.3").length())
+            assertThat(getJar("io.specmatic.example:core-all-debug:1.2.3").length())
                 .isGreaterThan(getJar("io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3").length())
-            Assertions.assertThat(getJar("io.specmatic.example:core-all-debug:1.2.3").length())
+            assertThat(getJar("io.specmatic.example:core-all-debug:1.2.3").length())
                 .isGreaterThan(getJar("io.specmatic.example:core:1.2.3").length())
 
             artifacts.filter { it.contains(":executable-all") }.forEach {
-                Assertions.assertThat(
-                    openJar(it).stream()
-                        .map { it.name })
+                assertThat(
+                    listJarContents(it)
+                )
                     .contains("io/specmatic/example/core/VersionInfo.class") // from the core dependency
                     .contains("io/specmatic/example/core/version.properties") // from the core dependency
                     .contains("io/specmatic/example/executable/VersionInfo.class")
@@ -344,7 +341,7 @@ class CommercialApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
                     .contains("org/intellij/lang/annotations/Language.class") // kotlin is also packaged
                     .contains("org/slf4j/Logger.class") // slf4j dependency is also packaged
 
-                Assertions.assertThat(openJar(it).manifest.mainAttributes.getValue("Main-Class")).isEqualTo(
+                assertThat(mainClass(it)).isEqualTo(
                     "io.specmatic.example.executable.Main"
                 )
             }
@@ -453,19 +450,19 @@ class CommercialApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
                 "io.specmatic.example:core-min:1.2.3"
             )
 
-            Assertions.assertThat(getDependencies("io.specmatic.example:executable-all:1.2.3")).isEmpty()
-            Assertions.assertThat(getDependencies("io.specmatic.example:executable-all-debug:1.2.3")).isEmpty()
-            Assertions.assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).containsExactlyInAnyOrder(
+            assertThat(getDependencies("io.specmatic.example:executable-all:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:executable-all-debug:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).containsExactlyInAnyOrder(
                 "io.specmatic.example:core:1.2.3",
                 "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
                 "org.slf4j:slf4j-api:2.0.17",
                 *loggingDependencies
             )
-            Assertions.assertThat(getDependencies("io.specmatic.example:core:1.2.3")).isEmpty()
+            assertThat(getDependencies("io.specmatic.example:core:1.2.3")).isEmpty()
 
-            Assertions.assertThat(
-                openJar("io.specmatic.example:executable-all:1.2.3").stream()
-                    .map { it.name })
+            assertThat(
+                listJarContents("io.specmatic.example:executable-all:1.2.3")
+            )
                 .contains("example/io/specmatic/example/core/VersionInfo.class") // from the core dependency
                 .contains("example/io/specmatic/example/core/version.properties") // from the core dependency
                 .contains("io/specmatic/example/executable/VersionInfo.class")
@@ -475,13 +472,8 @@ class CommercialApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
                 .contains("example/org/intellij/lang/annotations/Language.class") // kotlin is also packaged
                 .contains("example/org/slf4j/Logger.class") // slf4j dependency is also packaged
 
-            Assertions.assertThat(
-                openJar("io.specmatic.example:executable-all:1.2.3").manifest.mainAttributes.getValue(
-                    "Main-Class"
-                )
-            ).isEqualTo(
-                "io.specmatic.example.executable.Main"
-            )
+            assertThat(mainClass("io.specmatic.example:executable-all:1.2.3"))
+                .isEqualTo("io.specmatic.example.executable.Main")
         }
     }
 }
