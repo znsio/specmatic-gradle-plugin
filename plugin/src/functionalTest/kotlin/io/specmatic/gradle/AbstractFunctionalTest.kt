@@ -154,9 +154,9 @@ open class AbstractFunctionalTest {
             )
 
     fun assertMainJarExecutes(result: BuildResult, innerPackage: String? = null) {
-        assertThat(result.output).contains("Hello, world! Version: v1.2.3(unknown)")
+        assertThat(result.output).contains("Hello, world! Version: v1.2.3")
         assertThat(result.output).containsAnyOf(
-            "[this will only show via logback] INFO  slf4j -- Hello, logger! Version: v1.2.3(unknown)",
+            "[this will only show via logback] INFO  slf4j -- Hello, logger! Version: v1.2.3",
             "No SLF4J providers were found"
         )
 
@@ -175,9 +175,9 @@ open class AbstractFunctionalTest {
     }
 
     fun assertMainObfuscatedJarExecutes(result: BuildResult, innerPackage: String? = null) {
-        assertThat(result.output).contains("Hello, world! Version: v1.2.3(unknown)")
+        assertThat(result.output).contains("Hello, world! Version: v1.2.3")
         assertThat(result.output).containsAnyOf(
-            "[this will only show via logback] INFO  slf4j -- Hello, logger! Version: v1.2.3(unknown)",
+            "[this will only show via logback] INFO  slf4j -- Hello, logger! Version: v1.2.3",
             "No SLF4J providers were found"
         )
 

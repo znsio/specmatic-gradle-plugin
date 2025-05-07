@@ -39,7 +39,7 @@ data class ProjectVersionInfo(
                 val name = "$name"
                 ${maybeKotlinTimestamp()}
                 
-                fun describe() = "v${version}(${shortCommit()})${if (timestamp != null) " built at $timestamp" else ""}"
+                fun describe() = "v${version}${if (version.contains("SNAPSHOT")) "(${shortCommit()})" else ""}${if (timestamp != null) " built at $timestamp" else ""}"
             }
         """.trimIndent()
     }
