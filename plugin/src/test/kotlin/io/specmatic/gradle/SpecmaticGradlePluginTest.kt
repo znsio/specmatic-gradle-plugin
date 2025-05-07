@@ -4,11 +4,11 @@ import com.github.jk1.license.LicenseReportPlugin
 import io.mockk.every
 import io.mockk.mockk
 import io.specmatic.gradle.extensions.SpecmaticGradleExtension
-import net.researchgate.release.ReleasePlugin
+import io.specmatic.gradle.release.SpecmaticReleasePlugin
+import io.specmatic.gradle.release.execGit
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.barfuin.gradle.taskinfo.GradleTaskInfoPlugin
-import org.eclipse.jgit.api.Git
 import org.gradle.api.Project
 import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.initialization.resolve.RulesMode
@@ -22,6 +22,7 @@ import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.bundling.AbstractArchiveTask
 import org.gradle.groovy.scripts.ScriptSource
 import org.gradle.initialization.SettingsState
+import org.gradle.internal.impldep.org.eclipse.jgit.api.Git
 import org.gradle.internal.management.DependencyResolutionManagementInternal
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.the
@@ -31,6 +32,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.slf4j.LoggerFactory
 import java.io.File
 
 
@@ -122,14 +124,14 @@ class SpecmaticGradlePluginTest {
     }
 
     @Test
-    fun `should configure releases plugin`() {
+    fun `should apply releases plugin`() {
         val project = createProject()
         project.plugins.apply("io.specmatic.gradle")
-        assertThat(project.plugins.hasPlugin(ReleasePlugin::class.java)).isTrue()
+        assertThat(project.plugins.hasPlugin(SpecmaticReleasePlugin::class.java)).isTrue()
     }
 
     @Test
-    fun `should configure task info plugin`() {
+    fun `should apply task info plugin`() {
         val project = createProject()
         project.plugins.apply("io.specmatic.gradle")
         assertThat(project.plugins.hasPlugin(GradleTaskInfoPlugin::class.java)).isTrue()
@@ -187,6 +189,7 @@ class SpecmaticGradlePluginTest {
         @Test
         fun `should stamp jar files with version, group, name and unknown git sha when repo is not initialized`() {
             val project = ProjectBuilder.builder().withName("test-project").build()
+            project.projectDir.execGit(LoggerFactory.getLogger("test"), "init")
             setupSettingsMock(project)
             project.version = "1.2.3"
             project.group = "test-group"

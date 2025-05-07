@@ -1,13 +1,14 @@
 package io.specmatic.gradle
 
+import io.specmatic.gradle.release.execGit
 import org.assertj.core.api.Assertions.assertThat
-import org.eclipse.jgit.api.Git
 import org.gradle.internal.impldep.org.apache.maven.model.io.xpp3.MavenXpp3Reader
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.io.CleanupMode
 import org.junit.jupiter.api.io.TempDir
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.jar.JarFile
 
@@ -31,11 +32,16 @@ open class AbstractFunctionalTest {
 
     @BeforeEach
     fun baseSetup() {
-        Git.init().setDirectory(projectDir).call()
-        projectDir.resolve(".gitignore").writeText("")
+        projectDir.execGit(LoggerFactory.getLogger("test"), "init")
+        projectDir.resolve(".gitignore").writeText(
+            """
+            build
+            .gradle
+            """.trimIndent()
+        )
         gradleProperties.writeText(
             """
-                version=1.2.3
+                version=${projectVersion()}
                 group=io.specmatic.example
             """.trimIndent()
         )
@@ -154,9 +160,9 @@ open class AbstractFunctionalTest {
             )
 
     fun assertMainJarExecutes(result: BuildResult, innerPackage: String? = null) {
-        assertThat(result.output).contains("Hello, world! Version: v1.2.3")
+        assertThat(result.output).contains("Hello, world! Version: v${projectVersion()}")
         assertThat(result.output).containsAnyOf(
-            "[this will only show via logback] INFO  slf4j -- Hello, logger! Version: v1.2.3",
+            "[this will only show via logback] INFO  slf4j -- Hello, logger! Version: v${projectVersion()}",
             "No SLF4J providers were found"
         )
 
@@ -175,9 +181,9 @@ open class AbstractFunctionalTest {
     }
 
     fun assertMainObfuscatedJarExecutes(result: BuildResult, innerPackage: String? = null) {
-        assertThat(result.output).contains("Hello, world! Version: v1.2.3")
+        assertThat(result.output).contains("Hello, world! Version: v${projectVersion()}")
         assertThat(result.output).containsAnyOf(
-            "[this will only show via logback] INFO  slf4j -- Hello, logger! Version: v1.2.3",
+            "[this will only show via logback] INFO  slf4j -- Hello, logger! Version: v${projectVersion()}",
             "No SLF4J providers were found"
         )
 
@@ -198,11 +204,14 @@ open class AbstractFunctionalTest {
         assertThat(result.output).contains("BUILD SUCCESSFUL")
     }
 
+    open fun projectVersion(): String = "1.2.3"
+
     private fun openJar(coordinates: String): JarFile = JarFile(getJar(coordinates))
 
-    fun mainClass(coordinates: String): String? = openJar(coordinates).use{ it.manifest.mainAttributes.getValue("Main-Class") }
+    fun mainClass(coordinates: String): String? =
+        openJar(coordinates).use { it.manifest.mainAttributes.getValue("Main-Class") }
 
-    fun mainClass(file: File): String? = JarFile(file).use{ it.manifest.mainAttributes.getValue("Main-Class") }
+    fun mainClass(file: File): String? = JarFile(file).use { it.manifest.mainAttributes.getValue("Main-Class") }
 
     fun listJarContents(coordinates: String): List<String> {
         val jarFile = openJar(coordinates)

@@ -18,6 +18,12 @@ specmatic {
         "specmatic-openapi",
         "specmatic-redis",
     )
+    preReleaseVadlidateTasks = listOf("check")
+    releasePublishTasks = listOf(
+        "plugin:publishPlugins",
+        "plugin:publishToMavenCentral",
+        "plugin:publishAllPublicationsToSpecmaticPrivateRepository",
+    )
     publishTo("specmaticPrivate", "https://maven.pkg.github.com/znsio/specmatic-private-maven-repo")
     withOSSLibrary(project(":plugin")) {
         // from com.gradle.publish.PublishPlugin#PUBLISH_TASK_NAME
@@ -117,21 +123,3 @@ specmatic {
         license = "Apache-2.0"
     }
 }
-
-tasks.getByName("beforeReleaseBuild") {
-    dependsOn("check")
-}
-
-tasks.getByName("afterReleaseBuild") {
-    dependsOn("plugin:publishPlugins")
-    dependsOn("plugin:publishToMavenCentral")
-    dependsOn("plugin:publishAllPublicationsToSpecmaticPrivateRepository")
-}
-
-afterEvaluate {
-    release {
-        failOnSnapshotDependencies = false
-    }
-}
-
-project(":plugin").evaluationDependsOn(":dummy")

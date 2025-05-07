@@ -6,6 +6,8 @@ import org.apache.commons.codec.digest.DigestUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.kohsuke.github.GHRelease
 import org.kohsuke.github.GHRepository
@@ -15,7 +17,10 @@ import java.io.IOException
 import java.nio.file.Files
 
 
-open class CreateGithubReleaseTask() : DefaultTask() {
+abstract class CreateGithubReleaseTask() : DefaultTask() {
+
+    @get:Internal
+    abstract val releaseVersion: Property<String>
 
     private val files = mutableMapOf<Project, MutableMap<String, String>>()
 
@@ -25,7 +30,6 @@ open class CreateGithubReleaseTask() : DefaultTask() {
         }
         files.put(target, release.files)
     }
-
 
     @TaskAction
     fun createGithubRelease() {
@@ -43,12 +47,10 @@ open class CreateGithubReleaseTask() : DefaultTask() {
         )
 
 
-        val projectVersion = project.version.toString()
-
-        val githubRelease = findReleaseByName(githubRepo, projectVersion) ?: githubRepo.createRelease(projectVersion)
-            .name(projectVersion)
-            .draft(true)
-            .create()
+        val githubRelease =
+            findReleaseByName(githubRepo, releaseVersion.get()) ?: githubRepo.createRelease(releaseVersion.get())
+                .name(releaseVersion.get()).draft(true).create()
+        logger.warn("Created release ${githubRelease.name} with id ${githubRelease.id}")
 
         for (asset in githubRelease.listAssets()) {
             asset.delete()

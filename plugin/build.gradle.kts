@@ -13,10 +13,11 @@ repositories {
 dependencies {
     implementation("com.github.jk1.dependency-license-report:com.github.jk1.dependency-license-report.gradle.plugin:2.9")
     implementation("com.adarshr.test-logger:com.adarshr.test-logger.gradle.plugin:4.0.0")
+    implementation("org.semver4j:semver4j:5.7.0")
     implementation("net.researchgate:gradle-release:3.1.0")
     implementation("org.barfuin.gradle.taskinfo:org.barfuin.gradle.taskinfo.gradle.plugin:2.2.0")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.20")
-    implementation("org.eclipse.jgit:org.eclipse.jgit:7.2.0.202503040940-r")
+    implementation("commons-codec:commons-codec:1.18.0")
     implementation("com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:9.0.0-beta10")
     implementation("com.vanniktech.maven.publish:com.vanniktech.maven.publish.gradle.plugin:0.31.0")
     implementation("org.kohsuke:github-api:1.327")
@@ -25,6 +26,8 @@ dependencies {
     implementation("org.gradlex.jvm-dependency-conflict-resolution:org.gradlex.jvm-dependency-conflict-resolution.gradle.plugin:2.2")
     implementation("org.gradlex.java-ecosystem-capabilities:org.gradlex.java-ecosystem-capabilities.gradle.plugin:1.5.3")
     implementation("io.fuchs.gradle.classpath-collision-detector:io.fuchs.gradle.classpath-collision-detector.gradle.plugin:1.0.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("org.zeroturnaround:zt-exec:1.12")
 
     testImplementation("org.apache.maven:maven-model:3.9.9")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")

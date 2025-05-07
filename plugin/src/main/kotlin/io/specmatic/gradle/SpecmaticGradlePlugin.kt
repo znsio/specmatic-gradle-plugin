@@ -12,6 +12,7 @@ import io.specmatic.gradle.jar.massage.applyToRootProjectOrSubprojects
 import io.specmatic.gradle.jar.publishing.applyShadowConfigs
 import io.specmatic.gradle.license.SpecmaticLicenseReportingPlugin
 import io.specmatic.gradle.plugin.VersionInfo
+import io.specmatic.gradle.release.SpecmaticReleasePlugin
 import io.specmatic.gradle.tests.SpecmaticTestReportingPlugin
 import io.specmatic.gradle.versioninfo.VersionInfoPlugin
 import io.specmatic.gradle.versioninfo.versionInfo
