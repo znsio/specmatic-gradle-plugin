@@ -74,7 +74,7 @@ abstract class AbstractVulnScanTask @Inject constructor(private val execLauncher
         val lockFile = trivyHomeDir.get().resolve("trivy-download.lock")
         RandomAccessFile(lockFile, "rw").channel.use { channel ->
             channel.lock().use {
-                val lastModified = if (trivyInstallDir().exists()) trivyInstallDir().lastModified() else 0L
+                val lastModified = if (trivyExecutableFile().exists()) trivyExecutableFile().lastModified() else 0L
                 val oneWeekInMillis = 7 * 24 * 60 * 60 * 1000L
                 val isOlderThanOneWeek = System.currentTimeMillis() - lastModified > oneWeekInMillis
                 if (isOlderThanOneWeek) {
@@ -108,7 +108,7 @@ abstract class AbstractVulnScanTask @Inject constructor(private val execLauncher
             project.delete(trivyInstallDir())
             trivyInstallDir().mkdirs()
             project.copy {
-                if (trivyCompressedDownloadPath.extension == ".zip") {
+                if (trivyCompressedDownloadPath.extension == "zip") {
                     from(project.zipTree(trivyCompressedDownloadPath))
                 } else {
                     from(project.tarTree(trivyCompressedDownloadPath))
@@ -141,10 +141,11 @@ abstract class AbstractVulnScanTask @Inject constructor(private val execLauncher
             }
         }
 
-    protected fun trivyExecutable(): String {
-        val extension = if (os == "windows") ".exe" else ""
+    protected fun trivyExecutable(): String = trivyExecutableFile().path
 
-        return trivyInstallDir().resolve("trivy$extension").path
+    private fun trivyExecutableFile(): File {
+        val extension = if (os == "windows") ".exe" else ""
+        return trivyInstallDir().resolve("trivy$extension")
     }
 
     @get:Input

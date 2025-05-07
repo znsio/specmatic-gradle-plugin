@@ -198,7 +198,16 @@ open class AbstractFunctionalTest {
         assertThat(result.output).contains("BUILD SUCCESSFUL")
     }
 
-    fun openJar(coordinates: String): JarFile = JarFile(getJar(coordinates))
+    private fun openJar(coordinates: String): JarFile = JarFile(getJar(coordinates))
+
+    fun mainClass(coordinates: String): String? = openJar(coordinates).use{ it.manifest.mainAttributes.getValue("Main-Class") }
+
+    fun mainClass(file: File): String? = JarFile(file).use{ it.manifest.mainAttributes.getValue("Main-Class") }
+
+    fun listJarContents(coordinates: String): List<String> {
+        val jarFile = openJar(coordinates)
+        return jarFile.use { jarFile.entries().toList().map { it.name } }
+    }
 
     fun getJar(coordinates: String): File =
         artifactDir(coordinates).resolve("${coordinates.artifactId()}-${coordinates.version()}.jar")

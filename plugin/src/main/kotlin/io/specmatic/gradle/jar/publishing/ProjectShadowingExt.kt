@@ -181,12 +181,13 @@ private fun extractPackagesInJars(
     val packagesToRelocate = mutableSetOf<String>()
     runtimeClasspathFiles.forEach { eachFile ->
         if (eachFile.name.lowercase().endsWith(".jar")) {
-            val jarInputStream = JarFile(eachFile)
-            jarInputStream.entries().asSequence().forEach { entry ->
-                val entryName = entry.name
-                if (shouldRelocatePackage(entryName, excludePackages)) {
-                    val packageName = entryName.substring(0, entryName.lastIndexOf('/'))
-                    packagesToRelocate.add(packageName)
+            JarFile(eachFile).use {
+                it.entries().asSequence().forEach { entry ->
+                    val entryName = entry.name
+                    if (shouldRelocatePackage(entryName, excludePackages)) {
+                        val packageName = entryName.substring(0, entryName.lastIndexOf('/'))
+                        packagesToRelocate.add(packageName)
+                    }
                 }
             }
         }
