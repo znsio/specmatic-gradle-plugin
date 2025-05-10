@@ -17,7 +17,7 @@ dependencies {
     implementation("org.barfuin.gradle.taskinfo:org.barfuin.gradle.taskinfo.gradle.plugin:2.2.0")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.20")
     implementation("org.eclipse.jgit:org.eclipse.jgit:7.2.0.202503040940-r")
-    implementation("com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:9.0.0-beta10")
+    implementation("com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:9.0.0-beta13")
     implementation("com.vanniktech.maven.publish:com.vanniktech.maven.publish.gradle.plugin:0.31.0")
     implementation("org.kohsuke:github-api:1.327")
     implementation("org.cyclonedx.bom:org.cyclonedx.bom.gradle.plugin:2.2.0")
