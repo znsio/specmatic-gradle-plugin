@@ -53,7 +53,7 @@ abstract class CreateGithubReleaseTask() : DefaultTask() {
                 .makeLatest(GHReleaseBuilder.MakeLatest.TRUE)
                 .name(releaseVersion.get())
                 .create()
-        logger.warn("Created release ${githubRelease.name} with id ${githubRelease.id}")
+        logger.warn("Created release ${githubRelease.name} with id ${githubRelease.id} at ${githubRelease.url}")
 
         for (asset in githubRelease.listAssets()) {
             asset.delete()
