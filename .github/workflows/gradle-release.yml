@@ -19,12 +19,6 @@ jobs:
       contents: write
     steps:
 
-      - name: Setup git
-        run: |
-          git config --local user.email "github-service-account@specmatic.io"
-          git config --local user.name "Specmatic GitHub Service Account"
-          git clean -fd
-
       - name: 'Build/test'
         uses: znsio/specmatic-github-workflows/action-build-gradle@main
 
