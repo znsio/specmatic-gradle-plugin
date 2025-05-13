@@ -10,6 +10,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.kohsuke.github.GHRelease
+import org.kohsuke.github.GHReleaseBuilder
 import org.kohsuke.github.GHRepository
 import org.kohsuke.github.GitHubBuilder
 import java.io.File
@@ -49,7 +50,9 @@ abstract class CreateGithubReleaseTask() : DefaultTask() {
 
         val githubRelease =
             findReleaseByName(githubRepo, releaseVersion.get()) ?: githubRepo.createRelease(releaseVersion.get())
-                .name(releaseVersion.get()).draft(true).create()
+                .makeLatest(GHReleaseBuilder.MakeLatest.TRUE)
+                .name(releaseVersion.get())
+                .create()
         logger.warn("Created release ${githubRelease.name} with id ${githubRelease.id}")
 
         for (asset in githubRelease.listAssets()) {
