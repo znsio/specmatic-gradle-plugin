@@ -82,7 +82,7 @@ tasks.withType<Test> {
     useJUnitPlatform()
     maxParallelForks = 2
 
-    val tempDir = project.layout.buildDirectory.dir("reports/tmpdir").get().asFile
+    val tempDir = project.layout.buildDirectory.dir("reports/tmpdir/${this.name}").get().asFile
     environment("TMPDIR", tempDir)
     systemProperty("java.io.tmpdir", tempDir)
 
