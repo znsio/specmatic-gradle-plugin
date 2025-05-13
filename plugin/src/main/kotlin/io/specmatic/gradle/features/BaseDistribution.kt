@@ -11,7 +11,11 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
+import org.gradle.api.publish.maven.tasks.AbstractPublishToMaven
+import org.gradle.api.publish.tasks.GenerateModuleMetadata
+import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.exclude
+import org.gradle.plugins.signing.Sign
 import org.gradlex.jvm.dependency.conflict.resolution.JvmDependencyConflictResolutionPlugin
 import org.gradlex.jvm.dependency.conflict.resolution.JvmDependencyConflictsExtension
 
@@ -43,6 +47,27 @@ abstract class BaseDistribution(protected val project: Project) : DistributionFl
             }
         }
     }
+
+    protected fun signPublishTasksDependOnSourcesJar() {
+        project.tasks.withType(Sign::class.java) {
+            dependsOn(
+                project.tasks.withType(Jar::class.java)
+                    .filter { it.name.lowercase().endsWith("sourcesjar") })
+        }
+
+        project.tasks.withType(AbstractPublishToMaven::class.java) {
+            dependsOn(
+                project.tasks.withType(Jar::class.java)
+                    .filter { it.name.lowercase().endsWith("sourcesjar") })
+        }
+
+        project.tasks.withType(GenerateModuleMetadata::class.java) {
+            dependsOn(
+                project.tasks.withType(Jar::class.java)
+                    .filter { it.name.lowercase().endsWith("sourcesjar") })
+        }
+    }
+
 
     protected open fun shadow(prefix: String?, action: Action<ShadowJar>?) {
         if (prefix != null) {

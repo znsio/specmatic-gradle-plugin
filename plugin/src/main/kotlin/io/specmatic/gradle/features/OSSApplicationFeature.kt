@@ -39,6 +39,8 @@ open class OSSApplicationFeature(project: Project) : ApplicationFeature, DockerB
                         classifier = "javadoc"
                     }
                 }
+
+                signPublishTasksDependOnSourcesJar()
             }
         }
     }
