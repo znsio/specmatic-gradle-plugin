@@ -92,7 +92,7 @@ specmatic {
     }
     licenseData {
         name = "org.cyclonedx.bom:org.cyclonedx.bom.gradle.plugin"
-        version = "2.2.0"
+        version = "2.3.0"
         projectUrl = "https://github.com/CycloneDX/cyclonedx-gradle-plugin"
         license = "Apache-2.0"
     }
