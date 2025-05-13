@@ -13,7 +13,6 @@ class MavenCentral : PublishTarget
 class MavenInternal(val repoName: String, val url: URI) : PublishTarget
 
 open class SpecmaticGradleExtension {
-    var preReleaseVadlidateTasks = listOf<String>()
     var releasePublishTasks = listOf<String>()
     var jvmVersion: JavaLanguageVersion = JavaLanguageVersion.of(17)
         set(value) {

@@ -122,8 +122,6 @@ projects.
         // List of sample projects that need validation before release, and bumping post release
         downstreamDependentProjects = listOf("project1", "project2")
    
-        // List of tasks that need to be run before a release
-        preReleaseVadlidateTasks = listOf("check")
         // List of publish tasks that need to be run on the release tag
         releasePublishTasks = listOf("publishTasks...")
    

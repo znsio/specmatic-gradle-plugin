@@ -31,8 +31,7 @@ private fun Project.configureReleaseTasks() {
 
     val preReleaseCheckTask = getPreReleaseCheckTask()
     val removeSnapshotTask = preReleaseBumpTask(preReleaseCheckTask)
-    val preReleaseValidationTask = preReleaseValidationTask(removeSnapshotTask)
-    val runReleaseLifecycleHooksTask = runReleaseLifecycleHooksTask(preReleaseValidationTask)
+    val runReleaseLifecycleHooksTask = runReleaseLifecycleHooksTask(removeSnapshotTask)
     val createReleaseTagTask = runReleaseTagTask(runReleaseLifecycleHooksTask)
     val postReleaseBumpTask = postReleaseBumpTask(createReleaseTagTask)
     val gitPushTask = gitPushTask(postReleaseBumpTask)
@@ -80,28 +79,6 @@ private fun Project.postReleaseBumpTask(dependentTask: TaskProvider<*>): TaskPro
         postReleaseVersion.set(project.provider { project.property("release.newVersion").toString() })
     }
 
-
-fun Project.preReleaseValidationTask(removeSnapshotTask: TaskProvider<*>): TaskProvider<*> {
-    return if (project.hasProperty("functionalTestingHack") && project.property("functionalTestingHack") == "true") {
-        project.tasks.register("preReleaseValidationHooks") {
-            dependsOn(removeSnapshotTask)
-            group = "release"
-            description = "Run pre-release validation tasks (add your tasks here) - test hax"
-        }
-    } else {
-        project.tasks.register("preReleaseValidationHooks", GradleBuild::class.java) {
-            dependsOn(removeSnapshotTask)
-            group = "release"
-            description = "Run pre-release validation tasks (add your tasks here)"
-
-            startParameter = project.gradle.startParameter.newInstance()
-            startParameter.projectProperties.putAll(project.gradle.startParameter.projectProperties)
-            buildName = "(pre-release-validation)"
-
-            tasks = listOf("clean", *project.specmaticExtension().preReleaseVadlidateTasks.toTypedArray())
-        }
-    }
-}
 
 private fun Project.runReleaseLifecycleHooksTask(
     removeSnapshotTask: TaskProvider<*>,

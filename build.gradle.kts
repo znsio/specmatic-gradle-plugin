@@ -18,7 +18,6 @@ specmatic {
         "specmatic-openapi",
         "specmatic-redis",
     )
-    preReleaseVadlidateTasks = listOf("check")
     releasePublishTasks = listOf(
         "plugin:publishPlugins",
         "plugin:publishToMavenCentral",
