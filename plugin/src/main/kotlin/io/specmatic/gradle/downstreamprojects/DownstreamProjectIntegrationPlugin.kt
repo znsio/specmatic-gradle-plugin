@@ -90,21 +90,14 @@ private fun Project.bumpSpecmaticVersionInProjectTask(
 
     doFirst {
         println("Bumping $specmaticModulePropertyKey in $eachProject")
-        val newLine = "${specmaticModulePropertyKey}=${specmaticModuleVersion}"
+        val newValue = "${specmaticModulePropertyKey}=${specmaticModuleVersion}"
         val gradlePropertiesFile = file("../${eachProject}/gradle.properties")
-        val content = gradlePropertiesFile.readLines().joinToString("\n") { line ->
-            if (line.trim().startsWith("#")) {
-                line
-            } else {
-                line.replace(
-                    Regex("""\s*${specmaticModulePropertyKey}\s*=\s*.*"""),
-                    newLine
-                )
-            }
-        }.let { updatedContent ->
+        val content = replacePropertyValue(
+            gradlePropertiesFile, specmaticModulePropertyKey, specmaticModuleVersion
+        ).let { updatedContent ->
             if (!updatedContent.lines().any { it.startsWith("${specmaticModulePropertyKey}=") }) {
                 println("$specmaticModulePropertyKey property not found, adding")
-                updatedContent + "\n${newLine}\n"
+                updatedContent + "\n${newValue}\n"
             } else {
                 updatedContent
             }
@@ -112,6 +105,17 @@ private fun Project.bumpSpecmaticVersionInProjectTask(
         gradlePropertiesFile.writeText(content)
     }
 }
+
+internal fun replacePropertyValue(file: File, key: String, value: Any?): String =
+    file.readLines().joinToString("\n") { line ->
+        if (line.trim().startsWith("#")) {
+            line
+        } else {
+            line.replace(
+                Regex("""\s*$key\s*=\s*.*"""), "$key=$value"
+            )
+        }
+    }
 
 private fun Project.fetchLibsInProjectTask(
     eachProject: String,

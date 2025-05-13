@@ -24,8 +24,6 @@ projects.
       or attribution specified in the license.
 3. Pretty print test progress - uses https://github.com/radarsh/gradle-test-logger-plugin
 4. Publish artifacts and create GitHub releases
-    - uses https://github.com/researchgate/gradle-release to create git tags
-    - uses API to create a GitHub release
 5. Print task info and dependencies - uses https://gitlab.com/barfuin/gradle-taskinfo
 6. Print vulnerability scan reports - uses [osv-scanner](https://github.com/google/osv-scanner)
 7. Creates a `version.properties` and `VersionInfo.kt` file in the `${groupId}:${projectName}` package. This contains
@@ -123,6 +121,11 @@ projects.
         kotlinApiVersion = KotlinVersion.KOTLIN_1_9
         // List of sample projects that need validation before release, and bumping post release
         downstreamDependentProjects = listOf("project1", "project2")
+   
+        // List of tasks that need to be run before a release
+        preReleaseVadlidateTasks = listOf("check")
+        // List of publish tasks that need to be run on the release tag
+        releasePublishTasks = listOf("publishTasks...")
    
         // replace certain dependencies with other dependencies
         versionReplacements = mapOf(
@@ -256,10 +259,8 @@ Here is a list of available tasks
 | `publishAllPublicationsToMavenCentralRepository`     | Publishes all Maven publications produced by this project to the mavenCentral repository.                                                                     |
 | `publishAllPublicationsToSpecmaticPrivateRepository` | Publishes all Maven publications produced by this project to the specmaticPrivate repository.                                                                 |
 | `publishAllPublicationsToStagingRepository`          | Publishes all Maven publications produced by this project to the staging repository.                                                                          |
-| **Release tasks**                                    |                                                                                                                                                               |
-| `afterReleaseBuild`                                  | Runs immediately after the build when doing a release. Install task dependencies on this task to be executed after a release build. For e.g. `uploadArchives` |
-| `beforeReleaseBuild`                                 | Runs immediately before the build when doing a release. Install task dependencies on this task to be execute before a release build. For e.g. `check`         |
 | `publishToMavenCentral`                              | Publishes to a staging repository on Sonatype OSS.                                                                                                            |
+| **Release tasks**                                    |                                                                                                                                                               |
 | `release`                                            | Verify project, release, and update version to next.                                                                                                          |
 | **Vulnerability tasks**                              |                                                                                                                                                               |
 | `vulnScanSBOM`                                       | Scan for and print vulnerabilities in just dependency tree.                                                                                                   |
