@@ -41,7 +41,7 @@ class SpecmaticReleasePluginTest : AbstractFunctionalTest() {
         )
 
         writeMainClass(projectDir, "io.specmatic.example.Main")
-        remoteRepoDir.execGit(logger, "init", "--bare")
+        remoteRepoDir.execGit(logger, "init", "--bare", "--initial-branch=main")
 
         projectDir.execGit(logger, "add", ".")
         projectDir.execGit(logger, "commit", "-m", "Initial commit")
