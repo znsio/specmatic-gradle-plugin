@@ -98,7 +98,7 @@ fun Project.preReleaseValidationTask(removeSnapshotTask: TaskProvider<*>): TaskP
             startParameter.projectProperties.putAll(project.gradle.startParameter.projectProperties)
             buildName = "(pre-release-validation)"
 
-            tasks = listOf(*project.specmaticExtension().preReleaseVadlidateTasks.toTypedArray())
+            tasks = listOf("clean", *project.specmaticExtension().preReleaseVadlidateTasks.toTypedArray())
         }
     }
 }
@@ -122,7 +122,7 @@ private fun Project.runReleaseLifecycleHooksTask(
             startParameter.projectProperties.putAll(project.gradle.startParameter.projectProperties)
             buildName = "(release-publish)"
 
-            tasks = listOf(*project.specmaticExtension().releasePublishTasks.toTypedArray())
+            tasks = listOf("clean", *project.specmaticExtension().releasePublishTasks.toTypedArray())
         }
     }
 }
