@@ -7,26 +7,31 @@ import io.specmatic.gradle.license.pluginInfo
 import io.specmatic.gradle.license.pluginWarn
 import io.specmatic.gradle.specmaticExtension
 import io.specmatic.gradle.versioninfo.versionInfo
-import net.researchgate.release.BuildEventsListenerRegistryProvider
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.BasePlugin
 import org.gradle.api.tasks.GradleBuild
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.build.event.BuildEventsListenerRegistry
 import org.gradle.tooling.events.OperationCompletionListener
 import org.gradle.tooling.events.task.TaskFailureResult
 import org.gradle.tooling.events.task.TaskOperationDescriptor
+import javax.inject.Inject
 
-class SpecmaticReleasePlugin : Plugin<Project> {
+class SpecmaticReleasePlugin @Inject constructor(
+    private val buildEventsListenerRegistry: BuildEventsListenerRegistry
+) : Plugin<Project> {
     override fun apply(target: Project) {
         target.plugins.apply(BasePlugin::class.java)
         target.afterEvaluate {
-            target.configureReleaseTasks()
+            target.configureReleaseTasks(buildEventsListenerRegistry)
         }
+
+
     }
 }
 
-private fun Project.configureReleaseTasks() {
+private fun Project.configureReleaseTasks(buildEventsListenerRegistry: BuildEventsListenerRegistry) {
     val originalGitCommit = project.versionInfo().gitCommit
 
     val preReleaseCheckTask = getPreReleaseCheckTask()
@@ -43,14 +48,14 @@ private fun Project.configureReleaseTasks() {
         dependsOn(createGithubReleaseTask)
     }
 
-    objects.newInstance(BuildEventsListenerRegistryProvider::class.java).buildEventsListenerRegistry.onTaskCompletion(
+    buildEventsListenerRegistry.onTaskCompletion(
         project.provider {
             OperationCompletionListener { finishEvent ->
                 val descriptor = finishEvent.descriptor
                 val operationResult = finishEvent.result
 
                 if (operationResult is TaskFailureResult && descriptor is TaskOperationDescriptor) {
-                    if (gradle.taskGraph.hasTask(releaseTask.get().path)) {
+                    if (project.gradle.taskGraph.hasTask(releaseTask.get().path)) {
                         project.pluginWarn("Release failed, reverting changes")
                         revertGitChanges(originalGitCommit)
                     }

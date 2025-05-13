@@ -79,12 +79,6 @@ specmatic {
         license = "Apache-2.0"
     }
     licenseData {
-        name = "net.researchgate:gradle-release"
-        version = "3.1.0"
-        projectUrl = "https://github.com/researchgate/gradle-release"
-        license = "MIT"
-    }
-    licenseData {
         name = "org.barfuin.gradle.taskinfo:org.barfuin.gradle.taskinfo.gradle.plugin"
         version = "2.2.0"
         projectUrl = "https://gitlab.com/barfuin/gradle-taskinfo"

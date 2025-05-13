@@ -14,7 +14,6 @@ dependencies {
     implementation("com.github.jk1.dependency-license-report:com.github.jk1.dependency-license-report.gradle.plugin:2.9")
     implementation("com.adarshr.test-logger:com.adarshr.test-logger.gradle.plugin:4.0.0")
     implementation("org.semver4j:semver4j:5.7.0")
-    implementation("net.researchgate:gradle-release:3.1.0")
     implementation("org.barfuin.gradle.taskinfo:org.barfuin.gradle.taskinfo.gradle.plugin:2.2.0")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.20")
     implementation("commons-codec:commons-codec:1.18.0")
