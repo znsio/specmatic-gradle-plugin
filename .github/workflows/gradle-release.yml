@@ -27,7 +27,9 @@ jobs:
           RELEASE_VERSION=$(semver get release $(/usr/bin/grep -E '^\s*version\s*=' gradle.properties | /usr/bin/sed -E -e 's/^\s*version\s*=//g'))
           NEXT_VERSION=$(semver bump ${{ github.event.inputs.bump_type }} $(/usr/bin/grep -E '^\s*version\s*=' gradle.properties | /usr/bin/sed -E -e 's/^\s*version\s*=//g'))-SNAPSHOT
           echo "Making a release with version $RELEASE_VERSION and next version $NEXT_VERSION..."
-
+    
+          git clean -fd
+          
           ./gradlew release \
             -Prelease.useAutomaticVersion=true \
             -Prelease.releaseVersion=${RELEASE_VERSION} \
