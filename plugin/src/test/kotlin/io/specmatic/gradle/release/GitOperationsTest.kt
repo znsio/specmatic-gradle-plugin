@@ -26,7 +26,7 @@ class GitOperationsTest {
 
     @BeforeEach
     fun setUp() {
-        remoteRepoDir.execGit(logger, "init")
+        remoteRepoDir.execGit(logger, "init", "--initial-branch=main")
         remoteRepoDir.resolve("README.md").writeText("dummy content")
         remoteRepoDir.execGit(logger, "add", "README.md")
         remoteRepoDir.execGit(logger, "commit", "-m", "Initial commit")

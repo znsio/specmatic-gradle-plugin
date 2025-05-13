@@ -189,7 +189,7 @@ class SpecmaticGradlePluginTest {
         @Test
         fun `should stamp jar files with version, group, name and unknown git sha when repo is not initialized`() {
             val project = ProjectBuilder.builder().withName("test-project").build()
-            project.projectDir.execGit(LoggerFactory.getLogger("test"), "init")
+            project.projectDir.execGit(LoggerFactory.getLogger("test"), "init", "--initial-branch=main")
             setupSettingsMock(project)
             project.version = "1.2.3"
             project.group = "test-group"

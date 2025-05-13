@@ -32,7 +32,7 @@ open class AbstractFunctionalTest {
 
     @BeforeEach
     fun baseSetup() {
-        projectDir.execGit(LoggerFactory.getLogger("test"), "init")
+        projectDir.execGit(LoggerFactory.getLogger("test"), "init", "--initial-branch=main")
         projectDir.resolve(".gitignore").writeText(
             """
             build
