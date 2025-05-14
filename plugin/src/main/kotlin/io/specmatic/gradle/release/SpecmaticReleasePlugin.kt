@@ -47,7 +47,6 @@ private fun Project.configureReleaseTasks() {
         override fun buildFinished(result: BuildResult) {
             if (result.failure != null) {
                 val executedTasks = project.gradle.taskGraph.allTasks.map { it.path }
-                pluginWarn("ExecutedTasks: $executedTasks")
                 val wasMyTaskRun = executedTasks.contains(releaseTask.get().path)
                 pluginWarn("Checking if release task ran: $wasMyTaskRun")
                 if (wasMyTaskRun) {
