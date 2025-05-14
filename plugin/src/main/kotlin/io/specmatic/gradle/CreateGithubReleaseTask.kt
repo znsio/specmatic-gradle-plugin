@@ -5,9 +5,9 @@ import org.apache.commons.codec.digest.DigestUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 import org.kohsuke.github.GHRelease
 import org.kohsuke.github.GHReleaseBuilder
 import org.kohsuke.github.GHRepository
@@ -16,13 +16,13 @@ import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 
-
+@DisableCachingByDefault(because="Makes network calls")
 abstract class CreateGithubReleaseTask() : DefaultTask() {
 
     @get:Internal
     abstract val releaseVersion: Property<String>
 
-    @get:InputDirectory
+    @get:Internal
     abstract val sourceDir: Property<File>
 
     @TaskAction
