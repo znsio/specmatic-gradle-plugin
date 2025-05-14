@@ -22,14 +22,11 @@ class SpecmaticReleasePlugin : Plugin<Project> {
         target.afterEvaluate {
             target.configureReleaseTasks()
         }
-
-
     }
 }
 
 private fun Project.configureReleaseTasks() {
     val originalGitCommit = project.versionInfo().gitCommit
-
 
     val preReleaseCheckTask = getPreReleaseCheckTask()
     val removeSnapshotTask = preReleaseBumpTask(preReleaseCheckTask)
@@ -63,6 +60,12 @@ private fun Project.configureReleaseTasks() {
 
 }
 
+private fun Project.validateSnapshotDependenciesTask(): TaskProvider<ValidateSnapshotDependencies?> =
+    tasks.register("validateSnapshotDependencies", ValidateSnapshotDependencies::class.java) {
+        group = "release"
+        description = "Validate snapshot dependencies"
+    }
+
 
 private fun Project.gitPushTask(runReleaseLifecycleHooksTask: TaskProvider<*>): TaskProvider<*> =
     project.tasks.register("releaseGitPush", GitPushTask::class.java) {
@@ -94,6 +97,7 @@ private fun Project.runReleaseLifecycleHooksTask(
             description = "Run release lifecycle hooks (add your tasks here) - test hax"
         }
     } else {
+        val validateSnapshotDependenciesTask = validateSnapshotDependenciesTask()
 
         val prepareGithubReleaseArtifactsTask = tasks.register("prepareGithubReleaseArtifacts", Copy::class.java) {
             group = "release"
@@ -123,6 +127,7 @@ private fun Project.runReleaseLifecycleHooksTask(
 
             tasks = listOf(
                 "clean",
+                validateSnapshotDependenciesTask.name,
                 prepareGithubReleaseArtifactsTask.name,
                 *project.specmaticExtension().releasePublishTasks.toTypedArray()
             )
