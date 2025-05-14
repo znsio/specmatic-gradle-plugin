@@ -40,19 +40,20 @@ abstract class CreateGithubReleaseTask() : DefaultTask() {
                 ?: throw GradleException("GITHUB_REPOSITORY environment variable not set")
         )
 
-
         val githubRelease =
             findReleaseByName(githubRepo, releaseVersion.get()) ?: githubRepo.createRelease(releaseVersion.get())
-                .makeLatest(GHReleaseBuilder.MakeLatest.TRUE).name(releaseVersion.get()).create()
+                .makeLatest(GHReleaseBuilder.MakeLatest.TRUE).draft(true).name(releaseVersion.get()).create()
         logger.warn("Created release ${githubRelease.name} with id ${githubRelease.id} at ${githubRelease.htmlUrl}")
 
         for (asset in githubRelease.listAssets()) {
             asset.delete()
         }
 
-        sourceDir.get().listFiles().forEach { eachFile ->
-            uploadAsset(githubRelease, eachFile)
-            project.pluginInfo("Uploaded asset $eachFile")
+        if (sourceDir.isPresent && sourceDir.get().exists()) {
+            sourceDir.get().listFiles().orEmpty().forEach { eachFile ->
+                uploadAsset(githubRelease, eachFile)
+                project.pluginInfo("Uploaded asset $eachFile")
+            }
         }
 
         githubRelease.update().draft(false).update()
