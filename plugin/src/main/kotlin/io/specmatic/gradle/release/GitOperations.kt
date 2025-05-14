@@ -24,10 +24,10 @@ fun File.execGit(logger: Logger, vararg args: String, quiet: Boolean = false): P
     return processExecutor.execute().also {
         if (it.exitValue == 0) {
             if (!quiet) {
-                logger.warn("Command '${processExecutor.command}' executed successfully in directory $this. Output was: ${it.outputUTF8()}")
+                logger.warn("Command '${processExecutor.command}' executed successfully in directory $this. Output was: ${it.outputUTF8().ifEmpty { "(blank)" }} ")
             }
         } else {
-            throw RuntimeException("Command '${processExecutor.command}' failed in directory $this with exit code ${it.exitValue}. Output was: ${it.outputUTF8()}")
+            throw RuntimeException("Command '${processExecutor.command}' failed in directory $this with exit code ${it.exitValue}. Output was: ${it.outputUTF8().ifEmpty { "(blank)" }}")
         }
     }
 }
