@@ -12,25 +12,22 @@ import org.gradle.BuildResult
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.BasePlugin
+import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.GradleBuild
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.build.event.BuildEventsListenerRegistry
-import javax.inject.Inject
 
-class SpecmaticReleasePlugin @Inject constructor(
-    private val buildEventsListenerRegistry: BuildEventsListenerRegistry
-) : Plugin<Project> {
+class SpecmaticReleasePlugin : Plugin<Project> {
     override fun apply(target: Project) {
         target.plugins.apply(BasePlugin::class.java)
         target.afterEvaluate {
-            target.configureReleaseTasks(buildEventsListenerRegistry)
+            target.configureReleaseTasks()
         }
 
 
     }
 }
 
-private fun Project.configureReleaseTasks(buildEventsListenerRegistry: BuildEventsListenerRegistry) {
+private fun Project.configureReleaseTasks() {
     val originalGitCommit = project.versionInfo().gitCommit
 
 
@@ -97,6 +94,24 @@ private fun Project.runReleaseLifecycleHooksTask(
             description = "Run release lifecycle hooks (add your tasks here) - test hax"
         }
     } else {
+
+        val prepareGithubReleaseArtifactsTask = tasks.register("prepareGithubReleaseArtifacts", Copy::class.java) {
+            group = "release"
+            description = "Prepare artifacts for Github release"
+
+            val targetDir = project.layout.buildDirectory.dir("githubAssets")
+            specmaticExtension().projectConfigurations.forEach { (eachProject, eachProjectConfig) ->
+                if (eachProjectConfig is GithubReleaseFeature) {
+                    (eachProjectConfig as BaseDistribution).githubRelease.files.forEach { (taskName, releaseFileName) ->
+                        dependsOn(eachProject.tasks.named(taskName))
+                        from(eachProject.tasks.named(taskName).map { it.outputs.files.singleFile })
+                        into(targetDir)
+                        rename { releaseFileName }
+                    }
+                }
+            }
+        }
+
         project.tasks.register("runReleaseLifecycleHooks", GradleBuild::class.java) {
             dependsOn(removeSnapshotTask)
             group = "release"
@@ -106,7 +121,11 @@ private fun Project.runReleaseLifecycleHooksTask(
             startParameter.projectProperties.putAll(project.gradle.startParameter.projectProperties)
             buildName = "(release-publish)"
 
-            tasks = listOf("clean", *project.specmaticExtension().releasePublishTasks.toTypedArray())
+            tasks = listOf(
+                "clean",
+                prepareGithubReleaseArtifactsTask.name,
+                *project.specmaticExtension().releasePublishTasks.toTypedArray()
+            )
         }
     }
 }
@@ -156,17 +175,11 @@ private fun Project.findOrCreateGithubReleaseTask(dependentTasks: TaskProvider<*
             dependsOn(dependentTasks)
             group = "release"
             description = "Create a Github release"
+            sourceDir.set(project.layout.buildDirectory.dir("githubAssets").get().asFile)
 
             releaseVersion.set(project.provider { project.property("release.releaseVersion").toString() })
-
-            specmaticExtension().projectConfigurations.forEach { (eachProject, eachProjectConfig) ->
-                if (eachProjectConfig is GithubReleaseFeature) {
-                    publish(eachProject, (eachProjectConfig as BaseDistribution).githubRelease)
-                }
-            }
-
         }
     } else {
-        tasks.named("createGithubRelease", CreateGithubReleaseTask::class.java)
+        tasks.named("createGithubRelease")
     }
 }
