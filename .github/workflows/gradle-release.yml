@@ -31,7 +31,6 @@ jobs:
           git clean -fd
           
           ./gradlew release \
-            -Prelease.useAutomaticVersion=true \
             -Prelease.releaseVersion=${RELEASE_VERSION} \
             -Prelease.newVersion=${NEXT_VERSION} \
         env:
