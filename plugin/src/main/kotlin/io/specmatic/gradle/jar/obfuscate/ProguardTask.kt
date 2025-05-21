@@ -83,9 +83,7 @@ abstract class ProguardTask @Inject constructor(
         }
     }
 
-    private fun getArgsFile(): File {
-        return getProguardOutputDir().resolve("args.txt")
-    }
+    private fun getArgsFile(): File = getProguardOutputDir().resolve("args.txt")
 
     private fun getJVMLibraryFiles(): List<File> {
         val dir = javaLauncher.get().metadata.installationPath.dir("jmods")
@@ -97,9 +95,7 @@ abstract class ProguardTask @Inject constructor(
     fun getRuntimeConfiguration(): Configuration = this.project.configurations.getByName("runtimeClasspath")
 
     @OutputDirectory
-    fun getProguardOutputDir(): File {
-        return File("${project.layout.buildDirectory.get().asFile}/proguard-${name}")
-    }
+    fun getProguardOutputDir(): File = File("${project.layout.buildDirectory.get().asFile}/proguard-${name}")
 
     private fun createArgs(): MutableList<String> {
         addLibraryArgs()
@@ -137,18 +133,12 @@ abstract class ProguardTask @Inject constructor(
         libraryJars(getJVMLibraryFiles().map { "${it.absolutePath}(!**.jar;!module-info.class)" })
     }
 
-    fun appendProguardArgs(vararg toAdd: String?) {
-        proguardArgs.addAll(toAdd.filterNotNull())
-    }
+    fun appendProguardArgs(vararg toAdd: String?): Boolean = proguardArgs.addAll(toAdd.filterNotNull())
 
-    private fun libraryJars(configuration: Configuration) {
-        libraryJars(configuration.files.map { it.absolutePath })
-    }
+    private fun libraryJars(configuration: Configuration) = libraryJars(configuration.files.map { it.absolutePath })
 
-    private fun libraryJars(libJar: Collection<String?>) {
-        libJar.filterNotNull().forEach {
-            appendProguardArgs("-libraryjars", it)
-        }
+    private fun libraryJars(libJar: Collection<String?>) = libJar.filterNotNull().forEach {
+        appendProguardArgs("-libraryjars", it)
     }
 
 }
