@@ -155,7 +155,12 @@ projects.
     
             // Create a docker build/publish task. Pass any optional args to the docker build task. 
             // The `--build-arg VERSION` is already passed as a default 
-            dockerBuild("--extra", "--docker", "--args")
+            dockerBuild {
+                // optional, uses the project name by default
+                imageName = "foo"
+                // any extra docker build args
+                extraDockerArgs = listOf("...")
+            }
     
             // Obfuscation is enabled by default, but you may pass additional proguard args https://www.guardsquare.com/manual/configuration/usage
             obfuscate("-some-arg")

@@ -21,7 +21,7 @@ import org.gradle.jvm.tasks.Jar
 import java.io.File
 import java.util.jar.JarFile
 
-private const val SHADOW_OBFUSCATED_JAR = "shadowObfuscatedJar"
+internal val SHADOW_OBFUSCATED_JAR = "shadowObfuscatedJar"
 
 internal fun Project.createUnobfuscatedShadowJar(
     shadowActions: MutableList<Action<ShadowJar>>, shadowPrefix: String, isApplication: Boolean

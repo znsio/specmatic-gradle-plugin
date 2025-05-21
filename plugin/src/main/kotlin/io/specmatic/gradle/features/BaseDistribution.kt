@@ -13,6 +13,7 @@ import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.api.publish.maven.tasks.AbstractPublishToMaven
 import org.gradle.api.publish.tasks.GenerateModuleMetadata
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.exclude
 import org.gradle.plugins.signing.Sign
@@ -88,12 +89,8 @@ abstract class BaseDistribution(protected val project: Project) : DistributionFl
         githubRelease = GithubReleaseConfig().apply(block)
     }
 
-    protected open fun dockerBuild(vararg dockerBuildArgs: String?) {
-        this.project.registerDockerTasks(null, *dockerBuildArgs)
-    }
-
-    protected open fun dockerBuild(imageName: String?, vararg dockerBuildArgs: String?) {
-        this.project.registerDockerTasks(imageName, *dockerBuildArgs)
+    protected open fun dockerBuild(block: DockerBuildConfig.() -> Unit) {
+        this.project.registerDockerTasks(DockerBuildConfig().apply(block))
     }
 
     protected fun setupLogging() {
