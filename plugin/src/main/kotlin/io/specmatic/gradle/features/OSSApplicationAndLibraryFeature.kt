@@ -25,6 +25,7 @@ open class OSSApplicationAndLibraryFeature(project: Project) : ApplicationFeatur
         project.plugins.withType(JavaPlugin::class.java) {
             project.forceJavadocAndSourcesJars()
             val unobfuscatedShadowJarTask = project.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, true)
+
             project.plugins.withType(MavenPublishPlugin::class.java) {
 
                 project.createUnobfuscatedJarPublication(
@@ -59,11 +60,10 @@ open class OSSApplicationAndLibraryFeature(project: Project) : ApplicationFeatur
         super.githubRelease(block)
     }
 
-    override fun dockerBuild(vararg dockerBuildArgs: String?) {
-        super.dockerBuild(*dockerBuildArgs)
-    }
-
-    override fun dockerBuild(imageName: String?, vararg dockerBuildArgs: String?) {
-        super.dockerBuild(imageName = imageName, *dockerBuildArgs)
+    override fun dockerBuild(block: DockerBuildConfig.() -> Unit) {
+        super.dockerBuild {
+            apply { block() }
+            mainJarTaskName = "unobfuscatedShadowJar"
+        }
     }
 }

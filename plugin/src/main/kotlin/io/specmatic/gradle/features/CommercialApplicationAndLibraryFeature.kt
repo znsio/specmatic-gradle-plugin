@@ -51,11 +51,10 @@ class CommercialApplicationAndLibraryFeature(project: Project) : ShadowingFeatur
         super.githubRelease(block)
     }
 
-    override fun dockerBuild(vararg dockerBuildArgs: String?) {
-        super.dockerBuild(*dockerBuildArgs)
-    }
-
-    override fun dockerBuild(imageName: String?, vararg dockerBuildArgs: String?) {
-        super.dockerBuild(imageName = imageName, *dockerBuildArgs)
+    override fun dockerBuild(block: DockerBuildConfig.() -> Unit) {
+        super.dockerBuild {
+            apply { block() }
+            mainJarTaskName = SHADOW_OBFUSCATED_JAR
+        }
     }
 }

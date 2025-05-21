@@ -1,6 +1,20 @@
 package io.specmatic.gradle.features
 
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.gradle.api.Project
+
 interface DockerBuildFeature {
-    fun dockerBuild(vararg dockerBuildArgs: String?)
-    fun dockerBuild(imageName: String? = null, vararg dockerBuildArgs: String?)
+    fun dockerBuild(block: DockerBuildConfig.() -> Unit = {})
 }
+
+/**
+ * Either specify a jar, or a dockerfile must be present in the root project
+ */
+data class DockerBuildConfig(
+    internal var mainJarTaskName: String? = null,
+    var imageName: String? = null,
+    var extraDockerArgs: MutableList<String> = mutableListOf(),
+)
+
+internal fun Project.mainJar(mainJarTaskName: String) =
+    this.tasks.named(mainJarTaskName, ShadowJar::class.java).get().archiveFile.get().asFile

@@ -26,7 +26,7 @@ open class SpecmaticGradleExtension {
     var kotlinApiVersion: KotlinVersion = KotlinVersion.KOTLIN_1_9
     internal val publishTo = mutableListOf<PublishTarget>()
     internal val licenseData = mutableListOf<ModuleLicenseData>()
-    internal val projectConfigurations: MutableMap<Project, DistributionFlavor> = mutableMapOf()
+    internal val projectConfigurations: MutableMap<Project, BaseDistribution> = mutableMapOf()
     var versionReplacements = mutableMapOf<String, String>()
 
     fun publishToMavenCentral() {
