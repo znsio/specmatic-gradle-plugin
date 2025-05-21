@@ -107,10 +107,10 @@ abstract class ProguardTask @Inject constructor(
         appendProguardArgs("-injars", inputJar!!.absolutePath)
         appendProguardArgs("-outjars", outputJar!!.absolutePath)
 
-        appendProguardArgs("-printseeds", "${getProguardOutputDir().resolve("seeds.txt")}")
-        appendProguardArgs("-printconfiguration", "${getProguardOutputDir().resolve("proguard.cfg")}")
-        appendProguardArgs("-dump", "${getProguardOutputDir().resolve("proguard.dump.txt")}")
-        appendProguardArgs("-printmapping", "${getProguardOutputDir().resolve("proguard.mapping.txt")}")
+        appendProguardArgs("-printseeds", "${seedsFile()}")
+        appendProguardArgs("-printconfiguration", "${outputConfigFile()}")
+        appendProguardArgs("-dump", "${dumpFile()}")
+        appendProguardArgs("-printmapping", "${mapFile()}")
         appendProguardArgs("-whyareyoukeeping", "class io.specmatic.** { *; }")
         appendProguardArgs("-dontoptimize")
         appendProguardArgs("-keepattributes", "!LocalVariableTable, !LocalVariableTypeTable")
@@ -123,6 +123,14 @@ abstract class ProguardTask @Inject constructor(
         appendProguardArgs("-keep", "class kotlin.Metadata")
         return proguardArgs
     }
+
+    private fun mapFile(): File = getProguardOutputDir().resolve("proguard.mapping.txt")
+
+    private fun dumpFile(): File = getProguardOutputDir().resolve("proguard.dump.txt")
+
+    private fun outputConfigFile(): File = getProguardOutputDir().resolve("proguard.cfg")
+
+    private fun seedsFile(): File = getProguardOutputDir().resolve("seeds.txt")
 
     private fun addLibraryArgs() {
         libraryJars(getRuntimeConfiguration())
