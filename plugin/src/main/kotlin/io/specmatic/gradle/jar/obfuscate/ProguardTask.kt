@@ -25,7 +25,7 @@ abstract class ProguardTask @Inject constructor(
     val proguardVersion = "7.7.0"
 
     private var javaLauncher: Property<JavaLauncher> =
-        objectFactory.property<JavaLauncher?>(JavaLauncher::class.java).convention(javaToolchainService.launcherFor({}))
+        objectFactory.property(JavaLauncher::class.java).convention(javaToolchainService.launcherFor {})
 
     @get:Input
     val proguardArgs = mutableListOf<String>()
