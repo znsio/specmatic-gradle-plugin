@@ -5,6 +5,7 @@ import io.specmatic.gradle.exec.shellEscapedArgs
 import io.specmatic.gradle.license.pluginInfo
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
@@ -98,7 +99,9 @@ abstract class ProguardTask @Inject constructor(
     fun getProguardOutputDir(): File = File("${project.layout.buildDirectory.get().asFile}/proguard-${name}")
 
     private fun createArgs(): MutableList<String> {
+        addJVMLibraryJars()
         addLibraryArgs()
+        addMappingFiles()
 
         appendProguardArgs("-injars", inputJar!!.absolutePath)
         appendProguardArgs("-outjars", outputJar!!.absolutePath)
@@ -109,7 +112,7 @@ abstract class ProguardTask @Inject constructor(
         appendProguardArgs("-printconfiguration", "${outputConfigFile()}")
         appendProguardArgs("-dump", "${dumpFile()}")
         appendProguardArgs("-printmapping", "${mapFile()}")
-        
+
         appendProguardArgs("-whyareyoukeeping", "class io.specmatic.** { *; }")
         appendProguardArgs("-keepattributes", "!LocalVariableTable, !LocalVariableTypeTable")
 
@@ -122,13 +125,28 @@ abstract class ProguardTask @Inject constructor(
         return proguardArgs
     }
 
-    private fun mapFile(): File = getProguardOutputDir().resolve("proguard.mapping.txt")
     // see https://www.guardsquare.com/manual/configuration/examples#incremental
     private fun proguardArgsToSupportIncrementalObfuscationOfDownstreamDependencies() {
         appendProguardArgs("-useuniqueclassmembernames")
         appendProguardArgs("-dontoptimize")
         appendProguardArgs("-dontshrink")
     }
+
+    private fun addMappingFiles() {
+        val dependentProjects = project.configurations.flatMap { config ->
+            config.dependencies.filterIsInstance<ProjectDependency>()
+        }.map { project.rootProject.project(it.path) }
+
+        val dependentObfuscationMappingFiles = dependentProjects.map { dependentProject ->
+            dependentProject.tasks.named("obfuscateJarInternal", ProguardTask::class.java).get().mapFile()
+        }
+
+        dependentObfuscationMappingFiles.forEach {
+            appendProguardArgs("-applymapping", it.path)
+        }
+    }
+
+    internal fun mapFile(): File = getProguardOutputDir().resolve("proguard.mapping.txt")
 
     private fun dumpFile(): File = getProguardOutputDir().resolve("proguard.dump.txt")
 
@@ -137,13 +155,15 @@ abstract class ProguardTask @Inject constructor(
     private fun seedsFile(): File = getProguardOutputDir().resolve("seeds.txt")
 
     private fun addLibraryArgs() {
-        libraryJars(getRuntimeConfiguration())
+        val configuration = getRuntimeConfiguration()
+        libraryJars(configuration.files.map { it.path })
+    }
+
+    private fun addJVMLibraryJars() {
         libraryJars(getJVMLibraryFiles().map { "${it.absolutePath}(!**.jar;!module-info.class)" })
     }
 
-    fun appendProguardArgs(vararg toAdd: String?): Boolean = proguardArgs.addAll(toAdd.filterNotNull())
-
-    private fun libraryJars(configuration: Configuration) = libraryJars(configuration.files.map { it.absolutePath })
+    internal fun appendProguardArgs(vararg toAdd: String?): Boolean = proguardArgs.addAll(toAdd.filterNotNull())
 
     private fun libraryJars(libJar: Collection<String?>) = libJar.filterNotNull().forEach {
         appendProguardArgs("-libraryjars", it)
