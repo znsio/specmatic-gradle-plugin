@@ -9,6 +9,7 @@ import io.specmatic.gradle.features.ApplicationFeature
 import io.specmatic.gradle.jar.massage.jar
 import io.specmatic.gradle.jar.massage.shadow
 import io.specmatic.gradle.license.pluginInfo
+import io.specmatic.gradle.projectDependencies
 import io.specmatic.gradle.specmaticExtension
 import org.gradle.api.Action
 import org.gradle.api.Project
@@ -49,6 +50,20 @@ internal fun Project.createUnobfuscatedShadowJar(
     return shadowJarTask
 }
 
+private fun Project.excludeProjectDependencies(shadowJarTask: TaskProvider<ShadowJar>) {
+    project.afterEvaluate {
+        val dependentProjectPaths = projectDependencies()
+
+        shadowJarTask.configure {
+            dependentProjectPaths.forEach {
+                val spec = dependencyFilter.get().project(it.path)
+                dependencyFilter.get().exclude(spec)
+            }
+        }
+    }
+}
+
+
 internal fun Project.createObfuscatedShadowJar(
     obfuscateJarTask: TaskProvider<Jar>,
     shadowActions: MutableList<Action<ShadowJar>>,
@@ -73,12 +88,33 @@ internal fun Project.createObfuscatedShadowJar(
         applyProjectSpecifiedConfigurations(this, shadowActions)
     }
 
+    excludeProjectDependencies(shadowJarTask)
+    dependOnUpstreamObfuscationTasks(shadowJarTask)
+
     project.tasks.named("assemble") { dependsOn(shadowJarTask) }
 
     return shadowJarTask
 
 }
 
+private fun Project.dependOnUpstreamObfuscationTasks(shadowJarTask: TaskProvider<ShadowJar>) {
+    afterEvaluate {
+        val dependentProjects = project.projectDependencies().map { rootProject.project(it.path) }
+
+        val dependentObfuscationTasks = dependentProjects.map { dependentProject ->
+            dependentProject.tasks.named(OBFUSCATE_JAR_TASK, Jar::class.java)
+        }
+
+        dependentObfuscationTasks.forEach { eachUpstreamObfuscationTask ->
+            shadowJarTask.configure {
+                dependsOn(eachUpstreamObfuscationTask)
+                from(project.provider {
+                    project.zipTree(eachUpstreamObfuscationTask.get().archiveFile)
+                })
+            }
+        }
+    }
+}
 
 private fun Project.applyProjectSpecifiedConfigurations(
     shadowJarTask: ShadowJar, shadowActions: MutableList<Action<ShadowJar>>
@@ -127,11 +163,7 @@ internal fun Project.applyShadowConfigs() {
             if (project.specmaticExtension().projectConfigurations[project] !is ApplicationFeature) {
                 excludePackages.addAll(
                     listOf(
-                        "java",
-                        "javax",
-                        "kotlin",
-                        "org/jetbrains",
-                        "org/intellij/lang/annotations"
+                        "java", "javax", "kotlin", "org/jetbrains", "org/intellij/lang/annotations"
                     )
                 )
             }
@@ -175,8 +207,7 @@ private fun ShadowJar.maybeRelocateIfConfigured(project: Project, shadowPrefix: 
 }
 
 private fun extractPackagesInJars(
-    runtimeClasspathFiles: Set<File>,
-    excludePackages: List<String>
+    runtimeClasspathFiles: Set<File>, excludePackages: List<String>
 ): MutableSet<String> {
     val packagesToRelocate = mutableSetOf<String>()
     runtimeClasspathFiles.forEach { eachFile ->

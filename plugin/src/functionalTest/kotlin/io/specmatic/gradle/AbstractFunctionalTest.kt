@@ -193,10 +193,10 @@ open class AbstractFunctionalTest {
                 .filter { it.startsWith("Hello from ${packageComponents[0]}") && !it.contains(".internal.") }
             assertThat(expectedLines)
                 .containsExactlyInAnyOrder(
-                    "Hello from ${packageComponents[0]}.a.a.e#a",
-                    "Hello from ${packageComponents[0]}.a.a.d#a",
-                    "Hello from ${packageComponents[0]}.a.a.c#a",
-                    "Hello from ${packageComponents[0]}.a.a.b#a",
+                    "Hello from ${packageComponents[0]}.a.a.e#e",
+                    "Hello from ${packageComponents[0]}.a.a.d#d",
+                    "Hello from ${packageComponents[0]}.a.a.c#c",
+                    "Hello from ${packageComponents[0]}.a.a.b#b",
                     "Hello from ${packageComponents[0]}.a.a.a#a"
                 )
 
