@@ -22,6 +22,7 @@ import org.barfuin.gradle.taskinfo.GradleTaskInfoPlugin
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.language.base.plugins.LifecycleBasePlugin
 
 @Suppress("unused")
@@ -77,4 +78,8 @@ fun Project.specmaticExtension(): SpecmaticGradleExtension {
         currentProject = currentProject.parent
     }
     throw GradleException("SpecmaticGradleExtension not found in project ${this}, or any of its parents")
+}
+
+fun Project.projectDependencies(): List<ProjectDependency> = project.configurations.flatMap { config ->
+    config.dependencies.filterIsInstance<ProjectDependency>()
 }

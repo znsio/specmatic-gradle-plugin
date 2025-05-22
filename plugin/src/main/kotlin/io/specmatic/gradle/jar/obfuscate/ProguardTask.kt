@@ -3,9 +3,9 @@ package io.specmatic.gradle.jar.obfuscate
 import io.specmatic.gradle.exec.shellEscape
 import io.specmatic.gradle.exec.shellEscapedArgs
 import io.specmatic.gradle.license.pluginInfo
+import io.specmatic.gradle.projectDependencies
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
@@ -133,9 +133,7 @@ abstract class ProguardTask @Inject constructor(
     }
 
     private fun addMappingFiles() {
-        val dependentProjects = project.configurations.flatMap { config ->
-            config.dependencies.filterIsInstance<ProjectDependency>()
-        }.map { project.rootProject.project(it.path) }
+        val dependentProjects = project.projectDependencies().map { project.rootProject.project(it.path) }
 
         val dependentObfuscationMappingFiles = dependentProjects.map { dependentProject ->
             dependentProject.tasks.named("obfuscateJarInternal", ProguardTask::class.java).get().mapFile()

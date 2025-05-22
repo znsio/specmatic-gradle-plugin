@@ -3,8 +3,8 @@ package io.specmatic.gradle.jar.publishing
 import io.specmatic.gradle.jar.massage.jar
 import io.specmatic.gradle.jar.obfuscate.ProguardTask
 import io.specmatic.gradle.license.pluginInfo
+import io.specmatic.gradle.projectDependencies
 import org.gradle.api.Project
-import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.tasks.Jar
 
@@ -46,9 +46,7 @@ internal fun Project.createObfuscatedOriginalJar(proguardExtraArgs: MutableList<
 
 private fun Project.dependOnUpstreamObfuscationTasks(proguardTask: TaskProvider<ProguardTask?>) {
     afterEvaluate {
-        val dependentProjects = project.configurations.flatMap { config ->
-            config.dependencies.filterIsInstance<ProjectDependency>()
-        }.map { rootProject.project(it.path) }
+        val dependentProjects = project.projectDependencies().map { rootProject.project(it.path) }
 
         val dependentObfuscationTasks = dependentProjects.map { dependentProject ->
             dependentProject.tasks.named("obfuscateJarInternal", ProguardTask::class.java)
