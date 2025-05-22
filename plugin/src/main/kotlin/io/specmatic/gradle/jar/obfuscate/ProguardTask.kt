@@ -103,12 +103,14 @@ abstract class ProguardTask @Inject constructor(
         appendProguardArgs("-injars", inputJar!!.absolutePath)
         appendProguardArgs("-outjars", outputJar!!.absolutePath)
 
+        proguardArgsToSupportIncrementalObfuscationOfDownstreamDependencies()
+
         appendProguardArgs("-printseeds", "${seedsFile()}")
         appendProguardArgs("-printconfiguration", "${outputConfigFile()}")
         appendProguardArgs("-dump", "${dumpFile()}")
         appendProguardArgs("-printmapping", "${mapFile()}")
+        
         appendProguardArgs("-whyareyoukeeping", "class io.specmatic.** { *; }")
-        appendProguardArgs("-dontoptimize")
         appendProguardArgs("-keepattributes", "!LocalVariableTable, !LocalVariableTypeTable")
 
         // Keep all public members in the internal package
@@ -121,6 +123,12 @@ abstract class ProguardTask @Inject constructor(
     }
 
     private fun mapFile(): File = getProguardOutputDir().resolve("proguard.mapping.txt")
+    // see https://www.guardsquare.com/manual/configuration/examples#incremental
+    private fun proguardArgsToSupportIncrementalObfuscationOfDownstreamDependencies() {
+        appendProguardArgs("-useuniqueclassmembernames")
+        appendProguardArgs("-dontoptimize")
+        appendProguardArgs("-dontshrink")
+    }
 
     private fun dumpFile(): File = getProguardOutputDir().resolve("proguard.dump.txt")
 
