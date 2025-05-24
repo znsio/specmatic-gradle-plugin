@@ -51,7 +51,7 @@ internal fun Project.registerDockerTasks(dockerBuildConfig: DockerBuildConfig) {
 
     createDockerVulnScanTask(dockerTags.first())
 
-    tasks.register("dockerBuildxPublish", Exec::class.java) {
+    val dockerBuildxPublishInternalTask = tasks.register("dockerBuildxPublishInternal", Exec::class.java) {
         dependsOn(createDockerfilesTask, dockerBuildConfig.mainJarTaskName!!)
         group = "docker"
         description = "Publishes the multivariant docker image"
@@ -61,6 +61,34 @@ internal fun Project.registerDockerTasks(dockerBuildConfig: DockerBuildConfig) {
         )
 
         workingDir = project.layout.buildDirectory.get().asFile
+    }
+
+    val dockerReadmePublishTask = tasks.register("dockerReadmePublish", UpdateDockerHubOverviewTask::class.java) {
+        dependsOn(dockerBuildxPublishInternalTask)
+        group = "docker"
+        val readmeFile = project.file("readme.docker.md")
+        onlyIf { readmeFile.exists() }
+
+        description = "Publishes the README to docker hub"
+        dockerHubUsername.set(provider {
+            System.getenv("SPECMATIC_DOCKER_HUB_USERNAME")
+                ?: error("SPECMATIC_DOCKER_HUB_USERNAME environment variable is not set")
+        })
+
+        dockerHubApiToken.set(provider {
+            System.getenv("SPECMATIC_DOCKER_HUB_TOKEN")
+                ?: error("SPECMATIC_DOCKER_HUB_TOKEN environment variable is not set")
+        })
+
+        repositoryName.set("$dockerOrganization/$imageName")
+
+        readmeContent.set(provider { readmeFile.readText() })
+    }
+
+    tasks.register("dockerBuildxPublish") {
+        dependsOn(dockerBuildxPublishInternalTask, dockerReadmePublishTask)
+        group = "docker"
+        description = "Publish image and README to docker hub"
     }
 }
 
@@ -98,8 +126,7 @@ private fun Task.createDockerfile(dockerBuildConfig: DockerBuildConfig, targetJa
             .relativeTo(project.layout.buildDirectory.get().asFile).path
 
         val dockerFileContent =
-            templateContent.replace("%TARGET_JAR_PATH%", targetJarPath)
-                .replace("%SOURCE_JAR_PATH%", sourceJarPath)
+            templateContent.replace("%TARGET_JAR_PATH%", targetJarPath).replace("%SOURCE_JAR_PATH%", sourceJarPath)
                 .replace("%IMAGE_NAME%", project.dockerImage(dockerBuildConfig))
 
         dockerFile.writeText(dockerFileContent)
