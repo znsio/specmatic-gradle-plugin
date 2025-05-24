@@ -37,12 +37,11 @@ abstract class UpdateDockerHubOverviewTask : DefaultTask() {
     @TaskAction
     fun updateOverview() {
         val jwtToken = fetchJwtToken(dockerHubUsername.get(), dockerHubApiToken.get())
-        updateDockerHubOverview(
-            jwtToken
-        )
+        updateDockerHubOverview(jwtToken)
     }
 
     private fun fetchJwtToken(username: String, apiToken: String): String {
+        logger.warn("Fetching JWT token for DockerHub user: $username")
         val url = "https://hub.docker.com/v2/users/login/"
         val payload = mapper().writeValueAsString(mapOf("username" to username, "password" to apiToken))
         val requestBody = payload.toRequestBody("application/json".toMediaType())
@@ -60,6 +59,7 @@ abstract class UpdateDockerHubOverviewTask : DefaultTask() {
     }
 
     private fun updateDockerHubOverview(jwtToken: String) {
+        logger.warn("Updating DockerHub overview for repository: ${repositoryName.get()}")
         val url = "https://hub.docker.com/v2/repositories/${repositoryName.get()}/"
 
         val payload = mapper().writeValueAsString(
