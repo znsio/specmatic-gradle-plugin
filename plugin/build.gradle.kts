@@ -25,6 +25,7 @@ dependencies {
     implementation("org.gradlex.jvm-dependency-conflict-resolution:org.gradlex.jvm-dependency-conflict-resolution.gradle.plugin:2.3")
     implementation("org.gradlex.java-ecosystem-capabilities:org.gradlex.java-ecosystem-capabilities.gradle.plugin:1.5.3")
     implementation("io.fuchs.gradle.classpath-collision-detector:io.fuchs.gradle.classpath-collision-detector.gradle.plugin:1.0.0")
+    implementation("com.diffplug.spotless:com.diffplug.spotless.gradle.plugin:7.0.3")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.zeroturnaround:zt-exec:1.12")
 
@@ -42,10 +43,11 @@ gradlePlugin {
             id = "io.specmatic.gradle"
             implementationClass = "io.specmatic.gradle.SpecmaticGradlePlugin"
             displayName = "Specmatic Gradle Plugin"
-            description = buildString {
-                append("This plugin is used to run Specmatic tests as part of the build process.")
-                append("It ensures some standardization for build processes across specmatic repositories.")
-            }
+            description =
+                buildString {
+                    append("This plugin is used to run Specmatic tests as part of the build process.")
+                    append("It ensures some standardization for build processes across specmatic repositories.")
+                }
             tags = listOf("specmatic", "internal", "standardization")
         }
     }
@@ -54,10 +56,11 @@ gradlePlugin {
     vcsUrl = "https://github.com/specmatic/specmatic-gradle-plugin"
 }
 
-val functionalTestSourceSet = sourceSets.create("functionalTest") {
-    compileClasspath += sourceSets["main"].output
-    runtimeClasspath += sourceSets["main"].output
-}
+val functionalTestSourceSet =
+    sourceSets.create("functionalTest") {
+        compileClasspath += sourceSets["main"].output
+        runtimeClasspath += sourceSets["main"].output
+    }
 
 configurations["functionalTestImplementation"].extendsFrom(configurations["testImplementation"])
 configurations["functionalTestRuntimeOnly"].extendsFrom(configurations["testRuntimeOnly"])
@@ -81,7 +84,11 @@ tasks.withType<Test> {
     useJUnitPlatform()
     maxParallelForks = 2
 
-    val tempDir = project.layout.buildDirectory.dir("reports/tmpdir/${this.name}").get().asFile
+    val tempDir =
+        project.layout.buildDirectory
+            .dir("reports/tmpdir/${this.name}")
+            .get()
+            .asFile
     environment("TMPDIR", tempDir)
     systemProperty("java.io.tmpdir", tempDir)
 
