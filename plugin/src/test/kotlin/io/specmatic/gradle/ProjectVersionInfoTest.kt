@@ -4,7 +4,6 @@ import io.specmatic.gradle.versioninfo.ProjectVersionInfo
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import kotlin.test.assertTrue
 
 class ProjectVersionInfoTest {
 
@@ -175,7 +174,10 @@ class ProjectVersionInfoTest {
                 timestamp = "2021-09-01T12:00:00Z"
             )
 
-            assertThat(projectVersionInfo.toKotlinClass().contains("""fun describe() = "v1.0.0 built at 2021-09-01T12:00:00Z""""))
+            assertThat(
+                projectVersionInfo.toKotlinClass()
+                    .contains("""fun describe() = "v1.0.0 built at 2021-09-01T12:00:00Z"""")
+            )
         }
 
         @Test

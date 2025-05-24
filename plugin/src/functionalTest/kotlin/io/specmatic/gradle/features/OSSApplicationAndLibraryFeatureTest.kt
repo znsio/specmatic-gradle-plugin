@@ -63,7 +63,8 @@ class OSSApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
             )
 
             assertThat(
-                listJarContents("io.specmatic.example:example-project-all:1.2.3"))
+                listJarContents("io.specmatic.example:example-project-all:1.2.3")
+            )
                 .contains("io/specmatic/example/VersionInfo.class")
                 .contains("io/specmatic/example/version.properties")
                 .contains("kotlin/Metadata.class") // kotlin is also packaged
@@ -149,7 +150,8 @@ class OSSApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
             assertThat(getDependencies("io.specmatic.example:example-project-all:1.2.3")).isEmpty()
 
             assertThat(
-                listJarContents("io.specmatic.example:example-project-all:1.2.3"))
+                listJarContents("io.specmatic.example:example-project-all:1.2.3")
+            )
                 .contains("io/specmatic/example/VersionInfo.class")
                 .contains("io/specmatic/example/version.properties")
                 .contains("example/kotlin/Metadata.class") // kotlin is also packaged
@@ -253,7 +255,8 @@ class OSSApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
             )
 
             assertThat(
-                listJarContents("io.specmatic.example:executable-all:1.2.3"))
+                listJarContents("io.specmatic.example:executable-all:1.2.3")
+            )
                 .contains("io/specmatic/example/core/VersionInfo.class") // from the core dependency
                 .contains("io/specmatic/example/core/version.properties") // from the core dependency
                 .contains("io/specmatic/example/executable/VersionInfo.class")
@@ -372,7 +375,8 @@ class OSSApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
             )
 
             assertThat(
-                listJarContents("io.specmatic.example:executable-all:1.2.3"))
+                listJarContents("io.specmatic.example:executable-all:1.2.3")
+            )
                 .contains("example/io/specmatic/example/core/VersionInfo.class") // from the core dependency
                 .contains("example/io/specmatic/example/core/version.properties") // from the core dependency
                 .contains("io/specmatic/example/executable/VersionInfo.class")

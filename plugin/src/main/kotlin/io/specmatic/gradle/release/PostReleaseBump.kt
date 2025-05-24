@@ -11,6 +11,7 @@ import java.io.File
 abstract class PostReleaseBump : DefaultTask() {
     @get:Internal
     abstract val rootDir: Property<File>
+
     @get:Internal
     abstract val postReleaseVersion: Property<String>
 

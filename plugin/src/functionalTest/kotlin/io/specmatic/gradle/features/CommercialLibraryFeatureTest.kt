@@ -86,7 +86,8 @@ class CommercialLibraryFeatureTest : AbstractFunctionalTest() {
 
             artifacts.filter { !it.contains("min") && !it.contains("dont-use-this") }.forEach {
                 assertThat(
-                    listJarContents(it))
+                    listJarContents(it)
+                )
                     .hasSizeLessThan(100) // vague, but should be less than 100, with kotlin deps, this will be in the hundreds
                     .contains("io/specmatic/example/VersionInfo.class")
                     .contains("io/specmatic/example/version.properties")
@@ -182,7 +183,8 @@ class CommercialLibraryFeatureTest : AbstractFunctionalTest() {
 
             artifacts.filter { !it.contains("min") && !it.contains("dont-use-this") }.forEach {
                 assertThat(
-                    listJarContents(it))
+                    listJarContents(it)
+                )
                     .hasSizeLessThan(100) // vague, but should be less than 100, with kotlin deps, this will be in the hundreds
                     .contains("io/specmatic/example/VersionInfo.class")
                     .contains("io/specmatic/example/version.properties")
@@ -331,7 +333,8 @@ class CommercialLibraryFeatureTest : AbstractFunctionalTest() {
                 .isGreaterThan(getJar("io.specmatic.example:core:1.2.3").length())
 
             assertThat(
-                listJarContents("io.specmatic.example:executable-all-debug:1.2.3"))
+                listJarContents("io.specmatic.example:executable-all-debug:1.2.3")
+            )
                 .hasSizeLessThan(110) // vague, but should be less than 100, with kotlin deps, this will be in the hundreds
                 .contains("io/specmatic/example/core/VersionInfo.class") // from the core dependency
                 .contains("io/specmatic/example/core/version.properties") // from the core dependency
@@ -343,7 +346,8 @@ class CommercialLibraryFeatureTest : AbstractFunctionalTest() {
                 .contains("org/slf4j/Logger.class") // slf4j dependency is also packaged
 
             assertThat(
-                listJarContents("io.specmatic.example:executable:1.2.3"))
+                listJarContents("io.specmatic.example:executable:1.2.3")
+            )
                 .hasSizeLessThan(110) // vague, but should be less than 100, with kotlin deps, this will be in the hundreds
                 .contains("io/specmatic/example/core/VersionInfo.class") // from the core dependency
                 .contains("io/specmatic/example/core/version.properties") // from the core dependency
@@ -467,7 +471,8 @@ class CommercialLibraryFeatureTest : AbstractFunctionalTest() {
             assertThat(getDependencies("io.specmatic.example:core:1.2.3")).isEmpty()
 
             assertThat(
-                listJarContents("io.specmatic.example:executable:1.2.3"))
+                listJarContents("io.specmatic.example:executable:1.2.3")
+            )
                 .hasSizeGreaterThan(30) // vague assertion, but if we add dependencies, we should have a large number of files
                 .contains("example/io/specmatic/example/core/VersionInfo.class") // from the core dependency
                 .contains("example/io/specmatic/example/core/version.properties") // from the core dependency

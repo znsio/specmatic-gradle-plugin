@@ -16,7 +16,7 @@ import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 
-@DisableCachingByDefault(because="Makes network calls")
+@DisableCachingByDefault(because = "Makes network calls")
 abstract class CreateGithubReleaseTask() : DefaultTask() {
 
     @get:Internal

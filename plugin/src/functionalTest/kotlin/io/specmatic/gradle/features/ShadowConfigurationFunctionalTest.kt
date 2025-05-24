@@ -102,7 +102,8 @@ class ShadowConfigurationFunctionalTest : AbstractFunctionalTest() {
         Assertions.assertThat(getDependencies("io.specmatic.example:core:1.2.3")).isEmpty()
 
         Assertions.assertThat(
-            listJarContents("io.specmatic.example:executable:1.2.3"))
+            listJarContents("io.specmatic.example:executable:1.2.3")
+        )
             .contains("io/specmatic/example/core/VersionInfo.class") // from the core dependency
             .contains("io/specmatic/example/core/version.properties") // from the core dependency
             .contains("io/specmatic/example/executable/VersionInfo.class") // from the executable dependency

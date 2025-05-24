@@ -51,7 +51,8 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
                 )
 
             assertThat(
-                listJarContents("io.specmatic.example:example-project:1.2.3"))
+                listJarContents("io.specmatic.example:example-project:1.2.3")
+            )
                 .contains("io/specmatic/example/VersionInfo.class")
                 .contains("io/specmatic/example/version.properties")
                 .doesNotContain("kotlin/Metadata.class") // kotlin is also packaged
@@ -180,7 +181,8 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
                 )
 
             assertThat(
-                listJarContents("io.specmatic.example:executable:1.2.3"))
+                listJarContents("io.specmatic.example:executable:1.2.3")
+            )
                 .contains("io/specmatic/example/executable/VersionInfo.class")
                 .contains("io/specmatic/example/executable/version.properties")
                 .doesNotContain("io/specmatic/example/core/VersionInfo.class") // from the core dependency
