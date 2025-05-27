@@ -51,7 +51,7 @@ gradlePlugin {
     }
 
     website = "https://specmatic.io"
-    vcsUrl = "https://github.com/znsio/specmatic-gradle-plugin"
+    vcsUrl = "https://github.com/specmatic/specmatic-gradle-plugin"
 }
 
 val functionalTestSourceSet = sourceSets.create("functionalTest") {
