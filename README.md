@@ -43,7 +43,7 @@ projects.
 ## Requirements for using this plugin
 
 1. The following environment variables containing secrets are needed based on the
-   requirements. [This script](https://github.com/znsio/specmatic-github-workflows/blob/main/bin/upload-secrets) will
+   requirements. [This script](https://github.com/specmatic/specmatic-github-workflows/blob/main/bin/upload-secrets) will
    help you upload the relevant secrets by scanning your github workflows.
 
    | Variable(s)                                                                                                                                 | Purpose                                                                                                        | 
@@ -85,7 +85,7 @@ projects.
            mavenLocal()
            maven {
                name = "specmaticPrivate"
-               url = uri("https://maven.pkg.github.com/znsio/specmatic-private-maven-repo")
+               url = uri("https://maven.pkg.github.com/specmatic/specmatic-private-maven-repo")
                credentials {
                    username = listOf(
                        settings.extra.properties["github.actor"],

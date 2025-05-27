@@ -20,7 +20,7 @@ jobs:
     steps:
 
       - name: 'Build/test'
-        uses: znsio/specmatic-github-workflows/action-build-gradle@main
+        uses: specmatic/specmatic-github-workflows/action-build-gradle@main
 
       - name: 'Release'
         run: |

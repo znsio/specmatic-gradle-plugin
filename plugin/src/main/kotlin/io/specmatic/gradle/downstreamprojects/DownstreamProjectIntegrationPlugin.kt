@@ -163,7 +163,7 @@ private fun Project.cloneOrUpdateRepoTask(
         val downstreamProjectDir = getDownstreamProjectDir(eachRepo)
 
         if (!downstreamProjectDir.exists()) {
-            commandLine("git", "clone", "https://github.com/znsio/$eachRepo.git", downstreamProjectDir)
+            commandLine("git", "clone", "https://github.com/specmatic/$eachRepo.git", downstreamProjectDir)
         } else {
             // pull the latest changes if the repo already exists
             commandLine("git", "pull", "--ff-only", "--no-rebase")
