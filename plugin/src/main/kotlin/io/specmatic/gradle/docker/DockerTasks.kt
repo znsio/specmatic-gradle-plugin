@@ -12,7 +12,7 @@ import org.gradle.api.tasks.Exec
 import java.text.SimpleDateFormat
 import java.util.*
 
-private const val dockerOrganization = "znsio"
+private const val dockerOrganization = "specmatic"
 
 internal fun Project.registerDockerTasks(dockerBuildConfig: DockerBuildConfig) {
     val imageName = dockerImage(dockerBuildConfig)
