@@ -23,7 +23,7 @@ specmatic {
         "plugin:publishToMavenCentral",
         "plugin:publishAllPublicationsToSpecmaticPrivateRepository",
     )
-    publishTo("specmaticPrivate", "https://maven.pkg.github.com/znsio/specmatic-private-maven-repo")
+    publishTo("specmaticPrivate", "https://maven.pkg.github.com/specmatic/specmatic-private-maven-repo")
     withOSSLibrary(project(":plugin")) {
         // from com.gradle.publish.PublishPlugin#PUBLISH_TASK_NAME
         publishGradle {
@@ -45,8 +45,8 @@ specmatic {
                     }
                 }
                 scm {
-                    connection = "https://github.com/znsio/specmatic-gradle-plugin"
-                    url = "https://github.com/znsio/specmatic-gradle-plugin"
+                    connection = "https://github.com/specmatic/specmatic-gradle-plugin"
+                    url = "https://github.com/specmatic/specmatic-gradle-plugin"
                 }
             }
         }

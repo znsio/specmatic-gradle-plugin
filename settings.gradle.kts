@@ -18,7 +18,7 @@ pluginManagement {
 
         maven {
             name = "specmaticPrivate"
-            url = uri("https://maven.pkg.github.com/znsio/specmatic-private-maven-repo")
+            url = uri("https://maven.pkg.github.com/specmatic/specmatic-private-maven-repo")
             credentials {
                 username =
                     settings.extra.properties["github.actor"]?.toString()
