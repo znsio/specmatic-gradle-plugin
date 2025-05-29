@@ -125,7 +125,7 @@ private fun Task.createDockerfile(dockerBuildConfig: DockerBuildConfig, targetJa
         val templateContent = templateStream.bufferedReader().use { it.readText() }
 
         val sourceJarPath = project.mainJar(dockerBuildConfig.mainJarTaskName!!)
-            .relativeTo(project.layout.buildDirectory.get().asFile).path
+            .relativeTo(project.layout.buildDirectory.get().asFile).path.replace("\\", "/")
 
         val dockerFileContent =
             templateContent.replace("%TARGET_JAR_PATH%", targetJarPath).replace("%SOURCE_JAR_PATH%", sourceJarPath)
