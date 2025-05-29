@@ -212,8 +212,8 @@ class SpecmaticGradlePluginTest {
         @Test
         fun `should stamp jar files with version, group, name and git sha with repo is initialized`(@TempDir tempDir: File) {
             val git = Git.init().setDirectory(tempDir).call()
-            git.commit().setMessage("Initial commit").call()
-            val headCommit = git.commit().setMessage("Second commit").call()
+            git.commit().setMessage("Initial commit").setSign(false).call()
+            val headCommit = git.commit().setMessage("Second commit").setSign(false).call()
 
             val project = ProjectBuilder.builder().withProjectDir(tempDir).withName("test-project").build()
             setupSettingsMock(project)
