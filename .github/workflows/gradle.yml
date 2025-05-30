@@ -8,7 +8,10 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+    runs-on: ${{ matrix.os }}
     permissions:
       contents: write # This is required so that the dependency check can push dependency graph to the github repository
     steps:
@@ -16,7 +19,7 @@ jobs:
         uses: specmatic/specmatic-github-workflows/action-build-gradle@main
 
       - name: Publish Snapshot
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main') && matrix.os == 'ubuntu-latest'
         run: ./gradlew publishAllPublicationsToMavenCentralRepository publishAllPublicationsToSpecmaticPrivateRepository
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: "${{ secrets.SPECMATIC_MAVEN_CENTRAL_USERNAME }}"
