@@ -13,6 +13,7 @@ import io.specmatic.gradle.jar.publishing.applyShadowConfigs
 import io.specmatic.gradle.license.SpecmaticLicenseReportingPlugin
 import io.specmatic.gradle.plugin.VersionInfo
 import io.specmatic.gradle.release.SpecmaticReleasePlugin
+import io.specmatic.gradle.spotless.SpecmaticSpotlessPlugin
 import io.specmatic.gradle.tests.SpecmaticTestReportingPlugin
 import io.specmatic.gradle.versioninfo.VersionInfoPlugin
 import io.specmatic.gradle.versioninfo.versionInfo
@@ -49,6 +50,7 @@ class SpecmaticGradlePlugin : Plugin<Project> {
             plugins.apply(SpecmaticTestReportingPlugin::class.java)
         }
         target.plugins.apply(SpecmaticReleasePlugin::class.java)
+        target.plugins.apply(SpecmaticSpotlessPlugin::class.java)
 
         target.plugins.apply(GradleTaskInfoPlugin::class.java)
 
@@ -66,7 +68,6 @@ class SpecmaticGradlePlugin : Plugin<Project> {
             plugins.apply(ForceVersionConstraintsPlugin::class.java)
         }
     }
-
 }
 
 fun Project.specmaticExtension(): SpecmaticGradleExtension {
@@ -77,7 +78,7 @@ fun Project.specmaticExtension(): SpecmaticGradleExtension {
         }
         currentProject = currentProject.parent
     }
-    throw GradleException("SpecmaticGradleExtension not found in project ${this}, or any of its parents")
+    throw GradleException("SpecmaticGradleExtension not found in project $this, or any of its parents")
 }
 
 fun Project.projectDependencies(): List<ProjectDependency> = project.configurations.flatMap { config ->
