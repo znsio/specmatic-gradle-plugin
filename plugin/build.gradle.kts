@@ -28,6 +28,7 @@ dependencies {
     implementation("com.diffplug.spotless:com.diffplug.spotless.gradle.plugin:7.0.3")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.zeroturnaround:zt-exec:1.12")
+    implementation("io.gitlab.arturbosch.detekt:io.gitlab.arturbosch.detekt.gradle.plugin:1.23.8")
 
     testImplementation("org.apache.maven:maven-model:3.9.9")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")

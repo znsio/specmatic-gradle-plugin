@@ -4,6 +4,7 @@ import io.specmatic.gradle.artifacts.EnsureJarsAreStampedPlugin
 import io.specmatic.gradle.artifacts.EnsureReproducibleArtifactsPlugin
 import io.specmatic.gradle.collision.CollisionDetectorPluginWrapper
 import io.specmatic.gradle.compiler.ConfigureCompilerOptionsPlugin
+import io.specmatic.gradle.detekt.SpecmaticDetektPlugin
 import io.specmatic.gradle.downstreamprojects.DownstreamProjectIntegrationPlugin
 import io.specmatic.gradle.exec.ConfigureExecTaskPlugin
 import io.specmatic.gradle.extensions.SpecmaticGradleExtension
@@ -48,6 +49,7 @@ class SpecmaticGradlePlugin : Plugin<Project> {
         target.plugins.apply(SpecmaticLicenseReportingPlugin::class.java)
         target.allprojects {
             plugins.apply(SpecmaticTestReportingPlugin::class.java)
+            plugins.apply(SpecmaticDetektPlugin::class.java)
         }
         target.plugins.apply(SpecmaticReleasePlugin::class.java)
         target.plugins.apply(SpecmaticSpotlessPlugin::class.java)
