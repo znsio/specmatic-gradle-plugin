@@ -29,6 +29,9 @@ class OSSApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
                     }
                     
                     specmatic {
+                        publishTo("obfuscatedOnly", file("build/obfuscated-only").toURI(), io.specmatic.gradle.extensions.RepoType.PUBLISH_OBFUSCATED_ONLY)
+                        publishTo("allArtifacts", file("build/all-artifacts").toURI(), io.specmatic.gradle.extensions.RepoType.PUBLISH_ALL)
+                        
                         withOSSApplicationLibrary(rootProject) {
                             mainClass = "io.specmatic.example.Main"
                             dockerBuild()
@@ -93,6 +96,30 @@ class OSSApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
                 .contains("""exec java ${'$'}JAVA_OPTS -jar /usr/local/share/example-project.jar "${'$'}@"""")
         }
 
+        @Test
+        fun `it should publish only obfuscated jars to repos marked as PUBLISH_OBFUSCATED_ONLY`() {
+            runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository")
+
+            assertThat(
+                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates()
+            ).containsExactlyInAnyOrder(
+                "io.specmatic.example:example-project:1.2.3",
+                "io.specmatic.example:example-project-all:1.2.3"
+            )
+        }
+
+        @Test
+        fun `it should publish all jars to repos marked as PUBLISH_ALL`() {
+            runWithSuccess("publishAllPublicationsToAllArtifactsRepository")
+
+            assertThat(
+                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates()
+            ).containsExactlyInAnyOrder(
+                "io.specmatic.example:example-project:1.2.3",
+                "io.specmatic.example:example-project-all:1.2.3"
+            )
+        }
+
     }
 
     @Nested
@@ -117,6 +144,9 @@ class OSSApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
                     }
                     
                     specmatic {
+                        publishTo("obfuscatedOnly", file("build/obfuscated-only").toURI(), io.specmatic.gradle.extensions.RepoType.PUBLISH_OBFUSCATED_ONLY)
+                        publishTo("allArtifacts", file("build/all-artifacts").toURI(), io.specmatic.gradle.extensions.RepoType.PUBLISH_ALL)
+                        
                         withOSSApplicationLibrary(rootProject) {
                             mainClass = "io.specmatic.example.Main"
                             shadow("example")
@@ -163,6 +193,30 @@ class OSSApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
                 "io.specmatic.example.Main"
             )
         }
+
+        @Test
+        fun `it should publish only obfuscated jars to repos marked as PUBLISH_OBFUSCATED_ONLY`() {
+            runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository")
+
+            assertThat(
+                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates()
+            ).containsExactlyInAnyOrder(
+                "io.specmatic.example:example-project:1.2.3",
+                "io.specmatic.example:example-project-all:1.2.3"
+            )
+        }
+
+        @Test
+        fun `it should publish all jars to repos marked as PUBLISH_ALL`() {
+            runWithSuccess("publishAllPublicationsToAllArtifactsRepository")
+
+            assertThat(
+                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates()
+            ).containsExactlyInAnyOrder(
+                "io.specmatic.example:example-project:1.2.3",
+                "io.specmatic.example:example-project-all:1.2.3"
+            )
+        }
     }
 
     @Nested
@@ -201,6 +255,9 @@ class OSSApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
                     }
                     
                     specmatic {
+                        publishTo("obfuscatedOnly", file("build/obfuscated-only").toURI(), io.specmatic.gradle.extensions.RepoType.PUBLISH_OBFUSCATED_ONLY)
+                        publishTo("allArtifacts", file("build/all-artifacts").toURI(), io.specmatic.gradle.extensions.RepoType.PUBLISH_ALL)
+                        
                         withOSSLibrary(project(":core")) {
                         }
                         
@@ -286,6 +343,32 @@ class OSSApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
                 .contains("""#!/usr/bin/env bash""")
                 .contains("""exec java ${'$'}JAVA_OPTS -jar /usr/local/share/specmatic-foo.jar "${'$'}@"""")
         }
+
+        @Test
+        fun `it should publish only obfuscated jars to repos marked as PUBLISH_OBFUSCATED_ONLY`() {
+            runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository")
+
+            assertThat(
+                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates()
+            ).containsExactlyInAnyOrder(
+                "io.specmatic.example:executable:1.2.3",
+                "io.specmatic.example:executable-all:1.2.3",
+                "io.specmatic.example:core:1.2.3",
+            )
+        }
+
+        @Test
+        fun `it should publish all jars to repos marked as PUBLISH_ALL`() {
+            runWithSuccess("publishAllPublicationsToAllArtifactsRepository")
+
+            assertThat(
+                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates()
+            ).containsExactlyInAnyOrder(
+                "io.specmatic.example:executable:1.2.3",
+                "io.specmatic.example:executable-all:1.2.3",
+                "io.specmatic.example:core:1.2.3",
+            )
+        }
     }
 
     @Nested
@@ -324,6 +407,9 @@ class OSSApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
                     }
                     
                     specmatic {
+                        publishTo("obfuscatedOnly", file("build/obfuscated-only").toURI(), io.specmatic.gradle.extensions.RepoType.PUBLISH_OBFUSCATED_ONLY)
+                        publishTo("allArtifacts", file("build/all-artifacts").toURI(), io.specmatic.gradle.extensions.RepoType.PUBLISH_ALL)
+                        
                         withOSSLibrary(project(":core")) {
                         }
                         
@@ -388,6 +474,32 @@ class OSSApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
 
             assertThat(mainClass("io.specmatic.example:executable-all:1.2.3")).isEqualTo(
                 "io.specmatic.example.executable.Main"
+            )
+        }
+
+        @Test
+        fun `it should publish only obfuscated jars to repos marked as PUBLISH_OBFUSCATED_ONLY`() {
+            runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository")
+
+            assertThat(
+                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates()
+            ).containsExactlyInAnyOrder(
+                "io.specmatic.example:executable:1.2.3",
+                "io.specmatic.example:executable-all:1.2.3",
+                "io.specmatic.example:core:1.2.3"
+            )
+        }
+
+        @Test
+        fun `it should publish all jars to repos marked as PUBLISH_ALL`() {
+            runWithSuccess("publishAllPublicationsToAllArtifactsRepository")
+
+            assertThat(
+                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates()
+            ).containsExactlyInAnyOrder(
+                "io.specmatic.example:executable:1.2.3",
+                "io.specmatic.example:executable-all:1.2.3",
+                "io.specmatic.example:core:1.2.3"
             )
         }
     }

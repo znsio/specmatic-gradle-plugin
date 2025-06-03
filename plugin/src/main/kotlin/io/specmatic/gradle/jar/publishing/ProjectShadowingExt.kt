@@ -86,6 +86,7 @@ internal fun Project.createObfuscatedShadowJar(
 
         configureCommonShadowConfigs(jarTask, project, shadowPrefix, isApplication)
         applyProjectSpecifiedConfigurations(this, shadowActions)
+        this.extensions.extraProperties.set("isObfuscated", true)
     }
 
     excludeProjectDependencies(shadowJarTask)
