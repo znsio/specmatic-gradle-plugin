@@ -1,3 +1,5 @@
+import io.specmatic.gradle.extensions.RepoType
+
 plugins {
     // version specified in settings.gradle
     id("io.specmatic.gradle")
@@ -5,6 +7,10 @@ plugins {
 
 specmatic {
     publishToMavenCentral()
+    publishTo("specmaticPrivate", "https://repo.specmatic.io/private", RepoType.PUBLISH_ALL)
+    publishTo("specmaticSnapshots", "https://repo.specmatic.io/snapshots", RepoType.PUBLISH_OBFUSCATED_ONLY)
+    publishTo("specmaticReleases", "https://repo.specmatic.io/releases", RepoType.PUBLISH_OBFUSCATED_ONLY)
+
     downstreamDependentProjects = listOf(
         "specmatic",
         "specmatic-arazzo",
@@ -22,8 +28,10 @@ specmatic {
         "plugin:publishPlugins",
         "plugin:publishToMavenCentral",
         "plugin:publishAllPublicationsToSpecmaticPrivateRepository",
+        "plugin:publishAllPublicationsToSpecmaticSnapshotsRepository",
+        "plugin:publishAllPublicationsToSpecmaticReleasesRepository",
     )
-    publishTo("specmaticPrivate", "https://maven.pkg.github.com/specmatic/specmatic-private-maven-repo")
+
     withOSSLibrary(project(":plugin")) {
         // from com.gradle.publish.PublishPlugin#PUBLISH_TASK_NAME
         publishGradle {

@@ -27,10 +27,10 @@ abstract class CreateGithubReleaseTask() : DefaultTask() {
 
     @TaskAction
     fun createGithubRelease() {
-        val user = (System.getenv("ORG_GRADLE_PROJECT_specmaticPrivateUsername")
-            ?: throw GradleException("ORG_GRADLE_PROJECT_specmaticPrivateUsername environment variable not set"))
-        val password = (System.getenv("ORG_GRADLE_PROJECT_specmaticPrivatePassword")
-            ?: throw GradleException("ORG_GRADLE_PROJECT_specmaticPrivatePassword environment variable not set"))
+        val user = (System.getenv("SPECMATIC_GITHUB_USER")
+            ?: throw GradleException("SPECMATIC_GITHUB_USER environment variable not set"))
+        val password = (System.getenv("SPECMATIC_GITHUB_TOKEN")
+            ?: throw GradleException("SPECMATIC_GITHUB_TOKEN environment variable not set"))
 
         val githubApi = GitHubBuilder().withEndpoint(System.getenv("GITHUB_API_URL") ?: "https://api.github.com")
             .withPassword(user, password).build()

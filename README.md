@@ -56,8 +56,8 @@ projects.
    | `ORG_GRADLE_PROJECT_signingInMemoryKeyId`                                                                                                   | GPG key ID (last 8 chars of hex hex key without the leading `0x`)                                              |
    | `ORG_GRADLE_PROJECT_signingInMemoryKeyPassword`                                                                                             | Passphrase for the GPG key                                                                                     |
    | **Specmatic Private Repo**                                                                                                                  |                                                                                                                |
-   | `ORG_GRADLE_PROJECT_specmaticPrivateUsername`                                                                                               | Username for Specmatic private repository                                                                      |
-   | `ORG_GRADLE_PROJECT_specmaticPrivatePassword`                                                                                               | Password for Specmatic private repository                                                                      |
+   | `SPECMATIC_REPOSILITE_USERNAME`                                                                                                             | Username for Specmatic private repository                                                                      |
+   | `SPECMATIC_REPOSILITE_TOKEN`                                                                                                                | Password for Specmatic private repository                                                                      |
    | **Docker Hub**                                                                                                                              |                                                                                                                |
    | No variables are needed, but you are required to perform a docker login yourself. The plugin will simply execute a `docker push` equivalent |                                                                                                                |
 
@@ -83,24 +83,25 @@ projects.
            gradlePluginPortal()
            mavenCentral()
            mavenLocal()
-           maven {
-               name = "specmaticPrivate"
-               url = uri("https://maven.pkg.github.com/specmatic/specmatic-private-maven-repo")
-               credentials {
-                   username = listOf(
-                       settings.extra.properties["github.actor"],
-                       System.getenv("SPECMATIC_GITHUB_USER"),
-                       System.getenv("ORG_GRADLE_PROJECT_specmaticPrivateUsername")
-                   ).firstNotNullOfOrNull { it }.toString()
-   
-                   password = listOf(
-                       settings.extra.properties["github.token"],
-                       System.getenv("SPECMATIC_GITHUB_TOKEN"),
-                       System.getenv("ORG_GRADLE_PROJECT_specmaticPrivatePassword")
-                   ).firstNotNullOfOrNull { it }.toString()
+    
+           val repos = mapOf(
+              "specmaticReleases" to uri("https://repo.specmatic.io/releases"),
+              "specmaticSnapshots" to uri("https://repo.specmatic.io/snapshots"),
+              "specmaticPrivate" to uri("https://repo.specmatic.io/private"),
+           )
+    
+           repos.forEach { (repoName, repoUrl) ->
+               maven { 
+                   name = repoName
+                   url = repoUrl
+                   credentials {
+                       username =
+                           settings.extra.properties["reposilite.user"]?.toString() ?: System.getenv("SPECMATIC_REPOSILITE_USERNAME")
+                       password =
+                           settings.extra.properties["reposilite.token"]?.toString() ?: System.getenv("SPECMATIC_REPOSILITE_TOKEN")
+                   }
                }
-           }
-
+           } 
        }
    }
    ```
