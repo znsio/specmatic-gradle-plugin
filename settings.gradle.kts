@@ -16,21 +16,22 @@ pluginManagement {
             }
         }
 
-        maven {
-            name = "specmaticPrivate"
-            url = uri("https://maven.pkg.github.com/specmatic/specmatic-private-maven-repo")
-            credentials {
-                username =
-                    settings.extra.properties["github.actor"]?.toString()
-                        ?: System.getenv("SPECMATIC_GITHUB_USER")?.toString()
-                                ?: System.getenv("ORG_GRADLE_PROJECT_specmaticPrivateUsername")?.toString()
-                password =
-                    settings.extra.properties["github.token"]?.toString()
-                        ?: System.getenv("SPECMATIC_GITHUB_TOKEN")?.toString()
-                                ?: System.getenv("ORG_GRADLE_PROJECT_specmaticPrivatePassword")?.toString()
+        val repos = mapOf(
+            "specmaticReleases" to uri("https://repo.specmatic.io/releases"),
+            "specmaticSnapshots" to uri("https://repo.specmatic.io/snapshots"),
+            "specmaticPrivate" to uri("https://repo.specmatic.io/private"),
+        )
+
+        repos.forEach { (repoName, repoUrl) ->
+            maven {
+                this.name = repoName
+                this.url = repoUrl
+                credentials {
+                    username = settings.extra.properties["reposilite.user"]?.toString() ?: System.getenv("SPECMATIC_REPOSILITE_USERNAME")
+                    password = settings.extra.properties["reposilite.token"]?.toString() ?: System.getenv("SPECMATIC_REPOSILITE_TOKEN")
+                }
             }
         }
-
     }
 }
 
