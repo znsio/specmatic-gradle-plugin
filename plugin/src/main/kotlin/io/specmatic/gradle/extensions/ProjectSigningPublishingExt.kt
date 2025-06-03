@@ -8,6 +8,8 @@ import io.specmatic.gradle.license.pluginInfo
 import io.specmatic.gradle.specmaticExtension
 import org.gradle.api.Project
 import org.gradle.api.credentials.PasswordCredentials
+import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
+import org.gradle.jvm.tasks.Jar
 import org.gradle.plugins.signing.Sign
 import org.gradle.plugins.signing.SigningExtension
 import org.gradle.plugins.signing.SigningPlugin
@@ -45,8 +47,8 @@ private fun Project.setupPublishingTargets() {
 
         val publishTargets = specmaticExtension.publishTo + listOf(
             MavenInternal(
-                "staging", stagingRepo
-            )
+                "staging", stagingRepo, RepoType.PUBLISH_ALL,
+            ),
         )
 
         publishTargets.forEach { publishTarget ->
@@ -54,7 +56,7 @@ private fun Project.setupPublishingTargets() {
                 publishToMavenCentral(SonatypeHost.Companion.CENTRAL_PORTAL, false)
             } else if (publishTarget is MavenInternal) {
                 val repo = publishTarget
-                project.pluginInfo("Configuring publishing to ${repo.repoName} with url ${repo.url}")
+                project.pluginInfo("Configuring publishing to ${repo.repoName} with url ${repo.url} and type ${repo.type}")
                 publishing.repositories.maven {
                     name = repo.repoName
                     url = repo.url
@@ -66,7 +68,25 @@ private fun Project.setupPublishingTargets() {
                 project.pluginInfo("publishToMavenCentral is not set. Not publishing to Maven Central")
             }
         }
+
+        val isOSSFeature =
+            specmaticExtension.projectConfigurations[project] is io.specmatic.gradle.features.OSSLibraryFeature || specmaticExtension.projectConfigurations[project] is io.specmatic.gradle.features.OSSApplicationFeature || specmaticExtension.projectConfigurations[project] is io.specmatic.gradle.features.OSSApplicationAndLibraryFeature
+
+        if (!isOSSFeature) {
+            tasks.withType(PublishToMavenRepository::class.java) {
+                onlyIf("disabling publishing of unobfuscated artifacts to this repository") {
+                    val mavenRepo = publishTargets.filterIsInstance<MavenInternal>().first { it.repoName == this.repository.name }
+
+                    val singleDependency =
+                        publication.artifacts.flatMap { it.buildDependencies.getDependencies(null) }.filterIsInstance<Jar>().first()
+
+                    val thisPublishTaskIsPublishingObfuscatedDependency =
+                        (singleDependency.archiveClassifier.get() == "obfuscated" || singleDependency.archiveClassifier.get() == "all-obfuscated")
+
+                    mavenRepo.type == RepoType.PUBLISH_ALL || (mavenRepo.type == RepoType.PUBLISH_OBFUSCATED_ONLY && thisPublishTaskIsPublishingObfuscatedDependency)
+                }
+            }
+        }
         signAllPublications()
     }
-
 }

@@ -4,7 +4,7 @@ import io.specmatic.gradle.AbstractFunctionalTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
-import kotlin.test.Test
+import org.junit.jupiter.api.Test
 
 class OSSLibraryFeatureTest : AbstractFunctionalTest() {
     @Nested
@@ -29,6 +29,9 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
                     }
                     
                     specmatic {
+                        publishTo("obfuscatedOnly", file("build/obfuscated-only").toURI(), io.specmatic.gradle.extensions.RepoType.PUBLISH_OBFUSCATED_ONLY)
+                        publishTo("allArtifacts", file("build/all-artifacts").toURI(), io.specmatic.gradle.extensions.RepoType.PUBLISH_ALL)
+                    
                         kotlinVersion = "1.9.20"
                         withOSSLibrary(rootProject) {
                         }
@@ -61,6 +64,24 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
                 .doesNotContain("org/slf4j/Logger.class") // slf4j dependency is also packaged
 
             assertThat(mainClass("io.specmatic.example:example-project:1.2.3")).isNull()
+        }
+
+        @Test
+        fun `it should publish only obfuscated jars to repos marked as PUBLISH_OBFUSCATED_ONLY`() {
+            runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository")
+
+            assertThat(
+                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates()
+            ).containsExactlyInAnyOrder("io.specmatic.example:example-project:1.2.3")
+        }
+
+        @Test
+        fun `it should publish all jars to repos marked as PUBLISH_ALL`() {
+            runWithSuccess("publishAllPublicationsToAllArtifactsRepository")
+
+            assertThat(
+                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates()
+            ).containsExactlyInAnyOrder("io.specmatic.example:example-project:1.2.3")
         }
     }
 
@@ -141,6 +162,9 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
                     }
                     
                     specmatic {
+                        publishTo("obfuscatedOnly", file("build/obfuscated-only").toURI(), io.specmatic.gradle.extensions.RepoType.PUBLISH_OBFUSCATED_ONLY)
+                        publishTo("allArtifacts", file("build/all-artifacts").toURI(), io.specmatic.gradle.extensions.RepoType.PUBLISH_ALL)
+                    
                         withOSSLibrary(project(":core")) {
                         }
                         
@@ -193,6 +217,24 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
                 .doesNotContain("org/slf4j/Logger.class") // slf4j dependency is also packaged
 
             assertThat(mainClass("io.specmatic.example:executable:1.2.3")).isNull()
+        }
+
+        @Test
+        fun `it should publish only obfuscated jars to repos marked as PUBLISH_OBFUSCATED_ONLY`() {
+            runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository")
+
+            assertThat(
+                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates()
+            ).containsExactlyInAnyOrder("io.specmatic.example:executable:1.2.3", "io.specmatic.example:core:1.2.3")
+        }
+
+        @Test
+        fun `it should publish all jars to repos marked as PUBLISH_ALL`() {
+            runWithSuccess("publishAllPublicationsToAllArtifactsRepository")
+
+            assertThat(
+                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates()
+            ).containsExactlyInAnyOrder("io.specmatic.example:executable:1.2.3", "io.specmatic.example:core:1.2.3")
         }
     }
 

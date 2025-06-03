@@ -1,16 +1,22 @@
 package io.specmatic.gradle.extensions
 
-import io.specmatic.gradle.features.*
+import io.specmatic.gradle.features.BaseDistribution
+import io.specmatic.gradle.features.CommercialApplicationAndLibraryFeature
+import io.specmatic.gradle.features.CommercialApplicationFeature
+import io.specmatic.gradle.features.CommercialLibraryFeature
+import io.specmatic.gradle.features.OSSApplicationAndLibraryFeature
+import io.specmatic.gradle.features.OSSApplicationFeature
+import io.specmatic.gradle.features.OSSLibraryFeature
+import java.net.URI
 import org.gradle.api.Project
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
-import java.net.URI
 
 interface PublishTarget
 
 class MavenCentral : PublishTarget
 
-class MavenInternal(val repoName: String, val url: URI) : PublishTarget
+data class MavenInternal(val repoName: String, val url: URI, val type: RepoType) : PublishTarget
 
 open class SpecmaticGradleExtension {
     var releasePublishTasks = listOf<String>()
@@ -33,14 +39,13 @@ open class SpecmaticGradleExtension {
         publishTo.add(MavenCentral())
     }
 
-    fun publishTo(repoName: String, url: URI) {
-        publishTo.add(MavenInternal(repoName, url))
+    fun publishTo(repoName: String, url: URI, repoType: RepoType) {
+        publishTo.add(MavenInternal(repoName, url, repoType))
     }
 
-    fun publishTo(repoName: String, url: String) {
-        publishTo(repoName, URI.create(url))
+    fun publishTo(repoName: String, url: String, repoType: RepoType) {
+        publishTo(repoName, URI.create(url), repoType)
     }
-
 
     fun licenseData(block: ModuleLicenseData.() -> Unit) {
         licenseData.add(ModuleLicenseData().apply(block))

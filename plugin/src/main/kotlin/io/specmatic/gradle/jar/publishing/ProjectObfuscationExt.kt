@@ -36,6 +36,8 @@ internal fun Project.createObfuscatedOriginalJar(proguardExtraArgs: MutableList<
 
         from(project.zipTree(obfuscatedTempJar))
         archiveClassifier.set("obfuscated")
+
+        this.extensions.extraProperties.set("isObfuscated", true)
     }
 
     obfuscateJarInternalTask.get().finalizedBy(obfuscateJarTask)
