@@ -47,13 +47,7 @@ abstract class CreateGithubReleaseTask : DefaultTask() {
                     ?: throw GradleException("GITHUB_REPOSITORY environment variable not set"),
             )
 
-        val githubRelease =
-            findReleaseByName(githubRepo, releaseVersion.get()) ?: githubRepo
-                .createRelease(releaseVersion.get())
-                .makeLatest(GHReleaseBuilder.MakeLatest.TRUE)
-                .draft(true)
-                .name(releaseVersion.get())
-                .create()
+        val githubRelease = findReleaseByName(githubRepo, releaseVersion.get()) ?: createRelease(githubRepo)
         logger.warn("Created release ${githubRelease.name} with id ${githubRelease.id} at ${githubRelease.htmlUrl}")
 
         for (asset in githubRelease.listAssets()) {
@@ -68,6 +62,18 @@ abstract class CreateGithubReleaseTask : DefaultTask() {
         }
 
         githubRelease.update().draft(false).update()
+    }
+
+    private fun createRelease(githubRepo: GHRepository): GHRelease {
+        val release =
+            githubRepo
+                .createRelease(releaseVersion.get())
+                .makeLatest(GHReleaseBuilder.MakeLatest.TRUE)
+                .draft(true)
+                .name(releaseVersion.get())
+                .create()
+        project.pluginInfo("Created draft release ${release.name} with id ${release.id} at ${release.htmlUrl}")
+        return release
     }
 
     @Throws(IOException::class)
