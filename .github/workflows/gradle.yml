@@ -30,5 +30,3 @@ jobs:
           ORG_GRADLE_PROJECT_specmaticReleasesPassword: "${{ secrets.SPECMATIC_REPOSILITE_TOKEN }}"
           ORG_GRADLE_PROJECT_specmaticPrivateUsername: "${{ vars.SPECMATIC_REPOSILITE_USERNAME }}"
           ORG_GRADLE_PROJECT_specmaticPrivatePassword: "${{ secrets.SPECMATIC_REPOSILITE_TOKEN }}"
-          SPECMATIC_GITHUB_USER: "${{ vars.SPECMATIC_GITHUB_USER }}"
-          SPECMATIC_GITHUB_TOKEN: "${{ secrets.SPECMATIC_GITHUB_TOKEN }}"
