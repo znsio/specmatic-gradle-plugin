@@ -9,14 +9,14 @@ data class VulnerabilityReport(
     @field:JsonProperty("CreatedAt") val createdAt: String,
     @field:JsonProperty("ArtifactName") val artifactName: String,
     @field:JsonProperty("ArtifactType") val artifactType: String,
-    @field:JsonProperty("Results") val results: List<Result>
+    @field:JsonProperty("Results") val results: List<Result>,
 )
 
 data class Result(
     @field:JsonProperty("Target") val target: String,
     @field:JsonProperty("Class") val clazz: String,
     @field:JsonProperty("Type") val type: String,
-    @field:JsonProperty("Vulnerabilities") val vulnerabilities: List<Vulnerability>
+    @field:JsonProperty("Vulnerabilities") val vulnerabilities: List<Vulnerability>,
 )
 
 data class Vulnerability(
@@ -37,21 +37,22 @@ data class Vulnerability(
     @field:JsonProperty("CVSS") val cvss: Map<String, Cvss>,
     @field:JsonProperty("References") val references: List<String>,
     @field:JsonProperty("PublishedDate") val publishedDate: String,
-    @field:JsonProperty("LastModifiedDate") val lastModifiedDate: String
+    @field:JsonProperty("LastModifiedDate") val lastModifiedDate: String,
 )
 
 data class PkgIdentifier(
     @field:JsonProperty("PURL") val purl: String,
     @field:JsonProperty("UID") val uid: String,
-    @field:JsonProperty("BOMRef") val bomRef: String
+    @field:JsonProperty("BOMRef") val bomRef: String,
 )
 
 data class DataSource(
     @field:JsonProperty("ID") val id: String,
     @field:JsonProperty("Name") val name: String,
-    @field:JsonProperty("URL") val url: String
+    @field:JsonProperty("URL") val url: String,
 )
 
 data class Cvss(
-    @field:JsonProperty("V3Vector") val v3Vector: String, @field:JsonProperty("V3Score") val v3Score: Double
+    @field:JsonProperty("V3Vector") val v3Vector: String,
+    @field:JsonProperty("V3Score") val v3Score: Double,
 )

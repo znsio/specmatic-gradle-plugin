@@ -6,27 +6,30 @@ import org.gradle.api.GradleException
 import org.gradle.api.tasks.TaskAction
 
 abstract class ValidateSnapshotDependencies : DefaultTask() {
-
     @TaskAction
     fun assertNoSnapshotDependencies() {
         val allowSnapshotDependencies =
             project.hasProperty("allowSnapshotDependencies") && project.property("allowSnapshotDependencies") == "true"
 
-        val projectToSnapshotDependencies = project.allprojects.associateWith { project ->
-            (project.configurations + project.buildscript.configurations).flatMap { cfg ->
-                cfg.dependencies.matching { dep ->
-                    dep.version?.contains("SNAPSHOT") == true
+        val projectToSnapshotDependencies =
+            project.allprojects.associateWith { project ->
+                (project.configurations + project.buildscript.configurations).flatMap { cfg ->
+                    cfg.dependencies.matching { dep ->
+                        dep.version?.contains("SNAPSHOT") == true
+                    }
                 }
             }
-        }
 
         if (projectToSnapshotDependencies.isNotEmpty()) {
             val allPrettyPrintedDependencies =
-                projectToSnapshotDependencies.filterValues { it.isNotEmpty() }.map { (project, matchingDependencies) ->
-                    "Project $project uses dependencies with SNAPSHOT versions:\n" + matchingDependencies.joinToString(
-                        separator = "\n"
-                    ) { "- ${it.group}:${it.name}:${it.version}" }
-                }.joinToString(separator = "\n\n")
+                projectToSnapshotDependencies
+                    .filterValues { it.isNotEmpty() }
+                    .map { (project, matchingDependencies) ->
+                        "Project $project uses dependencies with SNAPSHOT versions:\n" +
+                            matchingDependencies.joinToString(
+                                separator = "\n",
+                            ) { "- ${it.group}:${it.name}:${it.version}" }
+                    }.joinToString(separator = "\n\n")
 
             if (allPrettyPrintedDependencies.isNotEmpty()) {
                 val message =
@@ -34,13 +37,13 @@ abstract class ValidateSnapshotDependencies : DefaultTask() {
                 if (allowSnapshotDependencies) {
                     project.pluginWarn(message)
                 } else {
-                    throw GradleException("$message\nPlease remove them before creating a release. Run with `-PallowSnapshotDependencies=true` to disable.")
+                    throw GradleException(
+                        "$message\nPlease remove them before creating a release. Run with `-PallowSnapshotDependencies=true` to disable."
+                    )
                 }
             } else {
                 project.pluginWarn("No SNAPSHOT dependencies found.")
             }
         }
-
     }
-
 }

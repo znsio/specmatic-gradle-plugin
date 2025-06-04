@@ -17,5 +17,4 @@ class CollisionDetectorPluginWrapper : Plugin<Project> {
             }
         }
     }
-
 }

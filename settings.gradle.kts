@@ -16,11 +16,12 @@ pluginManagement {
             }
         }
 
-        val repos = mapOf(
-            "specmaticReleases" to uri("https://repo.specmatic.io/releases"),
-            "specmaticSnapshots" to uri("https://repo.specmatic.io/snapshots"),
-            "specmaticPrivate" to uri("https://repo.specmatic.io/private"),
-        )
+        val repos =
+            mapOf(
+                "specmaticReleases" to uri("https://repo.specmatic.io/releases"),
+                "specmaticSnapshots" to uri("https://repo.specmatic.io/snapshots"),
+                "specmaticPrivate" to uri("https://repo.specmatic.io/private"),
+            )
 
         repos.forEach { (repoName, repoUrl) ->
             maven {

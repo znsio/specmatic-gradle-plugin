@@ -10,12 +10,10 @@ internal fun Project.kotlinPackage(): String {
     if (this == this.rootProject) {
         return group.toString().lowercase().replace("[^a-zA-Z0-9]".toRegex(), ".")
     }
-    return "${group}.${name}".lowercase().replace("[^a-zA-Z0-9]".toRegex(), ".")
+    return "$group.$name".lowercase().replace("[^a-zA-Z0-9]".toRegex(), ".")
 }
 
-internal fun Project.kotlinPackageDir(): String {
-    return kotlinPackage().replace(".", "/")
-}
+internal fun Project.kotlinPackageDir(): String = kotlinPackage().replace(".", "/")
 
 data class ProjectVersionInfo(
     val version: String,
@@ -24,10 +22,10 @@ data class ProjectVersionInfo(
     val name: String,
     val kotlinPackageName: String,
     val isRootProject: Boolean,
-    val timestamp: String?
+    val timestamp: String?,
 ) {
-    fun toKotlinClass(): String {
-        return """
+    fun toKotlinClass(): String =
+        """
             // $AUTO_GENERATED_CODE_WARNING
             package $kotlinPackageName
 
@@ -39,29 +37,35 @@ data class ProjectVersionInfo(
                 val name = "$name"
                 ${maybeKotlinTimestamp()}
                 
-                fun describe() = "v${version}${if (version.contains("SNAPSHOT")) "(${shortCommit()})" else ""}${if (timestamp != null) " built at $timestamp" else ""}"
+                fun describe() = "v${version}${if (version.contains(
+                "SNAPSHOT"
+            )
+        ) {
+            "(${shortCommit()})"
+        } else {
+            ""
+        }}${if (timestamp != null) " built at $timestamp" else ""}"
             }
         """.trimIndent()
-    }
 
     private fun shortCommit() = gitCommit.take(8).trim()
 
     fun packageDir() = kotlinPackageName.replace(".", "/")
+
     fun kotlinFilePath() = "${packageDir()}/VersionInfo.kt"
+
     fun propertiesFilePath() = "${packageDir()}/version.properties"
 
-
-    fun toPropertiesFile(): String {
-        return """
-            # $AUTO_GENERATED_CODE_WARNING
-            version=$version
-            gitCommit=$gitCommit
-            gitShortCommit=${shortCommit()}
-            group=$group
-            name=$name
-            ${maybePropertyTimestamp()}
+    fun toPropertiesFile(): String =
+        """
+        # $AUTO_GENERATED_CODE_WARNING
+        version=$version
+        gitCommit=$gitCommit
+        gitShortCommit=${shortCommit()}
+        group=$group
+        name=$name
+        ${maybePropertyTimestamp()}
         """.trimIndent()
-    }
 
     fun addToManifest(manifest: Manifest) {
         if (timestamp != null) {
@@ -76,6 +80,6 @@ data class ProjectVersionInfo(
     }
 
     private fun maybeKotlinTimestamp() = if (timestamp != null) "val timestamp = \"$timestamp\"" else ""
-    private fun maybePropertyTimestamp() = if (timestamp != null) "timestamp=$timestamp" else ""
 
+    private fun maybePropertyTimestamp() = if (timestamp != null) "timestamp=$timestamp" else ""
 }

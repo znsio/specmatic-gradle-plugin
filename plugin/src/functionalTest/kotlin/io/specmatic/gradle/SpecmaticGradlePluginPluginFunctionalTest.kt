@@ -1,13 +1,12 @@
 package io.specmatic.gradle
 
+import java.util.regex.Pattern
+import kotlin.test.Test
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.Nested
-import java.util.regex.Pattern
-import kotlin.test.Test
 
 class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
-
     @Test
     fun `throws error when shadow prefix is not valid package name`() {
         // Set up the test build
@@ -24,7 +23,7 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
                     shadow("bad-package") 
                 }
             }
-        """.trimIndent()
+            """.trimIndent(),
         )
 
         // Run the build
@@ -47,7 +46,7 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
             tasks.register("myExec", Exec::class.java) {
                 commandLine("echo", "hello", "world")
             }
-        """.trimIndent()
+            """.trimIndent(),
         )
 
         // Run the build
@@ -65,22 +64,22 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
             settingsFile.writeText("rootProject.name = \"fooBar\"")
             buildFile.writeText(
                 """
-                    plugins {
-                        id("java")
-                        kotlin("jvm") version "1.9.25"
-                        id("io.specmatic.gradle")
-                    }
-                    
-                    repositories {
-                        mavenCentral()
-                    }
-                    
-                    dependencies {
-                        // workaround for https://github.com/google/osv-scanner/issues/1744
-                        implementation("org.junit.jupiter:junit-jupiter-api:5.12.1")
-                    }
-                    
-                """.trimIndent()
+                plugins {
+                    id("java")
+                    kotlin("jvm") version "1.9.25"
+                    id("io.specmatic.gradle")
+                }
+                
+                repositories {
+                    mavenCentral()
+                }
+                
+                dependencies {
+                    // workaround for https://github.com/google/osv-scanner/issues/1744
+                    implementation("org.junit.jupiter:junit-jupiter-api:5.12.1")
+                }
+                
+                """.trimIndent(),
             )
 
             // Run the build
@@ -107,21 +106,21 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
                 rootProject.name = "fooBar"
                 include("project-a")
                 include("project-b")
-            """.trimIndent()
+                """.trimIndent(),
             )
 
             buildFile.writeText(
                 """
-            plugins {
-                id("java")
-                id("io.specmatic.gradle")
-            }
-                        
-            project(":project-a") {
-               apply(plugin = "java")
-            }
-            // nothing applied to project-b
-            """.trimIndent()
+                plugins {
+                    id("java")
+                    id("io.specmatic.gradle")
+                }
+                            
+                project(":project-a") {
+                   apply(plugin = "java")
+                }
+                // nothing applied to project-b
+                """.trimIndent(),
             )
             // Run the build
             val result = runWithSuccess("assemble")
@@ -150,30 +149,30 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
             settingsFile.writeText("")
             buildFile.writeText(
                 """
-                    plugins {
-                        id("java")
-                        id("io.specmatic.gradle")
-                    }
-                    
-                    specmatic {
-                        withOSSApplication(rootProject) {
-                            // we asked it to be published, but not specified where
-                            publish() {
-                                // we don't configure pom
-                            }
+                plugins {
+                    id("java")
+                    id("io.specmatic.gradle")
+                }
+                
+                specmatic {
+                    withOSSApplication(rootProject) {
+                        // we asked it to be published, but not specified where
+                        publish() {
+                            // we don't configure pom
                         }
                     }
-                """.trimIndent()
+                }
+                """.trimIndent(),
             )
-
 
             // Run the build
             val result = runWithSuccess("tasks", "--all")
 
             assertThat(result.output).doesNotMatch(
                 Pattern.compile(
-                    ".*publish.*mavencentral.*", Pattern.CASE_INSENSITIVE
-                )
+                    ".*publish.*mavencentral.*",
+                    Pattern.CASE_INSENSITIVE,
+                ),
             )
         }
 
@@ -183,22 +182,21 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
             settingsFile.writeText("")
             buildFile.writeText(
                 """
-                    plugins {
-                        id("java")
-                        id("io.specmatic.gradle")
-                    }
+                plugins {
+                    id("java")
+                    id("io.specmatic.gradle")
+                }
+                
+                specmatic {
+                    publishToMavenCentral()
                     
-                    specmatic {
-                        publishToMavenCentral()
-                        
-                        withOSSApplication(rootProject) {
-                            // we asked it to be published, but also specified where
-                            publish {}
-                        }
+                    withOSSApplication(rootProject) {
+                        // we asked it to be published, but also specified where
+                        publish {}
                     }
-                """.trimIndent()
+                }
+                """.trimIndent(),
             )
-
 
             // Run the build
             val result = runWithSuccess("tasks", "--all")
@@ -206,52 +204,52 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
             println(result.tasks.joinToString("\n") { it.path })
             assertThat(result.output).matches(
                 Pattern.compile(
-                    ".*publish\\S*MavenCentral\\S*.*", Pattern.MULTILINE or Pattern.DOTALL or Pattern.CASE_INSENSITIVE
-                )
+                    ".*publish\\S*MavenCentral\\S*.*",
+                    Pattern.MULTILINE or Pattern.DOTALL or Pattern.CASE_INSENSITIVE,
+                ),
             )
         }
     }
 
     @Nested
     inner class MainClassAttribute {
-
         @Test
         fun `adds main class to jars if specified in project`() {
             // Set up the test build
             settingsFile.writeText("rootProject.name = \"fooBar\"")
             buildFile.writeText(
                 """
-                    plugins {
-                        id("java")
-                        id("io.specmatic.gradle")
-                    }
+                plugins {
+                    id("java")
+                    id("io.specmatic.gradle")
+                }
+                
+                repositories {
+                    mavenCentral()
+                }
+                
+                dependencies {
+                    // workaround for https://github.com/google/osv-scanner/issues/1744
+                    implementation("org.junit.jupiter:junit-jupiter-api:5.12.1")
+                }
+                
+                specmatic {
+                    publishToMavenCentral()
                     
-                    repositories {
-                        mavenCentral()
-                    }
-                    
-                    dependencies {
-                        // workaround for https://github.com/google/osv-scanner/issues/1744
-                        implementation("org.junit.jupiter:junit-jupiter-api:5.12.1")
-                    }
-                    
-                    specmatic {
-                        publishToMavenCentral()
+                    withOSSApplication(rootProject) {
+                        mainClass = "org.example.Main"
                         
-                        withOSSApplication(rootProject) {
-                            mainClass = "org.example.Main"
-                            
-                            // we asked it to be published, but also specified where
-                            publish {}
-                        }
+                        // we asked it to be published, but also specified where
+                        publish {}
                     }
-                    
-                    tasks.register("customJar", Jar::class.java) {
-                        archiveBaseName.set("customJar")
-                        from("src/main/resources")
-                    }
-                    
-                """.trimIndent()
+                }
+                
+                tasks.register("customJar", Jar::class.java) {
+                    archiveBaseName.set("customJar")
+                    from("src/main/resources")
+                }
+                
+                """.trimIndent(),
             )
 
             val result = runWithSuccess("jar", "customJar")
@@ -272,32 +270,32 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
             settingsFile.writeText("rootProject.name = \"fooBar\"")
             buildFile.writeText(
                 """
-                    plugins {
-                        id("java")
-                        id("io.specmatic.gradle")
-                    }
+                plugins {
+                    id("java")
+                    id("io.specmatic.gradle")
+                }
 
-                    repositories {
-                        mavenCentral()
-                    }
+                repositories {
+                    mavenCentral()
+                }
+                
+                dependencies {
+                    // workaround for https://github.com/google/osv-scanner/issues/1744
+                    implementation("org.junit.jupiter:junit-jupiter-api:5.12.1")
+                }
+                
+                specmatic {
+                    publishToMavenCentral()
                     
-                    dependencies {
-                        // workaround for https://github.com/google/osv-scanner/issues/1744
-                        implementation("org.junit.jupiter:junit-jupiter-api:5.12.1")
-                    }
-                    
-                    specmatic {
-                        publishToMavenCentral()
-                        
-                        withOSSApplication(rootProject) { }
-                    }
-                    
-                    tasks.register("customJar", Jar::class.java) {
-                        archiveBaseName.set("customJar")
-                        from("src/main/resources")
-                    }
-                    
-                """.trimIndent()
+                    withOSSApplication(rootProject) { }
+                }
+                
+                tasks.register("customJar", Jar::class.java) {
+                    archiveBaseName.set("customJar")
+                    from("src/main/resources")
+                }
+                
+                """.trimIndent(),
             )
 
             val result = runWithSuccess("jar", "customJar")
@@ -321,34 +319,33 @@ class SpecmaticGradlePluginPluginFunctionalTest : AbstractFunctionalTest() {
             settingsFile.writeText("rootProject.name = \"fooBar\"")
             buildFile.writeText(
                 """
-                    plugins {
-                        id("java")
-                        id("io.specmatic.gradle")
-                    }
-                    
-                    repositories {
-                        mavenCentral()
-                    }
-                    
-                    dependencies {
-                        // add a dependency with some vulnerabilities
-                        implementation("com.google.code.gson:gson:2.8.8")
-                    }
-                    
-                """.trimIndent()
+                plugins {
+                    id("java")
+                    id("io.specmatic.gradle")
+                }
+                
+                repositories {
+                    mavenCentral()
+                }
+                
+                dependencies {
+                    // add a dependency with some vulnerabilities
+                    implementation("com.google.code.gson:gson:2.8.8")
+                }
+                
+                """.trimIndent(),
             )
 
             val result = runWithSuccess("check")
             assertThat(result.output).matches(
                 Pattern.compile(
                     ".* com.google.code.gson:gson .* CVE-2022-25647 .* 2.8.8 .*",
-                    Pattern.MULTILINE or Pattern.DOTALL or Pattern.CASE_INSENSITIVE
-                )
+                    Pattern.MULTILINE or Pattern.DOTALL or Pattern.CASE_INSENSITIVE,
+                ),
             )
             assertThat(result.task(":cyclonedxBom")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
             assertThat(result.task(":jar")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
             assertThat(result.task(":vulnScanJar")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
         }
     }
-
 }

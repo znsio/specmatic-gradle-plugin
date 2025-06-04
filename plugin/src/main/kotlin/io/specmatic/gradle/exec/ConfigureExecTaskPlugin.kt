@@ -9,7 +9,6 @@ import org.gradle.api.tasks.JavaExec
 import org.gradle.process.BaseExecSpec
 
 class ConfigureExecTaskPlugin : Plugin<Project> {
-
     private val configuredTasks = mutableSetOf<Task>()
 
     override fun apply(target: Project) {
@@ -54,12 +53,11 @@ class ConfigureExecTaskPlugin : Plugin<Project> {
                         cliArgs.addAll(task.commandLine)
                     }
 
-                    target.pluginInfo("[${workingDir}]\$ ${shellEscapedArgs(cliArgs)}")
+                    target.pluginInfo("[$workingDir]\$ ${shellEscapedArgs(cliArgs)}")
                 }
             }
         }
     }
-
 }
 
 fun shellEscapedArgs(args: List<String?>): String {

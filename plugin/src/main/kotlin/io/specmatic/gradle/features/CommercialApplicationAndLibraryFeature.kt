@@ -12,10 +12,14 @@ import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
-import org.gradle.jvm.tasks.Jar
 
-class CommercialApplicationAndLibraryFeature(project: Project) : ShadowingFeature, ObfuscationFeature,
-    ApplicationFeature, GithubReleaseFeature, DockerBuildFeature, BaseDistribution(project) {
+class CommercialApplicationAndLibraryFeature(project: Project) :
+    BaseDistribution(project),
+    ShadowingFeature,
+    ObfuscationFeature,
+    ApplicationFeature,
+    GithubReleaseFeature,
+    DockerBuildFeature {
     override var mainClass: String = ""
 
     override fun applyToProject() {
@@ -34,13 +38,16 @@ class CommercialApplicationAndLibraryFeature(project: Project) : ShadowingFeatur
 
             project.plugins.withType(MavenPublishPlugin::class.java) {
                 project.createShadowedObfuscatedJarPublication(
-                    obfuscatedShadowJar, "${project.name}-all",
+                    obfuscatedShadowJar,
+                    "${project.name}-all",
                 )
                 project.createObfuscatedOriginalJarPublication(
-                    obfuscatedOriginalJar, project.name,
+                    obfuscatedOriginalJar,
+                    project.name,
                 )
                 project.createShadowedUnobfuscatedJarPublication(
-                    unobfuscatedShadowJar, "${project.name}-all-debug",
+                    unobfuscatedShadowJar,
+                    "${project.name}-all-debug",
                 )
             }
         }

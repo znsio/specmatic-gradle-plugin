@@ -13,30 +13,30 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
         fun setup() {
             buildFile.writeText(
                 """
-                    plugins {
-                        id("java")
-                        kotlin("jvm") version "1.9.25"
-                        id("io.specmatic.gradle")
-                    }
+                plugins {
+                    id("java")
+                    kotlin("jvm") version "1.9.25"
+                    id("io.specmatic.gradle")
+                }
 
-                    repositories {
-                        mavenCentral()
+                repositories {
+                    mavenCentral()
+                }
+                
+                dependencies {
+                    // tiny jar, with no deps
+                    implementation("org.slf4j:slf4j-api:2.0.17")
+                }
+                
+                specmatic {
+                    publishTo("obfuscatedOnly", file("build/obfuscated-only").toURI(), io.specmatic.gradle.extensions.RepoType.PUBLISH_OBFUSCATED_ONLY)
+                    publishTo("allArtifacts", file("build/all-artifacts").toURI(), io.specmatic.gradle.extensions.RepoType.PUBLISH_ALL)
+                
+                    kotlinVersion = "1.9.20"
+                    withOSSLibrary(rootProject) {
                     }
-                    
-                    dependencies {
-                        // tiny jar, with no deps
-                        implementation("org.slf4j:slf4j-api:2.0.17")
-                    }
-                    
-                    specmatic {
-                        publishTo("obfuscatedOnly", file("build/obfuscated-only").toURI(), io.specmatic.gradle.extensions.RepoType.PUBLISH_OBFUSCATED_ONLY)
-                        publishTo("allArtifacts", file("build/all-artifacts").toURI(), io.specmatic.gradle.extensions.RepoType.PUBLISH_ALL)
-                    
-                        kotlinVersion = "1.9.20"
-                        withOSSLibrary(rootProject) {
-                        }
-                    }
-                """.trimIndent()
+                }
+                """.trimIndent(),
             )
 
             writeMainClass(projectDir, "io.specmatic.example.Main")
@@ -50,13 +50,12 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
             assertThat(getDependencies("io.specmatic.example:example-project:1.2.3"))
                 .containsExactlyInAnyOrder(
                     "org.jetbrains.kotlin:kotlin-stdlib:1.9.20",
-                    "org.slf4j:slf4j-api:2.0.17"
+                    "org.slf4j:slf4j-api:2.0.17",
                 )
 
             assertThat(
-                listJarContents("io.specmatic.example:example-project:1.2.3")
-            )
-                .contains("io/specmatic/example/VersionInfo.class")
+                listJarContents("io.specmatic.example:example-project:1.2.3"),
+            ).contains("io/specmatic/example/VersionInfo.class")
                 .contains("io/specmatic/example/version.properties")
                 .doesNotContain("kotlin/Metadata.class") // kotlin is also packaged
                 .doesNotContain("org/jetbrains/annotations/Contract.class") // kotlin is also packaged
@@ -71,7 +70,7 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
             runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository")
 
             assertThat(
-                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates()
+                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates(),
             ).containsExactlyInAnyOrder("io.specmatic.example:example-project:1.2.3")
         }
 
@@ -80,7 +79,7 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
             runWithSuccess("publishAllPublicationsToAllArtifactsRepository")
 
             assertThat(
-                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates()
+                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates(),
             ).containsExactlyInAnyOrder("io.specmatic.example:example-project:1.2.3")
         }
     }
@@ -91,27 +90,27 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
         fun setup() {
             buildFile.writeText(
                 """
-                    plugins {
-                        id("java")
-                        kotlin("jvm") version "1.9.25"
-                        id("io.specmatic.gradle")
-                    }
+                plugins {
+                    id("java")
+                    kotlin("jvm") version "1.9.25"
+                    id("io.specmatic.gradle")
+                }
 
-                    repositories {
-                        mavenCentral()
+                repositories {
+                    mavenCentral()
+                }
+                
+                dependencies {
+                    // tiny jar, with no deps
+                    implementation("org.slf4j:slf4j-api:2.0.17")
+                }
+                
+                specmatic {
+                    withOSSLibrary(rootProject) {
+                        shadow("example")
                     }
-                    
-                    dependencies {
-                        // tiny jar, with no deps
-                        implementation("org.slf4j:slf4j-api:2.0.17")
-                    }
-                    
-                    specmatic {
-                        withOSSLibrary(rootProject) {
-                            shadow("example")
-                        }
-                    }
-                """.trimIndent()
+                }
+                """.trimIndent(),
             )
 
             writeMainClass(projectDir, "io.specmatic.example.Main")
@@ -132,53 +131,53 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
         fun setup() {
             settingsFile.appendText(
                 """
-                    //
-                    include("core")
-                    include("executable")
-                    """.trimIndent()
+                //
+                include("core")
+                include("executable")
+                """.trimIndent(),
             )
 
             buildFile.writeText(
                 """
-                    plugins {
-                        id("java")
-                        kotlin("jvm") version "1.9.25"
-                        id("io.specmatic.gradle")
+                plugins {
+                    id("java")
+                    kotlin("jvm") version "1.9.25"
+                    id("io.specmatic.gradle")
+                }
+                
+                subprojects {
+                    repositories {
+                        mavenCentral()
                     }
                     
-                    subprojects {
-                        repositories {
-                            mavenCentral()
-                        }
-                        
-                        apply(plugin = "java")
-                        apply(plugin = "org.jetbrains.kotlin.jvm")
-                        
-                        dependencies {
-                            // tiny jar, with no deps
-                            implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.25")
-                            implementation("org.slf4j:slf4j-api:2.0.17")
-                        }
+                    apply(plugin = "java")
+                    apply(plugin = "org.jetbrains.kotlin.jvm")
+                    
+                    dependencies {
+                        // tiny jar, with no deps
+                        implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.25")
+                        implementation("org.slf4j:slf4j-api:2.0.17")
+                    }
+                }
+                
+                specmatic {
+                    publishTo("obfuscatedOnly", file("build/obfuscated-only").toURI(), io.specmatic.gradle.extensions.RepoType.PUBLISH_OBFUSCATED_ONLY)
+                    publishTo("allArtifacts", file("build/all-artifacts").toURI(), io.specmatic.gradle.extensions.RepoType.PUBLISH_ALL)
+                
+                    withOSSLibrary(project(":core")) {
                     }
                     
-                    specmatic {
-                        publishTo("obfuscatedOnly", file("build/obfuscated-only").toURI(), io.specmatic.gradle.extensions.RepoType.PUBLISH_OBFUSCATED_ONLY)
-                        publishTo("allArtifacts", file("build/all-artifacts").toURI(), io.specmatic.gradle.extensions.RepoType.PUBLISH_ALL)
-                    
-                        withOSSLibrary(project(":core")) {
-                        }
-                        
-                        withOSSLibrary(project("executable")) {
-                        }
+                    withOSSLibrary(project("executable")) {
                     }
-                    
-                    project(":executable") {
-                        dependencies {
-                          implementation(project(":core"))
-                        }
+                }
+                
+                project(":executable") {
+                    dependencies {
+                      implementation(project(":core"))
                     }
-                    
-                """.trimIndent()
+                }
+                
+                """.trimIndent(),
             )
 
             writeMainClass(projectDir.resolve("executable"), "io.specmatic.example.executable.Main")
@@ -189,25 +188,25 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
             runWithSuccess("publishAllPublicationsToStagingRepository", "publishToMavenLocal")
 
             assertPublishedWithJavadocAndSources(
-                "io.specmatic.example:executable:1.2.3", "io.specmatic.example:core:1.2.3"
+                "io.specmatic.example:executable:1.2.3",
+                "io.specmatic.example:core:1.2.3",
             )
 
             assertThat(getDependencies("io.specmatic.example:executable:1.2.3"))
                 .containsExactlyInAnyOrder(
                     "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
                     "org.slf4j:slf4j-api:2.0.17",
-                    "io.specmatic.example:core:1.2.3"
+                    "io.specmatic.example:core:1.2.3",
                 )
             assertThat(getDependencies("io.specmatic.example:core:1.2.3"))
                 .containsExactlyInAnyOrder(
                     "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
-                    "org.slf4j:slf4j-api:2.0.17"
+                    "org.slf4j:slf4j-api:2.0.17",
                 )
 
             assertThat(
-                listJarContents("io.specmatic.example:executable:1.2.3")
-            )
-                .contains("io/specmatic/example/executable/VersionInfo.class")
+                listJarContents("io.specmatic.example:executable:1.2.3"),
+            ).contains("io/specmatic/example/executable/VersionInfo.class")
                 .contains("io/specmatic/example/executable/version.properties")
                 .doesNotContain("io/specmatic/example/core/VersionInfo.class") // from the core dependency
                 .doesNotContain("io/specmatic/example/core/version.properties") // from the core dependency
@@ -224,7 +223,7 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
             runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository")
 
             assertThat(
-                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates()
+                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates(),
             ).containsExactlyInAnyOrder("io.specmatic.example:executable:1.2.3", "io.specmatic.example:core:1.2.3")
         }
 
@@ -233,7 +232,7 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
             runWithSuccess("publishAllPublicationsToAllArtifactsRepository")
 
             assertThat(
-                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates()
+                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates(),
             ).containsExactlyInAnyOrder("io.specmatic.example:executable:1.2.3", "io.specmatic.example:core:1.2.3")
         }
     }
@@ -244,48 +243,48 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
         fun setup() {
             settingsFile.appendText(
                 """
-                        //
-                        include("core")
-                        include("executable")
-                    """.trimIndent()
+                //
+                include("core")
+                include("executable")
+                """.trimIndent(),
             )
 
             buildFile.writeText(
                 """
-                    plugins {
-                        id("java")
-                        kotlin("jvm") version "1.9.25"
-                        id("io.specmatic.gradle")
+                plugins {
+                    id("java")
+                    kotlin("jvm") version "1.9.25"
+                    id("io.specmatic.gradle")
+                }
+                
+                subprojects {
+                    repositories {
+                        mavenCentral()
                     }
                     
-                    subprojects {
-                        repositories {
-                            mavenCentral()
-                        }
-                        
-                        apply(plugin = "java")
-                        apply(plugin = "org.jetbrains.kotlin.jvm")
-                        
-                        dependencies {
-                            // tiny jar, with no deps
-                            implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.25")
-                            implementation("org.slf4j:slf4j-api:2.0.17")
-                        }
-                    }
+                    apply(plugin = "java")
+                    apply(plugin = "org.jetbrains.kotlin.jvm")
                     
-                    specmatic {
-                        withOSSLibrary(project(":core")) {
-                            shadow("example")
-                        }
+                    dependencies {
+                        // tiny jar, with no deps
+                        implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.25")
+                        implementation("org.slf4j:slf4j-api:2.0.17")
                     }
-                    
-                    project(":executable") {
-                        dependencies {
-                          implementation(project(":core"))
-                        }
+                }
+                
+                specmatic {
+                    withOSSLibrary(project(":core")) {
+                        shadow("example")
                     }
-                    
-                """.trimIndent()
+                }
+                
+                project(":executable") {
+                    dependencies {
+                      implementation(project(":core"))
+                    }
+                }
+                
+                """.trimIndent(),
             )
 
             writeMainClass(projectDir.resolve("executable"), "io.specmatic.example.executable.Main")

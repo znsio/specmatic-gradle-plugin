@@ -11,7 +11,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 class ConfigureCompilerOptionsPlugin : Plugin<Project> {
-
     override fun apply(target: Project) {
         target.afterEvaluate {
             setupJavaCompilerOpts(target)

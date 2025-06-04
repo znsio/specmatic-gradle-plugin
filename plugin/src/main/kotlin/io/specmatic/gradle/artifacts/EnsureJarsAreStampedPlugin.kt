@@ -9,7 +9,6 @@ import org.gradle.api.Project
 import org.gradle.jvm.tasks.Jar
 
 class EnsureJarsAreStampedPlugin : Plugin<Project> {
-
     override fun apply(target: Project) {
         target.afterEvaluate {
             target.tasks.withType(Jar::class.java) {

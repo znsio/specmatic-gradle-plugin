@@ -6,7 +6,9 @@ import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 
-open class OSSLibraryFeature(project: Project) : GithubReleaseFeature, BaseDistribution(project) {
+open class OSSLibraryFeature(project: Project) :
+    BaseDistribution(project),
+    GithubReleaseFeature {
     override fun applyToProject() {
         super.applyToProject()
         if (this.isGradlePlugin) {

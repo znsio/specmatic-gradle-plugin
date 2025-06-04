@@ -33,8 +33,9 @@ class ForceVersionConstraintsPlugin : Plugin<Project> {
     }
 
     companion object {
-        val REPLACEMENTS = mapOf(
-            "dk.brics.automaton:automaton" to "dk.brics:automaton:1.12-4",
-        )
+        val REPLACEMENTS =
+            mapOf(
+                "dk.brics.automaton:automaton" to "dk.brics:automaton:1.12-4",
+            )
     }
 }
