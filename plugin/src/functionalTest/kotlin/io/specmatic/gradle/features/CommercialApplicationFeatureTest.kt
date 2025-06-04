@@ -204,17 +204,12 @@ class CommercialApplicationFeatureTest : AbstractFunctionalTest() {
         }
 
         @Test
-        fun `it should publish only obfuscated jars to repos marked as PUBLISH_OBFUSCATED_ONLY`() {
-            runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository")
+        fun `assert publication of obfuscated artifacts`() {
+            runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository", "publishAllPublicationsToAllArtifactsRepository")
 
             assertThat(
                 projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates(),
             ).containsExactlyInAnyOrder(*allObfuscatedArtifacts)
-        }
-
-        @Test
-        fun `it should publish all jars to repos marked as PUBLISH_ALL`() {
-            runWithSuccess("publishAllPublicationsToAllArtifactsRepository")
 
             assertThat(
                 projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates(),
@@ -403,17 +398,12 @@ class CommercialApplicationFeatureTest : AbstractFunctionalTest() {
         }
 
         @Test
-        fun `it should publish only obfuscated jars to repos marked as PUBLISH_OBFUSCATED_ONLY`() {
-            runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository")
+        fun `assert publication of obfuscated artifacts`() {
+            runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository", "publishAllPublicationsToAllArtifactsRepository")
 
             assertThat(
                 projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates(),
             ).containsExactlyInAnyOrder(*obfuscatedArtifacts)
-        }
-
-        @Test
-        fun `it should publish all jars to repos marked as PUBLISH_ALL`() {
-            runWithSuccess("publishAllPublicationsToAllArtifactsRepository")
 
             assertThat(
                 projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates(),
@@ -552,17 +542,12 @@ class CommercialApplicationFeatureTest : AbstractFunctionalTest() {
         }
 
         @Test
-        fun `it should publish only obfuscated jars to repos marked as PUBLISH_OBFUSCATED_ONLY`() {
-            runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository")
+        fun `assert publication of obfuscated artifacts`() {
+            runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository", "publishAllPublicationsToAllArtifactsRepository")
 
             assertThat(
                 projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates(),
             ).containsExactlyInAnyOrder(*obfuscatedArtifacts)
-        }
-
-        @Test
-        fun `it should publish all jars to repos marked as PUBLISH_ALL`() {
-            runWithSuccess("publishAllPublicationsToAllArtifactsRepository")
 
             assertThat(
                 projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates(),

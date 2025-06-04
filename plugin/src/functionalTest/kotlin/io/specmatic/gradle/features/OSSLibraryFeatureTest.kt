@@ -47,11 +47,10 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
             runWithSuccess("publishAllPublicationsToStagingRepository", "publishToMavenLocal")
 
             assertPublishedWithJavadocAndSources("io.specmatic.example:example-project:1.2.3")
-            assertThat(getDependencies("io.specmatic.example:example-project:1.2.3"))
-                .containsExactlyInAnyOrder(
-                    "org.jetbrains.kotlin:kotlin-stdlib:1.9.20",
-                    "org.slf4j:slf4j-api:2.0.17",
-                )
+            assertThat(getDependencies("io.specmatic.example:example-project:1.2.3")).containsExactlyInAnyOrder(
+                "org.jetbrains.kotlin:kotlin-stdlib:1.9.20",
+                "org.slf4j:slf4j-api:2.0.17",
+            )
 
             assertThat(
                 listJarContents("io.specmatic.example:example-project:1.2.3"),
@@ -66,17 +65,12 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
         }
 
         @Test
-        fun `it should publish only obfuscated jars to repos marked as PUBLISH_OBFUSCATED_ONLY`() {
-            runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository")
+        fun `assert publication of obfuscated artifacts`() {
+            runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository", "publishAllPublicationsToAllArtifactsRepository")
 
             assertThat(
                 projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates(),
             ).containsExactlyInAnyOrder("io.specmatic.example:example-project:1.2.3")
-        }
-
-        @Test
-        fun `it should publish all jars to repos marked as PUBLISH_ALL`() {
-            runWithSuccess("publishAllPublicationsToAllArtifactsRepository")
 
             assertThat(
                 projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates(),
@@ -192,17 +186,15 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
                 "io.specmatic.example:core:1.2.3",
             )
 
-            assertThat(getDependencies("io.specmatic.example:executable:1.2.3"))
-                .containsExactlyInAnyOrder(
-                    "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
-                    "org.slf4j:slf4j-api:2.0.17",
-                    "io.specmatic.example:core:1.2.3",
-                )
-            assertThat(getDependencies("io.specmatic.example:core:1.2.3"))
-                .containsExactlyInAnyOrder(
-                    "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
-                    "org.slf4j:slf4j-api:2.0.17",
-                )
+            assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).containsExactlyInAnyOrder(
+                "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
+                "org.slf4j:slf4j-api:2.0.17",
+                "io.specmatic.example:core:1.2.3",
+            )
+            assertThat(getDependencies("io.specmatic.example:core:1.2.3")).containsExactlyInAnyOrder(
+                "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
+                "org.slf4j:slf4j-api:2.0.17",
+            )
 
             assertThat(
                 listJarContents("io.specmatic.example:executable:1.2.3"),
@@ -219,17 +211,12 @@ class OSSLibraryFeatureTest : AbstractFunctionalTest() {
         }
 
         @Test
-        fun `it should publish only obfuscated jars to repos marked as PUBLISH_OBFUSCATED_ONLY`() {
-            runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository")
+        fun `assert publication of obfuscated artifacts`() {
+            runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository", "publishAllPublicationsToAllArtifactsRepository")
 
             assertThat(
                 projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates(),
             ).containsExactlyInAnyOrder("io.specmatic.example:executable:1.2.3", "io.specmatic.example:core:1.2.3")
-        }
-
-        @Test
-        fun `it should publish all jars to repos marked as PUBLISH_ALL`() {
-            runWithSuccess("publishAllPublicationsToAllArtifactsRepository")
 
             assertThat(
                 projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates(),
