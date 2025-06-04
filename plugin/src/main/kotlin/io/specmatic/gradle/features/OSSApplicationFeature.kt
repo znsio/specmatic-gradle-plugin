@@ -10,8 +10,12 @@ import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 
-open class OSSApplicationFeature(project: Project) : ApplicationFeature, DockerBuildFeature, ShadowingFeature,
-    GithubReleaseFeature, BaseDistribution(project) {
+open class OSSApplicationFeature(project: Project) :
+    BaseDistribution(project),
+    ApplicationFeature,
+    DockerBuildFeature,
+    ShadowingFeature,
+    GithubReleaseFeature {
     override var mainClass: String = ""
 
     override fun applyToProject() {

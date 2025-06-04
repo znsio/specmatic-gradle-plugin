@@ -51,7 +51,6 @@ open class SpecmaticGradleExtension {
         licenseData.add(ModuleLicenseData().apply(block))
     }
 
-
     fun withOSSLibrary(project: Project, block: OSSLibraryFeature.() -> Unit) {
         val projectConfig = OSSLibraryFeature(project).apply(block)
         projectConfig.applyToProject()
@@ -88,7 +87,6 @@ open class SpecmaticGradleExtension {
         projectConfigurations[project] = projectConfig
     }
 }
-
 
 class ModuleLicenseData {
     var name: String = ""

@@ -11,6 +11,8 @@ import io.specmatic.gradle.jar.massage.shadow
 import io.specmatic.gradle.license.pluginInfo
 import io.specmatic.gradle.projectDependencies
 import io.specmatic.gradle.specmaticExtension
+import java.io.File
+import java.util.jar.JarFile
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.component.SoftwareComponentFactory
@@ -19,31 +21,31 @@ import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.tasks.Jar
-import java.io.File
-import java.util.jar.JarFile
 
 internal const val SHADOW_OBFUSCATED_JAR = "shadowObfuscatedJar"
 
 internal fun Project.createUnobfuscatedShadowJar(
-    shadowActions: MutableList<Action<ShadowJar>>, shadowPrefix: String, isApplication: Boolean
+    shadowActions: MutableList<Action<ShadowJar>>,
+    shadowPrefix: String,
+    isApplication: Boolean,
 ): TaskProvider<ShadowJar> {
     val jarTask = project.tasks.jar
 
-    val shadowJarTask = project.tasks.register("unobfuscatedShadowJar", ShadowJar::class.java) {
-        project.pluginInfo("Created task $path")
-        group = "build"
-        description = "Shadow the original jar"
+    val shadowJarTask =
+        project.tasks.register("unobfuscatedShadowJar", ShadowJar::class.java) {
+            project.pluginInfo("Created task $path")
+            group = "build"
+            description = "Shadow the original jar"
 
-        dependsOn(jarTask)
+            dependsOn(jarTask)
 
-        archiveClassifier.set("all-unobfuscated")
+            archiveClassifier.set("all-unobfuscated")
 
-        from(project.provider { project.zipTree(jarTask.get().archiveFile) })
+            from(project.provider { project.zipTree(jarTask.get().archiveFile) })
 
-        configureCommonShadowConfigs(jarTask, project, shadowPrefix, isApplication)
-        applyProjectSpecifiedConfigurations(this, shadowActions)
-    }
-
+            configureCommonShadowConfigs(jarTask, project, shadowPrefix, isApplication)
+            applyProjectSpecifiedConfigurations(this, shadowActions)
+        }
 
     project.tasks.named("assemble") { dependsOn(shadowJarTask) }
 
@@ -63,31 +65,31 @@ private fun Project.excludeProjectDependencies(shadowJarTask: TaskProvider<Shado
     }
 }
 
-
 internal fun Project.createObfuscatedShadowJar(
     obfuscateJarTask: TaskProvider<Jar>,
     shadowActions: MutableList<Action<ShadowJar>>,
     shadowPrefix: String,
-    isApplication: Boolean
+    isApplication: Boolean,
 ): TaskProvider<ShadowJar> {
     val jarTask = project.tasks.jar
 
-    val shadowJarTask = project.tasks.register(SHADOW_OBFUSCATED_JAR, ShadowJar::class.java) {
-        project.pluginInfo("Created task $path")
-        group = "build"
-        description = "Shadow the obfuscated jar"
+    val shadowJarTask =
+        project.tasks.register(SHADOW_OBFUSCATED_JAR, ShadowJar::class.java) {
+            project.pluginInfo("Created task $path")
+            group = "build"
+            description = "Shadow the obfuscated jar"
 
-        dependsOn(obfuscateJarTask)
-        dependsOn(jarTask) // since we use manifest from jarTask, we make this explicit, although obfuscateJarTask depends on jarTask
+            dependsOn(obfuscateJarTask)
+            dependsOn(jarTask) // since we use manifest from jarTask, we make this explicit, although obfuscateJarTask depends on jarTask
 
-        archiveClassifier.set("all-obfuscated")
+            archiveClassifier.set("all-obfuscated")
 
-        from(project.provider { project.zipTree(obfuscateJarTask.get().archiveFile) })
+            from(project.provider { project.zipTree(obfuscateJarTask.get().archiveFile) })
 
-        configureCommonShadowConfigs(jarTask, project, shadowPrefix, isApplication)
-        applyProjectSpecifiedConfigurations(this, shadowActions)
-        this.extensions.extraProperties.set("isObfuscated", true)
-    }
+            configureCommonShadowConfigs(jarTask, project, shadowPrefix, isApplication)
+            applyProjectSpecifiedConfigurations(this, shadowActions)
+            this.extensions.extraProperties.set("isObfuscated", true)
+        }
 
     excludeProjectDependencies(shadowJarTask)
     dependOnUpstreamObfuscationTasks(shadowJarTask)
@@ -95,47 +97,47 @@ internal fun Project.createObfuscatedShadowJar(
     project.tasks.named("assemble") { dependsOn(shadowJarTask) }
 
     return shadowJarTask
-
 }
 
 private fun Project.dependOnUpstreamObfuscationTasks(shadowJarTask: TaskProvider<ShadowJar>) {
     afterEvaluate {
         val dependentProjects = project.projectDependencies().map { rootProject.project(it.path) }
 
-        val dependentObfuscationTasks = dependentProjects.map { dependentProject ->
-            dependentProject.tasks.named(OBFUSCATE_JAR_TASK, Jar::class.java)
-        }
+        val dependentObfuscationTasks =
+            dependentProjects.map { dependentProject ->
+                dependentProject.tasks.named(OBFUSCATE_JAR_TASK, Jar::class.java)
+            }
 
         dependentObfuscationTasks.forEach { eachUpstreamObfuscationTask ->
             shadowJarTask.configure {
                 dependsOn(eachUpstreamObfuscationTask)
-                from(project.provider {
-                    project.zipTree(eachUpstreamObfuscationTask.get().archiveFile)
-                })
+                from(
+                    project.provider {
+                        project.zipTree(eachUpstreamObfuscationTask.get().archiveFile)
+                    },
+                )
             }
         }
     }
 }
 
-private fun Project.applyProjectSpecifiedConfigurations(
-    shadowJarTask: ShadowJar, shadowActions: MutableList<Action<ShadowJar>>
-) {
+private fun Project.applyProjectSpecifiedConfigurations(shadowJarTask: ShadowJar, shadowActions: MutableList<Action<ShadowJar>>,) {
     shadowActions.forEach {
         project.pluginInfo("Applying custom shadow jar configuration")
         it.execute(shadowJarTask)
     }
 }
 
-
 internal fun Project.applyShadowConfigs() {
     pluginInfo("Applying shadow configurations to project $name")
     val shadowConfiguration = configurations.create("shadow")
 
-    val shadowRuntimeElements = configurations.create(SHADOW_RUNTIME_ELEMENTS_CONFIGURATION_NAME) {
-        extendsFrom(shadowConfiguration)
-        isCanBeConsumed = true
-        isCanBeResolved = false
-    }
+    val shadowRuntimeElements =
+        configurations.create(SHADOW_RUNTIME_ELEMENTS_CONFIGURATION_NAME) {
+            extendsFrom(shadowConfiguration)
+            isCanBeConsumed = true
+            isCanBeResolved = false
+        }
 
     val softwareComponentFactory = (project as ProjectInternal).services.get(SoftwareComponentFactory::class.java)
     val shadowComponent = softwareComponentFactory.adhoc(ShadowBasePlugin.COMPONENT_NAME)
@@ -145,7 +147,6 @@ internal fun Project.applyShadowConfigs() {
     }
 
     plugins.withType(JavaPlugin::class.java) {
-
         configurations.named("compileClasspath") {
             extendsFrom(shadowConfiguration)
         }
@@ -164,14 +165,25 @@ internal fun Project.applyShadowConfigs() {
             if (project.specmaticExtension().projectConfigurations[project] !is ApplicationFeature) {
                 excludePackages.addAll(
                     listOf(
-                        "java", "javax", "kotlin", "org/jetbrains", "org/intellij/lang/annotations"
-                    )
+                        "java",
+                        "javax",
+                        "kotlin",
+                        "org/jetbrains",
+                        "org/intellij/lang/annotations",
+                    ),
                 )
             }
 
-            from(provider { configurations.shadow.get().files.map { zipTree(it) } }) {
+            from(
+                provider {
+                    configurations.shadow
+                        .get()
+                        .files
+                        .map { zipTree(it) }
+                }
+            ) {
                 excludePackages.forEach {
-                    exclude("${it}/**")
+                    exclude("$it/**")
                 }
             }
         }
@@ -186,16 +198,23 @@ private fun ShadowJar.maybeRelocateIfConfigured(project: Project, shadowPrefix: 
         excludePackages.addAll(listOf("java", "javax", "kotlin", "org/jetbrains", "org/intellij/lang/annotations"))
     }
 
-    excludePackages.forEach { exclude("${it}/**") }
+    excludePackages.forEach { exclude("$it/**") }
 
     if (shadowPrefix.isNotBlank()) {
         // we do this in doFirst so that we can lazily evaluate the runtimeClasspath
         doFirst {
 //            val runtimeClasspathFiles = runtimeClasspath?.files.orEmpty()
 
-            val runtimeClasspathFiles = runtimeClasspath?.incoming?.artifacts?.filter {
-                !it.variant.owner.displayName.startsWith("ch.qos.logback:")
-            }?.map { it.file }.orEmpty().toSet()
+            val runtimeClasspathFiles =
+                runtimeClasspath
+                    ?.incoming
+                    ?.artifacts
+                    ?.filter {
+                        !it.variant.owner.displayName
+                            .startsWith("ch.qos.logback:")
+                    }?.map { it.file }
+                    .orEmpty()
+                    .toSet()
 
             val packagesToRelocate = extractPackagesInJars(runtimeClasspathFiles, excludePackages)
 
@@ -207,9 +226,7 @@ private fun ShadowJar.maybeRelocateIfConfigured(project: Project, shadowPrefix: 
     }
 }
 
-private fun extractPackagesInJars(
-    runtimeClasspathFiles: Set<File>, excludePackages: List<String>
-): MutableSet<String> {
+private fun extractPackagesInJars(runtimeClasspathFiles: Set<File>, excludePackages: List<String>,): MutableSet<String> {
     val packagesToRelocate = mutableSetOf<String>()
     runtimeClasspathFiles.forEach { eachFile ->
         if (eachFile.name.lowercase().endsWith(".jar")) {
@@ -227,13 +244,14 @@ private fun extractPackagesInJars(
     return packagesToRelocate
 }
 
-private fun shouldRelocatePackage(entryName: String, excludePackages: List<String>): Boolean =
-    entryName.endsWith(".class") && entryName.contains("/") && excludePackages.none {
+private fun shouldRelocatePackage(entryName: String, excludePackages: List<String>): Boolean = entryName.endsWith(".class") &&
+    entryName.contains("/") &&
+    excludePackages.none {
         entryName.startsWith(
-            "${it}/"
+            "$it/",
         )
-    } && !entryName.startsWith("META-INF/")
-
+    } &&
+    !entryName.startsWith("META-INF/")
 
 internal fun ShadowJar.configureCommonShadowConfigs(
     jarTask: TaskProvider<Jar>,
@@ -274,7 +292,7 @@ internal fun ShadowJar.configureCommonShadowConfigs(
         "META-INF/*.DSA",
         "META-INF/*.RSA",
         "META-INF/versions/**/module-info.class",
-        "module-info.class"
+        "module-info.class",
     )
 
     dependencies {

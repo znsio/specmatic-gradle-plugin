@@ -16,5 +16,9 @@ data class DockerBuildConfig(
     var extraDockerArgs: MutableList<String> = mutableListOf(),
 )
 
-internal fun Project.mainJar(mainJarTaskName: String) =
-    this.tasks.named(mainJarTaskName, ShadowJar::class.java).get().archiveFile.get().asFile
+internal fun Project.mainJar(mainJarTaskName: String) = this.tasks
+    .named(mainJarTaskName, ShadowJar::class.java)
+    .get()
+    .archiveFile
+    .get()
+    .asFile

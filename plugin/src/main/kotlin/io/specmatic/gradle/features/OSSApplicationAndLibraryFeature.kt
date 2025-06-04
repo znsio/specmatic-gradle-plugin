@@ -10,8 +10,12 @@ import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 
-open class OSSApplicationAndLibraryFeature(project: Project) : ApplicationFeature, DockerBuildFeature, ShadowingFeature,
-    GithubReleaseFeature, BaseDistribution(project) {
+open class OSSApplicationAndLibraryFeature(project: Project) :
+    BaseDistribution(project),
+    ApplicationFeature,
+    DockerBuildFeature,
+    ShadowingFeature,
+    GithubReleaseFeature {
     override var mainClass: String = ""
 
     override fun applyToProject() {
@@ -27,15 +31,15 @@ open class OSSApplicationAndLibraryFeature(project: Project) : ApplicationFeatur
             val unobfuscatedShadowJarTask = project.createUnobfuscatedShadowJar(shadowActions, shadowPrefix, true)
 
             project.plugins.withType(MavenPublishPlugin::class.java) {
-
                 project.createUnobfuscatedJarPublication(
-                    project.name
+                    project.name,
                 )
 
-                val shadowJarPublication = project.createShadowedUnobfuscatedJarPublication(
-                    unobfuscatedShadowJarTask,
-                    "${project.name}-all",
-                )
+                val shadowJarPublication =
+                    project.createShadowedUnobfuscatedJarPublication(
+                        unobfuscatedShadowJarTask,
+                        "${project.name}-all",
+                    )
 
                 shadowJarPublication.configure {
                     artifact(project.tasks.named("sourcesJar")) {
@@ -50,7 +54,6 @@ open class OSSApplicationAndLibraryFeature(project: Project) : ApplicationFeatur
             }
         }
     }
-
 
     override fun shadow(prefix: String?, action: Action<ShadowJar>?) {
         super.shadow(prefix, action)

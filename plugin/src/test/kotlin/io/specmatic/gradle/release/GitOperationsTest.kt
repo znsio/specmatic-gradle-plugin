@@ -1,5 +1,7 @@
 package io.specmatic.gradle.release
 
+import java.io.File
+import java.io.FileNotFoundException
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.gradle.api.GradleException
@@ -9,11 +11,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.CleanupMode
 import org.junit.jupiter.api.io.TempDir
 import org.slf4j.LoggerFactory
-import java.io.File
-import java.io.FileNotFoundException
 
 class GitOperationsTest {
-
     private val logger = LoggerFactory.getLogger("temp")
 
     @TempDir(cleanup = CleanupMode.ON_SUCCESS)
@@ -37,7 +36,7 @@ class GitOperationsTest {
             logger,
             "clone",
             remoteRepoDir.absolutePath,
-            gitRepo.absolutePath
+            gitRepo.absolutePath,
         )
     }
 
@@ -111,7 +110,9 @@ class GitOperationsTest {
             assertThatCode {
                 gitOperations.assertMainBranch()
             }.isInstanceOf(GradleException::class.java)
-                .hasMessage("You are not on the main branch. Please switch to the main branch to create a release. Run with `-PskipBranchCheck=true` to disable.")
+                .hasMessage(
+                    "You are not on the main branch. Please switch to the main branch to create a release. Run with `-PskipBranchCheck=true` to disable."
+                )
         }
 
         @Test
@@ -147,7 +148,9 @@ class GitOperationsTest {
             assertThatCode {
                 gitOperations.assertRepoNotDirty()
             }.isInstanceOf(GradleException::class.java)
-                .hasMessage("Repo is dirty. Please commit or stash your changes before creating a release. Run with `-PskipRepoDirtyCheck=true` to disable.")
+                .hasMessage(
+                    "Repo is dirty. Please commit or stash your changes before creating a release. Run with `-PskipRepoDirtyCheck=true` to disable."
+                )
         }
 
         @Test
@@ -178,7 +181,12 @@ class GitOperationsTest {
             val updatedContent = gradlePropertiesFile.readText()
             assertThat(updatedContent).isEqualTo("version=1.1.0")
 
-            val lastCommit = gitRepo.execGit(logger, "log", "-1", "--pretty=format:%s").outputUTF8().lines().first()
+            val lastCommit =
+                gitRepo
+                    .execGit(logger, "log", "-1", "--pretty=format:%s")
+                    .outputUTF8()
+                    .lines()
+                    .first()
             assertThat(lastCommit).isEqualTo("chore(release): pre-release bump version 1.1.0")
             assertThat(gitRepo.execGit(logger, "tag").outputUTF8().trim()).isEmpty()
         }
@@ -200,7 +208,13 @@ class GitOperationsTest {
             val unchangedContent = gradlePropertiesFile.readText()
             assertThat(unchangedContent).isEqualTo("version=1.0.0")
 
-            assertThat(gitRepo.execGit(logger, "log", "--oneline").outputUTF8().trim().lines()).hasSize(2)
+            assertThat(
+                gitRepo
+                    .execGit(logger, "log", "--oneline")
+                    .outputUTF8()
+                    .trim()
+                    .lines()
+            ).hasSize(2)
             assertThat(gitRepo.execGit(logger, "tag").outputUTF8().trim()).isEmpty()
         }
     }
@@ -233,14 +247,18 @@ class GitOperationsTest {
             }.isInstanceOf(FileNotFoundException::class.java)
                 .hasMessageContaining("gradle.properties (No such file or directory)")
 
-            assertThat(gitRepo.execGit(logger, "log", "--oneline").outputUTF8().trim().lines()).hasSize(1)
+            assertThat(
+                gitRepo
+                    .execGit(logger, "log", "--oneline")
+                    .outputUTF8()
+                    .trim()
+                    .lines()
+            ).hasSize(1)
         }
     }
 
-
     @Nested
     inner class AssertNoIncomingOrOutgoingChanges {
-
         @Test
         fun `should not throw exception when there are no incoming or outgoing changes`() {
             val gitOperations = GitOperations(gitRepo, emptyMap(), logger)
@@ -298,7 +316,6 @@ class GitOperationsTest {
         }
     }
 
-
     @Nested
     inner class Push {
         @Test
@@ -316,9 +333,16 @@ class GitOperationsTest {
 
             assertThat(remoteRepoDir.execGit(logger, "log", "--pretty=format:%s").outputUTF8().lines())
                 .hasSize(2)
-                .element(0).isEqualTo("New commit")
+                .element(0)
+                .isEqualTo("New commit")
 
-            assertThat(remoteRepoDir.execGit(logger, "tag").outputUTF8().trim().lines()).contains("1.0.0")
+            assertThat(
+                remoteRepoDir
+                    .execGit(logger, "tag")
+                    .outputUTF8()
+                    .trim()
+                    .lines()
+            ).contains("1.0.0")
         }
 
         @Test
@@ -327,10 +351,15 @@ class GitOperationsTest {
 
             gitOperations.push()
 
-            assertThat(remoteRepoDir.execGit(logger, "log", "--oneline").outputUTF8().trim().lines()).hasSize(1)
+            assertThat(
+                remoteRepoDir
+                    .execGit(logger, "log", "--oneline")
+                    .outputUTF8()
+                    .trim()
+                    .lines()
+            ).hasSize(1)
         }
     }
-
 
     @Nested
     inner class ResetHardTo {
@@ -343,7 +372,12 @@ class GitOperationsTest {
             val gitOperations = GitOperations(gitRepo, emptyMap(), logger)
             gitOperations.resetHardTo(initialCommitId)
 
-            val log = gitRepo.execGit(logger, "log", "--oneline").outputUTF8().trim().lines()
+            val log =
+                gitRepo
+                    .execGit(logger, "log", "--oneline")
+                    .outputUTF8()
+                    .trim()
+                    .lines()
             assertThat(log).hasSize(1)
         }
 
@@ -355,7 +389,12 @@ class GitOperationsTest {
                 gitOperations.resetHardTo(initialCommitId)
             }.doesNotThrowAnyException()
 
-            val logLines = gitRepo.execGit(logger, "log", "--oneline", "--no-abbrev-commit").outputUTF8().trim().lines()
+            val logLines =
+                gitRepo
+                    .execGit(logger, "log", "--oneline", "--no-abbrev-commit")
+                    .outputUTF8()
+                    .trim()
+                    .lines()
             assertThat(logLines)
                 .hasSize(1)
             assertThat(logLines.first()).startsWith(initialCommitId)

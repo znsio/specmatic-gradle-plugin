@@ -1,6 +1,8 @@
 package io.specmatic.gradle
 
 import io.specmatic.gradle.release.execGit
+import java.io.File
+import java.util.jar.JarFile
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.internal.impldep.org.apache.maven.model.io.xpp3.MavenXpp3Reader
 import org.gradle.testkit.runner.BuildResult
@@ -9,8 +11,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.io.CleanupMode
 import org.junit.jupiter.api.io.TempDir
 import org.slf4j.LoggerFactory
-import java.io.File
-import java.util.jar.JarFile
 
 open class AbstractFunctionalTest {
     @field:TempDir(cleanup = CleanupMode.ON_SUCCESS)
@@ -21,14 +21,15 @@ open class AbstractFunctionalTest {
     protected val stagingRepo by lazy { projectDir.resolve("build/mvn-repo") }
     protected val localMavenRepo by lazy { projectDir.resolve("build/m2/repository") }
 
-    protected val loggingDependencies = arrayOf(
-        "ch.qos.logback:logback-classic:1.5.18",
-        "ch.qos.logback:logback-core:1.5.18",
-        "org.apache.logging.log4j:log4j-to-slf4j:2.24.3",
-        "org.slf4j:jcl-over-slf4j:2.0.17",
-        "org.slf4j:jul-to-slf4j:2.0.17",
-        "org.slf4j:log4j-over-slf4j:2.0.17",
-    )
+    protected val loggingDependencies =
+        arrayOf(
+            "ch.qos.logback:logback-classic:1.5.18",
+            "ch.qos.logback:logback-core:1.5.18",
+            "org.apache.logging.log4j:log4j-to-slf4j:2.24.3",
+            "org.slf4j:jcl-over-slf4j:2.0.17",
+            "org.slf4j:jul-to-slf4j:2.0.17",
+            "org.slf4j:log4j-over-slf4j:2.0.17",
+        )
 
     @BeforeEach
     fun baseSetup() {
@@ -41,14 +42,14 @@ open class AbstractFunctionalTest {
         )
         gradleProperties.writeText(
             """
-                version=${projectVersion()}
-                group=io.specmatic.example
+            version=${projectVersion()}
+            group=io.specmatic.example
             """.trimIndent(),
         )
 
         settingsFile.writeText(
             """
-                rootProject.name = "example-project"
+            rootProject.name = "example-project"
             """.trimIndent(),
         )
     }
@@ -58,22 +59,22 @@ open class AbstractFunctionalTest {
             it.parentFile.mkdirs()
             it.writeText(
                 """
-                    <?xml version="1.0" encoding="UTF-8" ?>
-                    <!DOCTYPE configuration>
-                    <configuration>
-                      <import class="ch.qos.logback.classic.encoder.PatternLayoutEncoder"/>
-                      <import class="ch.qos.logback.core.ConsoleAppender"/>
-                    
-                      <appender name="STDOUT" class="ConsoleAppender">
-                        <encoder class="PatternLayoutEncoder">
-                          <pattern>[this will only show via logback] %-5level %logger{36} -%kvp- %msg%n</pattern>
-                        </encoder>
-                      </appender>
-                    
-                      <root level="debug">
-                        <appender-ref ref="STDOUT"/>
-                      </root>
-                    </configuration>                
+                <?xml version="1.0" encoding="UTF-8" ?>
+                <!DOCTYPE configuration>
+                <configuration>
+                  <import class="ch.qos.logback.classic.encoder.PatternLayoutEncoder"/>
+                  <import class="ch.qos.logback.core.ConsoleAppender"/>
+                
+                  <appender name="STDOUT" class="ConsoleAppender">
+                    <encoder class="PatternLayoutEncoder">
+                      <pattern>[this will only show via logback] %-5level %logger{36} -%kvp- %msg%n</pattern>
+                    </encoder>
+                  </appender>
+                
+                  <root level="debug">
+                    <appender-ref ref="STDOUT"/>
+                  </root>
+                </configuration>                
                 """.trimIndent(),
             )
         }
@@ -88,17 +89,17 @@ open class AbstractFunctionalTest {
                 it.parentFile.mkdirs()
                 it.writeText(
                     """
-                            package $packageName
-                            
-                            object $className {
-                                fun sayHello() {
-                                    val stackTraceElement = Thread.currentThread().stackTrace[1]
-                                    println("Hello from " + stackTraceElement.className + "#" + stackTraceElement.methodName)
-                                    ${previousClassName?.let { "$previousClassName.sayHello()" } ?: ""}
-                                }
-    
-                            }
-                        """.trimIndent(),
+                    package $packageName
+                    
+                    object $className {
+                        fun sayHello() {
+                            val stackTraceElement = Thread.currentThread().stackTrace[1]
+                            println("Hello from " + stackTraceElement.className + "#" + stackTraceElement.methodName)
+                            ${previousClassName?.let { "$previousClassName.sayHello()" } ?: ""}
+                        }
+                    
+                    }
+                    """.trimIndent(),
                 )
             }
         }
@@ -107,58 +108,57 @@ open class AbstractFunctionalTest {
     fun writeMainClass(projectDir: File, mainClass: String, innerPackage: String? = null) {
         val fileName = mainClass.replace(".", "/") + ".kt"
         val packageName = mainClass.substringBeforeLast(".")
-        projectDir.resolve("src/main/kotlin/${fileName}").also {
-
-            val callInnerPackageCode = if (innerPackage.orEmpty().isNotEmpty())
-                """
-                        println("Calling inner package")
-                        $innerPackage.Class5.sayHello()
+        projectDir.resolve("src/main/kotlin/$fileName").also {
+            val callInnerPackageCode =
+                if (innerPackage.orEmpty().isNotEmpty()) {
+                    """
+                    println("Calling inner package")
+                    $innerPackage.Class5.sayHello()
                     """.trimIndent()
-            else
-                ""
+                } else {
+                    ""
+                }
             it.parentFile.mkdirs()
             it.writeText(
                 """
-                        package $packageName
+                package $packageName
+                
+                object Main {
+                    @JvmStatic
+                    fun main(args: Array<String>) {
+                        // initialize an slf4j logger
+                        // this is to ensure that obfuscation/shadowing etc work fine
+                        val logger = org.slf4j.LoggerFactory.getLogger("slf4j")
+                        logger.info("Hello, logger! Version: " + VersionInfo.describe())
+                        println("Logger class is " + logger.javaClass)
                         
-                        object Main {
-                            @JvmStatic
-                            fun main(args: Array<String>) {
-                                // initialize an slf4j logger
-                                // this is to ensure that obfuscation/shadowing etc work fine
-                                val logger = org.slf4j.LoggerFactory.getLogger("slf4j")
-                                logger.info("Hello, logger! Version: " + VersionInfo.describe())
-                                println("Logger class is " + logger.javaClass)
-                                
-                                // this should only print if the above works
-                                println("Hello, world! Version: " + VersionInfo.describe())
-    
-                                $callInnerPackageCode
-                            }
-                        }
-                    """.trimIndent(),
+                        // this should only print if the above works
+                        println("Hello, world! Version: " + VersionInfo.describe())
+                
+                        $callInnerPackageCode
+                    }
+                }
+                """.trimIndent(),
             )
         }
     }
 
-    fun createRunner(gradleRunArgs: Array<out String>): GradleRunner =
-        GradleRunner.create().forwardOutput().withPluginClasspath().withProjectDir(projectDir)
-            .withArguments(
-                *gradleRunArgs,
-                "-Dmaven.repo.local=${localMavenRepo}",
-                "--stacktrace",
+    fun createRunner(gradleRunArgs: Array<out String>): GradleRunner = GradleRunner
+        .create()
+        .forwardOutput()
+        .withPluginClasspath()
+        .withProjectDir(projectDir)
+        .withArguments(
+            *gradleRunArgs,
+            "-Dmaven.repo.local=$localMavenRepo",
+            "--stacktrace",
 //                "-d"
 //                "-Dorg.gradle.debug=true"
-            )
+        )
 
+    fun runWithSuccess(vararg gradleRunArgs: String): BuildResult = createRunner(gradleRunArgs).build()
 
-    fun runWithSuccess(vararg gradleRunArgs: String): BuildResult {
-        return createRunner(gradleRunArgs).build()
-    }
-
-    fun runWithFailure(vararg gradleRunArgs: String): BuildResult {
-        return createRunner(gradleRunArgs).buildAndFail()
-    }
+    fun runWithFailure(vararg gradleRunArgs: String): BuildResult = createRunner(gradleRunArgs).buildAndFail()
 
     fun assertMainJarExecutes(result: BuildResult, innerPackage: String? = null) {
         assertThat(result.output).contains("Hello, world! Version: v${projectVersion()}")
@@ -168,8 +168,10 @@ open class AbstractFunctionalTest {
         )
 
         if (!innerPackage.isNullOrBlank()) {
-            val expectedLines = result.output.lines()
-                .filter { it.startsWith("Hello from $innerPackage") && it.contains(".internal.") }
+            val expectedLines =
+                result.output
+                    .lines()
+                    .filter { it.startsWith("Hello from $innerPackage") && it.contains(".internal.") }
             assertThat(expectedLines).containsExactly(
                 "Hello from $innerPackage.Class5#sayHello",
                 "Hello from $innerPackage.Class4#sayHello",
@@ -190,8 +192,10 @@ open class AbstractFunctionalTest {
 
         if (!innerPackage.isNullOrBlank()) {
             val packageComponents = innerPackage.split(".internal.")
-            val expectedLines = result.output.lines()
-                .filter { it.startsWith("Hello from ${packageComponents[0]}") && !it.contains(".internal.") }
+            val expectedLines =
+                result.output
+                    .lines()
+                    .filter { it.startsWith("Hello from ${packageComponents[0]}") && !it.contains(".internal.") }
             assertThat(expectedLines)
                 .containsExactlyInAnyOrder(
                     "Hello from ${packageComponents[0]}.a.a.e#e",
@@ -200,7 +204,6 @@ open class AbstractFunctionalTest {
                     "Hello from ${packageComponents[0]}.a.a.b#b",
                     "Hello from ${packageComponents[0]}.a.a.a#a",
                 )
-
         }
         assertThat(result.output).contains("BUILD SUCCESSFUL")
     }
@@ -209,8 +212,7 @@ open class AbstractFunctionalTest {
 
     private fun openJar(coordinates: String): JarFile = JarFile(getJar(coordinates))
 
-    fun mainClass(coordinates: String): String? =
-        openJar(coordinates).use { it.manifest.mainAttributes.getValue("Main-Class") }
+    fun mainClass(coordinates: String): String? = openJar(coordinates).use { it.manifest.mainAttributes.getValue("Main-Class") }
 
     fun mainClass(file: File): String? = JarFile(file).use { it.manifest.mainAttributes.getValue("Main-Class") }
 
@@ -225,10 +227,11 @@ open class AbstractFunctionalTest {
     fun getDependencies(coordinates: String): Set<String> {
         val publishedPomFiles = stagingRepo.walk().filter { it.extension == "pom" }
 
-        val pomFiles = publishedPomFiles.filter {
-            val model = it.inputStream().use { MavenXpp3Reader().read(it) }
-            "${model.groupId}:${model.artifactId}:${model.version}" == coordinates
-        }
+        val pomFiles =
+            publishedPomFiles.filter {
+                val model = it.inputStream().use { MavenXpp3Reader().read(it) }
+                "${model.groupId}:${model.artifactId}:${model.version}" == coordinates
+            }
 
         if (pomFiles.toSet().size != 1) {
             val stagingRepoPublishedPackages = stagingRepo.getPublishedArtifactCoordinates().joinToString(", ")
@@ -242,14 +245,14 @@ open class AbstractFunctionalTest {
         val pomFile = pomFiles.single()
 
         val model = pomFile.inputStream().use { MavenXpp3Reader().read(it) }
-        return model.dependencies.map {
-            if (it.version.isNullOrBlank()) {
-                "${it.groupId}:${it.artifactId}"
-            } else {
-                "${it.groupId}:${it.artifactId}:${it.version}"
-            }
-        }
-            .toSet()
+        return model.dependencies
+            .map {
+                if (it.version.isNullOrBlank()) {
+                    "${it.groupId}:${it.artifactId}"
+                } else {
+                    "${it.groupId}:${it.artifactId}:${it.version}"
+                }
+            }.toSet()
     }
 
     fun File.getPublishedArtifactCoordinates(): Set<String> {
@@ -257,10 +260,11 @@ open class AbstractFunctionalTest {
 
         val publishedPomFiles = walk().filter { it.extension == "pom" }
 
-        val publishedArtifacts = publishedPomFiles.map { pomFile ->
-            val model = pomFile.inputStream().use { MavenXpp3Reader().read(it) }
-            "${model.groupId}:${model.artifactId}:${model.version}"
-        }
+        val publishedArtifacts =
+            publishedPomFiles.map { pomFile ->
+                val model = pomFile.inputStream().use { MavenXpp3Reader().read(it) }
+                "${model.groupId}:${model.artifactId}:${model.version}"
+            }
 
         return publishedArtifacts.toSet()
     }
@@ -272,7 +276,6 @@ open class AbstractFunctionalTest {
         assertThat(localMavenRepo.getPublishedArtifactCoordinates()).containsExactlyInAnyOrder(*coordinates)
         localMavenRepo.assertOnlyJarPublishedWithoutSourcesAndJavadocs(*coordinates)
     }
-
 
     fun assertPublishedWithJavadocAndSources(vararg coordinates: String) {
         assertThat(stagingRepo.getPublishedArtifactCoordinates()).containsExactlyInAnyOrder(*coordinates)
@@ -288,13 +291,14 @@ open class AbstractFunctionalTest {
             val artifactId = it.artifactId()
             val version = it.version()
 
-            val jarFiles = artifactDir(groupId, artifactId, version).listFiles { file ->
-                file.extension == "jar" && !file.name.contains("-sources") && !file.name.contains("-javadoc")
-            }
-            assertThat(artifactDir(groupId, artifactId, version).resolve("${artifactId}-${version}.pom")).exists()
+            val jarFiles =
+                artifactDir(groupId, artifactId, version).listFiles { file ->
+                    file.extension == "jar" && !file.name.contains("-sources") && !file.name.contains("-javadoc")
+                }
+            assertThat(artifactDir(groupId, artifactId, version).resolve("$artifactId-$version.pom")).exists()
 
             assertThat(jarFiles).containsExactly(
-                artifactDir(groupId, artifactId, version).resolve("${artifactId}-${version}.jar"),
+                artifactDir(groupId, artifactId, version).resolve("$artifactId-$version.jar"),
             )
         }
     }
@@ -307,12 +311,12 @@ open class AbstractFunctionalTest {
 
             val jarFiles = artifactDir(groupId, artifactId, version).listFiles { file -> file.extension == "jar" }
 
-            assertThat(artifactDir(groupId, artifactId, version).resolve("${artifactId}-${version}.pom")).exists()
+            assertThat(artifactDir(groupId, artifactId, version).resolve("$artifactId-$version.pom")).exists()
 
             assertThat(jarFiles).containsExactlyInAnyOrder(
-                artifactDir(groupId, artifactId, version).resolve("${artifactId}-${version}.jar"),
-                artifactDir(groupId, artifactId, version).resolve("${artifactId}-${version}-javadoc.jar"),
-                artifactDir(groupId, artifactId, version).resolve("${artifactId}-${version}-sources.jar"),
+                artifactDir(groupId, artifactId, version).resolve("$artifactId-$version.jar"),
+                artifactDir(groupId, artifactId, version).resolve("$artifactId-$version-javadoc.jar"),
+                artifactDir(groupId, artifactId, version).resolve("$artifactId-$version-sources.jar"),
             )
         }
     }
@@ -332,11 +336,12 @@ open class AbstractFunctionalTest {
         return resolve("$groupPath/$namePath/$version")
     }
 
-    fun File.artifactDir(coordinates: String): File {
-        return this.artifactDir(coordinates.groupId(), coordinates.artifactId(), coordinates.version())
-    }
+    fun File.artifactDir(coordinates: String): File =
+        this.artifactDir(coordinates.groupId(), coordinates.artifactId(), coordinates.version())
 
     private fun String.version() = split(":").get(2)
+
     private fun String.artifactId() = split(":").get(1)
+
     private fun String.groupId() = split(":").get(0)
 }

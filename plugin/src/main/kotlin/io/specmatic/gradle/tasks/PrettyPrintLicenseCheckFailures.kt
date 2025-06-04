@@ -1,11 +1,11 @@
 package io.specmatic.gradle.tasks
 
 import groovy.json.JsonSlurper
+import java.io.File
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
-import java.io.File
 
 open class PrettyPrintLicenseCheckFailures : DefaultTask() {
     init {
@@ -45,8 +45,9 @@ open class PrettyPrintLicenseCheckFailures : DefaultTask() {
             }
 
             val joinedMessages = messages.joinToString("\n")
-            throw GradleException("The following dependencies have licenses that are not allowed:\n\n$joinedMessages\n\nYou may use -xCheckLicense argument to disable license checking.")
+            throw GradleException(
+                "The following dependencies have licenses that are not allowed:\n\n$joinedMessages\n\nYou may use -xCheckLicense argument to disable license checking."
+            )
         }
     }
-
 }

@@ -36,27 +36,30 @@ private fun Project.configureReleaseTasks() {
     val gitPushTask = gitPushTask(postReleaseBumpTask)
     val createGithubReleaseTask = findOrCreateGithubReleaseTask(gitPushTask)
 
-    val releaseTask = project.tasks.register("release") {
-        group = "release"
-        description = "Release the project"
-        dependsOn(createGithubReleaseTask)
-    }
+    val releaseTask =
+        project.tasks.register("release") {
+            group = "release"
+            description = "Release the project"
+            dependsOn(createGithubReleaseTask)
+        }
 
-
-    project.gradle.addBuildListener(object : BuildAdapter() {
-        override fun buildFinished(result: BuildResult) {
-            if (result.failure != null) {
-                val executedTasks = project.gradle.taskGraph.allTasks.map { it.path }
-                val wasMyTaskRun = executedTasks.contains(releaseTask.get().path)
-                pluginWarn("Checking if release task ran: $wasMyTaskRun")
-                if (wasMyTaskRun) {
-                    pluginWarn("Rolling back git changes to original commit $originalGitCommit")
-                    revertGitChanges(originalGitCommit)
+    project.gradle.addBuildListener(
+        object : BuildAdapter() {
+            override fun buildFinished(result: BuildResult) {
+                if (result.failure != null) {
+                    val executedTasks =
+                        project.gradle.taskGraph.allTasks
+                            .map { it.path }
+                    val wasMyTaskRun = executedTasks.contains(releaseTask.get().path)
+                    pluginWarn("Checking if release task ran: $wasMyTaskRun")
+                    if (wasMyTaskRun) {
+                        pluginWarn("Rolling back git changes to original commit $originalGitCommit")
+                        revertGitChanges(originalGitCommit)
+                    }
                 }
             }
-        }
-    })
-
+        },
+    )
 }
 
 private fun Project.validateSnapshotDependenciesTask(): TaskProvider<ValidateSnapshotDependencies?> =
@@ -64,7 +67,6 @@ private fun Project.validateSnapshotDependenciesTask(): TaskProvider<ValidateSna
         group = "release"
         description = "Validate snapshot dependencies"
     }
-
 
 private fun Project.gitPushTask(runReleaseLifecycleHooksTask: TaskProvider<*>): TaskProvider<*> =
     project.tasks.register("releaseGitPush", GitPushTask::class.java) {
@@ -85,11 +87,8 @@ private fun Project.postReleaseBumpTask(dependentTask: TaskProvider<*>): TaskPro
         postReleaseVersion.set(project.provider { project.property("release.newVersion").toString() })
     }
 
-
-private fun Project.runReleaseLifecycleHooksTask(
-    removeSnapshotTask: TaskProvider<*>,
-): TaskProvider<*> {
-    return if (project.hasProperty("functionalTestingHack") && project.property("functionalTestingHack") == "true") {
+private fun Project.runReleaseLifecycleHooksTask(removeSnapshotTask: TaskProvider<*>,): TaskProvider<*> =
+    if (project.hasProperty("functionalTestingHack") && project.property("functionalTestingHack") == "true") {
         project.tasks.register("runReleaseLifecycleHooks") {
             dependsOn(removeSnapshotTask)
             group = "release"
@@ -98,22 +97,23 @@ private fun Project.runReleaseLifecycleHooksTask(
     } else {
         val validateSnapshotDependenciesTask = validateSnapshotDependenciesTask()
 
-        val prepareGithubReleaseArtifactsTask = tasks.register("prepareGithubReleaseArtifacts", Copy::class.java) {
-            group = "release"
-            description = "Prepare artifacts for Github release"
+        val prepareGithubReleaseArtifactsTask =
+            tasks.register("prepareGithubReleaseArtifacts", Copy::class.java) {
+                group = "release"
+                description = "Prepare artifacts for Github release"
 
-            val targetDir = project.layout.buildDirectory.dir("githubAssets")
-            specmaticExtension().projectConfigurations.forEach { (eachProject, eachProjectConfig) ->
-                if (eachProjectConfig is GithubReleaseFeature) {
-                    (eachProjectConfig as BaseDistribution).githubRelease.files.forEach { (taskName, releaseFileName) ->
-                        dependsOn(eachProject.tasks.named(taskName))
-                        from(eachProject.tasks.named(taskName).map { it.outputs.files.singleFile })
-                        into(targetDir)
-                        rename { releaseFileName }
+                val targetDir = project.layout.buildDirectory.dir("githubAssets")
+                specmaticExtension().projectConfigurations.forEach { (eachProject, eachProjectConfig) ->
+                    if (eachProjectConfig is GithubReleaseFeature) {
+                        (eachProjectConfig as BaseDistribution).githubRelease.files.forEach { (taskName, releaseFileName) ->
+                            dependsOn(eachProject.tasks.named(taskName))
+                            from(eachProject.tasks.named(taskName).map { it.outputs.files.singleFile })
+                            into(targetDir)
+                            rename { releaseFileName }
+                        }
                     }
                 }
             }
-        }
 
         project.tasks.register("runReleaseLifecycleHooks", GradleBuild::class.java) {
             dependsOn(removeSnapshotTask)
@@ -124,16 +124,15 @@ private fun Project.runReleaseLifecycleHooksTask(
             startParameter.projectProperties.putAll(project.gradle.startParameter.projectProperties)
             buildName = "(release-publish)"
 
-            tasks = listOf(
-                "clean",
-                validateSnapshotDependenciesTask.name,
-                prepareGithubReleaseArtifactsTask.name,
-                *project.specmaticExtension().releasePublishTasks.toTypedArray()
-            )
+            tasks =
+                listOf(
+                    "clean",
+                    validateSnapshotDependenciesTask.name,
+                    prepareGithubReleaseArtifactsTask.name,
+                    *project.specmaticExtension().releasePublishTasks.toTypedArray(),
+                )
         }
     }
-}
-
 
 private fun Project.runReleaseTagTask(dependentTask: TaskProvider<*>): TaskProvider<*> =
     project.tasks.register("createReleaseTag", CreateReleaseTagTask::class.java) {
@@ -145,7 +144,6 @@ private fun Project.runReleaseTagTask(dependentTask: TaskProvider<*>): TaskProvi
         releaseVersion.set(project.provider { project.property("release.releaseVersion").toString() })
     }
 
-
 private fun Project.preReleaseBumpTask(dependentTask: TaskProvider<*>): TaskProvider<*> =
     project.tasks.register("preReleaseBump", PreReleaseVersionBump::class.java) {
         dependsOn(dependentTask)
@@ -156,13 +154,12 @@ private fun Project.preReleaseBumpTask(dependentTask: TaskProvider<*>): TaskProv
         releaseVersion.set(project.provider { project.property("release.releaseVersion").toString() })
     }
 
-private fun Project.getPreReleaseCheckTask(): TaskProvider<*> =
-    project.tasks.register("preReleaseCheck", PreReleaseCheck::class.java) {
-        group = "release"
-        description = "Pre-release checks"
+private fun Project.getPreReleaseCheckTask(): TaskProvider<*> = project.tasks.register("preReleaseCheck", PreReleaseCheck::class.java) {
+    group = "release"
+    description = "Pre-release checks"
 
-        rootDir.set(project.rootProject.rootDir)
-    }
+    rootDir.set(project.rootProject.rootDir)
+}
 
 private fun Project.revertGitChanges(originalGitCommit: String) {
     GitOperations(rootProject.rootDir, project.properties, logger).apply {
@@ -179,7 +176,12 @@ private fun Project.findOrCreateGithubReleaseTask(dependentTasks: TaskProvider<*
             dependsOn(dependentTasks)
             group = "release"
             description = "Create a Github release"
-            sourceDir.set(project.layout.buildDirectory.dir("githubAssets").get().asFile)
+            sourceDir.set(
+                project.layout.buildDirectory
+                    .dir("githubAssets")
+                    .get()
+                    .asFile
+            )
 
             releaseVersion.set(project.provider { project.property("release.releaseVersion").toString() })
         }

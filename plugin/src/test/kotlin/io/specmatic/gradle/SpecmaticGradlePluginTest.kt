@@ -6,6 +6,7 @@ import io.mockk.mockk
 import io.specmatic.gradle.extensions.SpecmaticGradleExtension
 import io.specmatic.gradle.release.SpecmaticReleasePlugin
 import io.specmatic.gradle.release.execGit
+import java.io.File
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.barfuin.gradle.taskinfo.GradleTaskInfoPlugin
@@ -33,11 +34,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.slf4j.LoggerFactory
-import java.io.File
-
 
 class SpecmaticGradlePluginTest {
-
     @Nested
     inner class LicenseReporting {
         @Test
@@ -52,12 +50,14 @@ class SpecmaticGradlePluginTest {
             assertThat(project.tasks.findByName("prettyPrintLicenseCheckFailures")).isNotNull()
             assertThat(project.tasks.findByName("createAllowedLicensesFile")).isNotNull()
 
-
             assertThat(
-                project.tasks.named("check").get().taskDependencies.getDependencies(null)
+                project.tasks
+                    .named("check")
+                    .get()
+                    .taskDependencies
+                    .getDependencies(null),
             ).contains(project.tasks.named("generateLicenseReport").get())
         }
-
 
         @Test
         fun `checkLicense task should invoke createAllowedLicensesFileTask and be finalized by prettyPrintLicenseCheckFailuresTask`() {
@@ -147,7 +147,11 @@ class SpecmaticGradlePluginTest {
             project.evaluationDependsOn(":") // force execution of `afterEvaluate` block
 
             val javaPluginExtension = project.extensions.getByType(JavaPluginExtension::class.java)
-            assertThat(javaPluginExtension.toolchain.languageVersion.get().asInt()).isEqualTo(17)
+            assertThat(
+                javaPluginExtension.toolchain.languageVersion
+                    .get()
+                    .asInt()
+            ).isEqualTo(17)
 
             val kotlinProjectExtension = project.extensions.findByType(KotlinProjectExtension::class.java)
             assertThat(kotlinProjectExtension).isNull()
@@ -161,7 +165,11 @@ class SpecmaticGradlePluginTest {
             project.evaluationDependsOn(":") // force execution of `afterEvaluate` block
 
             val javaPluginExtension = project.extensions.getByType(JavaPluginExtension::class.java)
-            assertThat(javaPluginExtension.toolchain.languageVersion.get().asInt()).isEqualTo(17)
+            assertThat(
+                javaPluginExtension.toolchain.languageVersion
+                    .get()
+                    .asInt()
+            ).isEqualTo(17)
         }
     }
 
@@ -210,12 +218,28 @@ class SpecmaticGradlePluginTest {
         }
 
         @Test
-        fun `should stamp jar files with version, group, name and git sha with repo is initialized`(@TempDir tempDir: File) {
+        fun `should stamp jar files with version, group, name and git sha with repo is initialized`(
+            @TempDir tempDir: File
+        ) {
             val git = Git.init().setDirectory(tempDir).call()
-            git.commit().setMessage("Initial commit").setSign(false).call()
-            val headCommit = git.commit().setMessage("Second commit").setSign(false).call()
+            git
+                .commit()
+                .setMessage("Initial commit")
+                .setSign(false)
+                .call()
+            val headCommit =
+                git
+                    .commit()
+                    .setMessage("Second commit")
+                    .setSign(false)
+                    .call()
 
-            val project = ProjectBuilder.builder().withProjectDir(tempDir).withName("test-project").build()
+            val project =
+                ProjectBuilder
+                    .builder()
+                    .withProjectDir(tempDir)
+                    .withName("test-project")
+                    .build()
             setupSettingsMock(project)
             project.version = "1.2.3"
             project.group = "test-group"
@@ -234,7 +258,6 @@ class SpecmaticGradlePluginTest {
                 assertThat(it.manifest.attributes["x-specmatic-git-sha"]).isEqualTo(headCommit.name)
             }
         }
-
     }
 
     @Nested
@@ -258,11 +281,19 @@ class SpecmaticGradlePluginTest {
             rootProject.version = "1.2.3"
 
             val subProjectWithJava =
-                ProjectBuilder.builder().withName("java-subproject").withParent(rootProject).build()
+                ProjectBuilder
+                    .builder()
+                    .withName("java-subproject")
+                    .withParent(rootProject)
+                    .build()
             subProjectWithJava.plugins.apply("java")
 
             val subProjectWithoutJava =
-                ProjectBuilder.builder().withName("non-java-subproject").withParent(rootProject).build()
+                ProjectBuilder
+                    .builder()
+                    .withName("non-java-subproject")
+                    .withParent(rootProject)
+                    .build()
 
             rootProject.plugins.apply("io.specmatic.gradle")
             rootProject.evaluationDependsOn(":") // force execution of `afterEvaluate` block
@@ -325,5 +356,4 @@ class SpecmaticGradlePluginTest {
         every { settingState.settings } returns settingsInternal
         (project as DefaultProject).gradle.attachSettings(settingState)
     }
-
 }

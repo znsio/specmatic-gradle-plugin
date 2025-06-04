@@ -1,6 +1,9 @@
 package io.specmatic.gradle
 
 import io.specmatic.gradle.license.pluginInfo
+import java.io.File
+import java.io.IOException
+import java.nio.file.Files
 import org.apache.commons.codec.digest.DigestUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -12,13 +15,9 @@ import org.kohsuke.github.GHRelease
 import org.kohsuke.github.GHReleaseBuilder
 import org.kohsuke.github.GHRepository
 import org.kohsuke.github.GitHubBuilder
-import java.io.File
-import java.io.IOException
-import java.nio.file.Files
 
 @DisableCachingByDefault(because = "Makes network calls")
-abstract class CreateGithubReleaseTask() : DefaultTask() {
-
+abstract class CreateGithubReleaseTask : DefaultTask() {
     @get:Internal
     abstract val releaseVersion: Property<String>
 
@@ -27,22 +26,34 @@ abstract class CreateGithubReleaseTask() : DefaultTask() {
 
     @TaskAction
     fun createGithubRelease() {
-        val user = (System.getenv("SPECMATIC_GITHUB_USER")
-            ?: throw GradleException("SPECMATIC_GITHUB_USER environment variable not set"))
-        val password = (System.getenv("SPECMATIC_GITHUB_TOKEN")
-            ?: throw GradleException("SPECMATIC_GITHUB_TOKEN environment variable not set"))
-
-        val githubApi = GitHubBuilder().withEndpoint(System.getenv("GITHUB_API_URL") ?: "https://api.github.com")
-            .withPassword(user, password).build()
-
-        val githubRepo = githubApi.getRepository(
-            System.getenv("GITHUB_REPOSITORY")
-                ?: throw GradleException("GITHUB_REPOSITORY environment variable not set")
+        val user = (
+            System.getenv("SPECMATIC_GITHUB_USER")
+                ?: throw GradleException("SPECMATIC_GITHUB_USER environment variable not set")
+        )
+        val password = (
+            System.getenv("SPECMATIC_GITHUB_TOKEN")
+                ?: throw GradleException("SPECMATIC_GITHUB_TOKEN environment variable not set")
         )
 
+        val githubApi =
+            GitHubBuilder()
+                .withEndpoint(System.getenv("GITHUB_API_URL") ?: "https://api.github.com")
+                .withPassword(user, password)
+                .build()
+
+        val githubRepo =
+            githubApi.getRepository(
+                System.getenv("GITHUB_REPOSITORY")
+                    ?: throw GradleException("GITHUB_REPOSITORY environment variable not set"),
+            )
+
         val githubRelease =
-            findReleaseByName(githubRepo, releaseVersion.get()) ?: githubRepo.createRelease(releaseVersion.get())
-                .makeLatest(GHReleaseBuilder.MakeLatest.TRUE).draft(true).name(releaseVersion.get()).create()
+            findReleaseByName(githubRepo, releaseVersion.get()) ?: githubRepo
+                .createRelease(releaseVersion.get())
+                .makeLatest(GHReleaseBuilder.MakeLatest.TRUE)
+                .draft(true)
+                .name(releaseVersion.get())
+                .create()
         logger.warn("Created release ${githubRelease.name} with id ${githubRelease.id} at ${githubRelease.htmlUrl}")
 
         for (asset in githubRelease.listAssets()) {
@@ -78,7 +89,6 @@ abstract class CreateGithubReleaseTask() : DefaultTask() {
         return null
     }
 
-
     private fun uploadAsset(release: GHRelease, file: File) {
         val mimeType = Files.probeContentType(file.toPath())
         val filename = file.name
@@ -98,6 +108,6 @@ abstract class CreateGithubReleaseTask() : DefaultTask() {
         file.inputStream().use {
             release.uploadAsset(releaseFileName, it, mimeType)
         }
-        release.uploadAsset("${releaseFileName}.SHA256", "$sha256 $releaseFileName".byteInputStream(), "text/plain")
+        release.uploadAsset("$releaseFileName.SHA256", "$sha256 $releaseFileName".byteInputStream(), "text/plain")
     }
 }

@@ -40,16 +40,24 @@ internal fun Project.configurePublishing() {
 }
 
 private fun Project.setupPublishingTargets() {
-    val stagingRepo = project.uri(project.rootProject.layout.buildDirectory.dir("mvn-repo"))
+    val stagingRepo =
+        project.uri(
+            project.rootProject.layout.buildDirectory
+                .dir("mvn-repo")
+        )
 
     project.extensions.getByType(MavenPublishBaseExtension::class.java).apply {
         val specmaticExtension = project.rootProject.specmaticExtension()
 
-        val publishTargets = specmaticExtension.publishTo + listOf(
-            MavenInternal(
-                "staging", stagingRepo, RepoType.PUBLISH_ALL,
-            ),
-        )
+        val publishTargets =
+            specmaticExtension.publishTo +
+                listOf(
+                    MavenInternal(
+                        "staging",
+                        stagingRepo,
+                        RepoType.PUBLISH_ALL,
+                    ),
+                )
 
         publishTargets.forEach { publishTarget ->
             if (publishTarget is MavenCentral) {
@@ -70,7 +78,9 @@ private fun Project.setupPublishingTargets() {
         }
 
         val isOSSFeature =
-            specmaticExtension.projectConfigurations[project] is io.specmatic.gradle.features.OSSLibraryFeature || specmaticExtension.projectConfigurations[project] is io.specmatic.gradle.features.OSSApplicationFeature || specmaticExtension.projectConfigurations[project] is io.specmatic.gradle.features.OSSApplicationAndLibraryFeature
+            specmaticExtension.projectConfigurations[project] is io.specmatic.gradle.features.OSSLibraryFeature ||
+                specmaticExtension.projectConfigurations[project] is io.specmatic.gradle.features.OSSApplicationFeature ||
+                specmaticExtension.projectConfigurations[project] is io.specmatic.gradle.features.OSSApplicationAndLibraryFeature
 
         if (!isOSSFeature) {
             tasks.withType(PublishToMavenRepository::class.java) {
@@ -78,12 +88,19 @@ private fun Project.setupPublishingTargets() {
                     val mavenRepo = publishTargets.filterIsInstance<MavenInternal>().first { it.repoName == this.repository.name }
 
                     val singleDependency =
-                        publication.artifacts.flatMap { it.buildDependencies.getDependencies(null) }.filterIsInstance<Jar>().first()
+                        publication.artifacts
+                            .flatMap { it.buildDependencies.getDependencies(null) }
+                            .filterIsInstance<Jar>()
+                            .first()
 
                     val thisPublishTaskIsPublishingObfuscatedDependency =
-                        (singleDependency.archiveClassifier.get() == "obfuscated" || singleDependency.archiveClassifier.get() == "all-obfuscated")
+                        (
+                            singleDependency.archiveClassifier.get() == "obfuscated" ||
+                                singleDependency.archiveClassifier.get() == "all-obfuscated"
+                        )
 
-                    mavenRepo.type == RepoType.PUBLISH_ALL || (mavenRepo.type == RepoType.PUBLISH_OBFUSCATED_ONLY && thisPublishTaskIsPublishingObfuscatedDependency)
+                    mavenRepo.type == RepoType.PUBLISH_ALL ||
+                        (mavenRepo.type == RepoType.PUBLISH_OBFUSCATED_ONLY && thisPublishTaskIsPublishingObfuscatedDependency)
                 }
             }
         }

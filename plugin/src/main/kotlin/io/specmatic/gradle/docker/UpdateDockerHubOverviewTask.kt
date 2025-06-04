@@ -13,7 +13,6 @@ import org.gradle.api.tasks.TaskAction
 
 @org.gradle.work.DisableCachingByDefault(because = "Makes network calls")
 abstract class UpdateDockerHubOverviewTask : DefaultTask() {
-
     @get:Input
     abstract val dockerHubUsername: Property<String>
 
@@ -27,6 +26,7 @@ abstract class UpdateDockerHubOverviewTask : DefaultTask() {
     abstract val readmeContent: Property<String>
 
     private fun client(): OkHttpClient = OkHttpClient()
+
     private fun mapper(): ObjectMapper = ObjectMapper().registerKotlinModule()
 
     init {
@@ -46,7 +46,12 @@ abstract class UpdateDockerHubOverviewTask : DefaultTask() {
         val payload = mapper().writeValueAsString(mapOf("username" to username, "password" to apiToken))
         val requestBody = payload.toRequestBody("application/json".toMediaType())
 
-        val request = Request.Builder().url(url).post(requestBody).build()
+        val request =
+            Request
+                .Builder()
+                .url(url)
+                .post(requestBody)
+                .build()
 
         client().newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
@@ -62,15 +67,21 @@ abstract class UpdateDockerHubOverviewTask : DefaultTask() {
         logger.warn("Updating DockerHub overview for repository: ${repositoryName.get()}")
         val url = "https://hub.docker.com/v2/repositories/${repositoryName.get()}/"
 
-        val payload = mapper().writeValueAsString(
-            mapOf(
-                "full_description" to readmeContent.get()
+        val payload =
+            mapper().writeValueAsString(
+                mapOf(
+                    "full_description" to readmeContent.get(),
+                ),
             )
-        )
         val requestBody = payload.toRequestBody("application/json".toMediaType())
 
         val request =
-            Request.Builder().url(url).patch(requestBody).addHeader("Authorization", "JWT $jwtToken").build()
+            Request
+                .Builder()
+                .url(url)
+                .patch(requestBody)
+                .addHeader("Authorization", "JWT $jwtToken")
+                .build()
 
         client().newCall(request).execute().use { response ->
             if (!response.isSuccessful) {

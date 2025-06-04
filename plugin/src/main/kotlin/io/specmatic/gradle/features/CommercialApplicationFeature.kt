@@ -1,15 +1,26 @@
 package io.specmatic.gradle.features
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import io.specmatic.gradle.jar.publishing.*
+import io.specmatic.gradle.jar.publishing.SHADOW_OBFUSCATED_JAR
+import io.specmatic.gradle.jar.publishing.createObfuscatedOriginalJar
+import io.specmatic.gradle.jar.publishing.createObfuscatedShadowJar
+import io.specmatic.gradle.jar.publishing.createShadowedObfuscatedJarPublication
+import io.specmatic.gradle.jar.publishing.createShadowedUnobfuscatedJarPublication
+import io.specmatic.gradle.jar.publishing.createUnobfuscatedShadowJar
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 
-class CommercialApplicationFeature(project: Project) : ApplicationFeature, ShadowingFeature, ObfuscationFeature,
-    GithubReleaseFeature, DockerBuildFeature, BaseDistribution(project) {
+class CommercialApplicationFeature(project: Project) :
+    BaseDistribution(project),
+    ApplicationFeature,
+    ShadowingFeature,
+    ObfuscationFeature,
+    GithubReleaseFeature,
+    DockerBuildFeature {
     override var mainClass: String = ""
+
     override fun applyToProject() {
         super.applyToProject()
         setupLogging()
@@ -26,10 +37,12 @@ class CommercialApplicationFeature(project: Project) : ApplicationFeature, Shado
 
             project.plugins.withType(MavenPublishPlugin::class.java) {
                 project.createShadowedObfuscatedJarPublication(
-                    obfuscatedShadowJar, project.name
+                    obfuscatedShadowJar,
+                    project.name,
                 )
                 project.createShadowedUnobfuscatedJarPublication(
-                    unobfuscatedShadowJar, "${project.name}-all-debug"
+                    unobfuscatedShadowJar,
+                    "${project.name}-all-debug",
                 )
             }
         }

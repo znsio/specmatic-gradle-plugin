@@ -13,26 +13,33 @@ import com.github.jk1.license.render.SimpleHtmlReportRenderer
 import io.specmatic.gradle.SpecmaticGradlePlugin
 import io.specmatic.gradle.extensions.ModuleLicenseData
 import io.specmatic.gradle.specmaticExtension
-import io.specmatic.gradle.tasks.*
+import io.specmatic.gradle.tasks.CreateAllowedLicensesFileTask
+import io.specmatic.gradle.tasks.PrettyPrintLicenseCheckFailures
+import io.specmatic.gradle.tasks.allowedLicenses
+import io.specmatic.gradle.tasks.createDefaultAllowedLicensesFile
+import io.specmatic.gradle.tasks.defaultAllowedLicensesFile
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskProvider
 
+internal class CustomLicenseImporter(private val allowedLicenses: MutableList<ModuleLicenseData>) : DependencyDataImporter {
+    override fun getImporterName(): String = "SpecmaticCustomImporter"
 
-internal class CustomLicenseImporter(private val allowedLicenses: MutableList<ModuleLicenseData>) :
-    DependencyDataImporter {
-    override fun getImporterName(): String {
-        return "SpecmaticCustomImporter"
-    }
-
-    override fun doImport(): Collection<ImportedModuleBundle> {
-        return listOf(ImportedModuleBundle(null, allowedLicenses.map {
-            ImportedModuleData(
-                it.name, it.version, it.projectUrl, it.license, it.licenseUrl
-            )
-        }))
-    }
+    override fun doImport(): Collection<ImportedModuleBundle> = listOf(
+        ImportedModuleBundle(
+            null,
+            allowedLicenses.map {
+                ImportedModuleData(
+                    it.name,
+                    it.version,
+                    it.projectUrl,
+                    it.license,
+                    it.licenseUrl,
+                )
+            },
+        ),
+    )
 }
 
 class SpecmaticLicenseReportingPlugin : Plugin<Project> {
@@ -48,7 +55,10 @@ class SpecmaticLicenseReportingPlugin : Plugin<Project> {
                 val specmaticExtension = project.specmaticExtension()
                 val reportExtension = licenseReportExtension(project)
 
-                val buildDir = project.layout.buildDirectory.get().asFile
+                val buildDir =
+                    project.layout.buildDirectory
+                        .get()
+                        .asFile
                 if (!buildDir.exists()) {
                     buildDir.mkdirs()
                 }
@@ -64,7 +74,6 @@ class SpecmaticLicenseReportingPlugin : Plugin<Project> {
         }
     }
 
-
     companion object {
         private fun renderers(): Array<ReportRenderer> {
             val simpleHtmlReportRenderer = SimpleHtmlReportRenderer("index.html")
@@ -73,20 +82,23 @@ class SpecmaticLicenseReportingPlugin : Plugin<Project> {
         }
 
         private fun filters(): Array<LicenseBundleNormalizer> {
-            val licenseBundleNormalizer = LicenseBundleNormalizer(
-                SpecmaticGradlePlugin::class.java.classLoader.getResourceAsStream("license-normalization.json"), true
-            )
+            val licenseBundleNormalizer =
+                LicenseBundleNormalizer(
+                    SpecmaticGradlePlugin::class.java.classLoader.getResourceAsStream("license-normalization.json"),
+                    true,
+                )
             val spdxLicenseBundleNormalizer = SpdxLicenseBundleNormalizer()
 
             return arrayOf(
-                licenseBundleNormalizer, spdxLicenseBundleNormalizer
+                licenseBundleNormalizer,
+                spdxLicenseBundleNormalizer,
             )
         }
 
         private fun configureTaskDependencies(
             project: Project,
             prettyPrintLicenseCheckFailuresTask: TaskProvider<PrettyPrintLicenseCheckFailures>,
-            createAllowedLicensesFileTask: TaskProvider<CreateAllowedLicensesFileTask>
+            createAllowedLicensesFileTask: TaskProvider<CreateAllowedLicensesFileTask>,
         ) {
             project.tasks.named("checkLicense") {
                 // always regenerate. because caching on this task is broken
@@ -108,14 +120,17 @@ class SpecmaticLicenseReportingPlugin : Plugin<Project> {
 
         private fun licenseReportExtension(project: Project) =
             project.extensions.findByType(LicenseReportExtension::class.java) ?: throw GradleException(
-                "License report extension not found"
+                "License report extension not found",
             )
 
         private fun createPrettyPrintLicenseCheckFailuresTask(project: Project): TaskProvider<PrettyPrintLicenseCheckFailures> =
             project.tasks.register("prettyPrintLicenseCheckFailures", PrettyPrintLicenseCheckFailures::class.java) {
-                inputFile = project.tasks.named("checkLicense").get().outputs.files.singleFile
+                inputFile =
+                    project.tasks
+                        .named("checkLicense")
+                        .get()
+                        .outputs.files.singleFile
             }
-
 
         private fun createCreateAllowedLicensesFileTask(project: Project): TaskProvider<CreateAllowedLicensesFileTask> =
             project.tasks.register("createAllowedLicensesFile", CreateAllowedLicensesFileTask::class.java) {
@@ -124,7 +139,6 @@ class SpecmaticLicenseReportingPlugin : Plugin<Project> {
             }
     }
 }
-
 
 fun Project.pluginInfo(string: String) {
     logger.warn("[SGP - ${this.path}]: $string")

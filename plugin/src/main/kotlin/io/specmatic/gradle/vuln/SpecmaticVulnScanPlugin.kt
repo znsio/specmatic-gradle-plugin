@@ -12,7 +12,12 @@ class SpecmaticVulnScanPlugin : Plugin<Project> {
 
             includeBomSerialNumber.set(false)
             // https://github.com/CycloneDX/cyclonedx-gradle-plugin/issues/271
-            destination.set(project.layout.buildDirectory.get().asFile.resolve("reports/cyclonedx"))
+            destination.set(
+                project.layout.buildDirectory
+                    .get()
+                    .asFile
+                    .resolve("reports/cyclonedx")
+            )
             outputName.set("bom")
             outputFormat.set("all")
         }

@@ -1,22 +1,20 @@
 package io.specmatic.gradle.versioninfo
 
 import io.specmatic.gradle.utils.gitSha
-import org.gradle.api.Project
-import org.gradle.internal.extensions.core.extra
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import org.gradle.api.Project
+import org.gradle.internal.extensions.core.extra
 
-fun Project.versionInfo(): ProjectVersionInfo {
-    return ProjectVersionInfo(
-        version = this.version.toString(),
-        gitCommit = project.gitSha(),
-        group = this.group.toString(),
-        name = this.name,
-        kotlinPackageName = kotlinPackage(),
-        isRootProject = this == this.rootProject,
-        timestamp = project.maybeBuildTimestampIfEnabled()
-    )
-}
+fun Project.versionInfo(): ProjectVersionInfo = ProjectVersionInfo(
+    version = this.version.toString(),
+    gitCommit = project.gitSha(),
+    group = this.group.toString(),
+    name = this.name,
+    kotlinPackageName = kotlinPackage(),
+    isRootProject = this == this.rootProject,
+    timestamp = project.maybeBuildTimestampIfEnabled(),
+)
 
 private fun Project.maybeBuildTimestampIfEnabled(): String? {
     val shouldTimestampJars = project.hasProperty("specmatic.jar.timestamp")
@@ -38,4 +36,4 @@ private fun Project.gitSha(): String {
     return rootProject.extra["specmaticPluginGitSha"] as String
 }
 
-//private fun hasTimestamp(project: Project) = project.hasProperty("specmatic.jar.timestamp")
+// private fun hasTimestamp(project: Project) = project.hasProperty("specmatic.jar.timestamp")

@@ -11,26 +11,28 @@ specmatic {
     publishTo("specmaticSnapshots", "https://repo.specmatic.io/snapshots", RepoType.PUBLISH_OBFUSCATED_ONLY)
     publishTo("specmaticReleases", "https://repo.specmatic.io/releases", RepoType.PUBLISH_OBFUSCATED_ONLY)
 
-    downstreamDependentProjects = listOf(
-        "specmatic",
-        "specmatic-arazzo",
-        "specmatic-async",
-        "specmatic-google-pubsub",
-        "specmatic-gradle-plugin",
-        "specmatic-graphql",
-        "specmatic-grpc",
-        "specmatic-kafka",
-        "specmatic-license",
-        "specmatic-openapi",
-        "specmatic-redis",
-    )
-    releasePublishTasks = listOf(
-        "plugin:publishPlugins",
-        "plugin:publishToMavenCentral",
-        "plugin:publishAllPublicationsToSpecmaticPrivateRepository",
-        "plugin:publishAllPublicationsToSpecmaticSnapshotsRepository",
-        "plugin:publishAllPublicationsToSpecmaticReleasesRepository",
-    )
+    downstreamDependentProjects =
+        listOf(
+            "specmatic",
+            "specmatic-arazzo",
+            "specmatic-async",
+            "specmatic-google-pubsub",
+            "specmatic-gradle-plugin",
+            "specmatic-graphql",
+            "specmatic-grpc",
+            "specmatic-kafka",
+            "specmatic-license",
+            "specmatic-openapi",
+            "specmatic-redis",
+        )
+    releasePublishTasks =
+        listOf(
+            "plugin:publishPlugins",
+            "plugin:publishToMavenCentral",
+            "plugin:publishAllPublicationsToSpecmaticPrivateRepository",
+            "plugin:publishAllPublicationsToSpecmaticSnapshotsRepository",
+            "plugin:publishAllPublicationsToSpecmaticReleasesRepository",
+        )
 
     withOSSLibrary(project(":plugin")) {
         // from com.gradle.publish.PublishPlugin#PUBLISH_TASK_NAME

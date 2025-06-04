@@ -51,23 +51,28 @@ abstract class BaseDistribution(protected val project: Project) : DistributionFl
     protected fun signPublishTasksDependOnSourcesJar() {
         project.tasks.withType(Sign::class.java) {
             dependsOn(
-                project.tasks.withType(Jar::class.java)
-                    .filter { it.name.lowercase().endsWith("sourcesjar") })
+                project.tasks
+                    .withType(Jar::class.java)
+                    .filter { it.name.lowercase().endsWith("sourcesjar") },
+            )
         }
 
         project.tasks.withType(AbstractPublishToMaven::class.java) {
             dependsOn(
-                project.tasks.withType(Jar::class.java)
-                    .filter { it.name.lowercase().endsWith("sourcesjar") })
+                project.tasks
+                    .withType(Jar::class.java)
+                    .filter { it.name.lowercase().endsWith("sourcesjar") },
+            )
         }
 
         project.tasks.withType(GenerateModuleMetadata::class.java) {
             dependsOn(
-                project.tasks.withType(Jar::class.java)
-                    .filter { it.name.lowercase().endsWith("sourcesjar") })
+                project.tasks
+                    .withType(Jar::class.java)
+                    .filter { it.name.lowercase().endsWith("sourcesjar") },
+            )
         }
     }
-
 
     protected open fun shadow(prefix: String?, action: Action<ShadowJar>?) {
         if (prefix != null) {
