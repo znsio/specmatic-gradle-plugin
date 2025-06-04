@@ -26,6 +26,7 @@ class SpecmaticSpotlessPlugin : Plugin<Project> {
 
                 kotlin {
                     target("**/*.kt")
+                    targetExclude("**/gen-kt/**")
                     configure(this)
                 }
                 isEnforceCheck = false
