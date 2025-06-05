@@ -175,10 +175,30 @@ class CommercialApplicationFeatureTest : AbstractFunctionalTest() {
         val allArtifacts = allObfuscatedArtifacts + allUnobfuscatedArtifacts
 
         @Test
-        fun `it publish single fat jar without any dependencies declared in the pom to staging repository`() {
-            runWithSuccess("publishAllPublicationsToStagingRepository", "publishToMavenLocal")
+        fun `it obfuscates and publishes jars`() {
+            val result =
+                runWithSuccess(
+                    "runMain",
+                    "runMainOriginal",
+                    "publishAllPublicationsToStagingRepository",
+                    "publishToMavenLocal",
+                    "publishAllPublicationsToObfuscatedOnlyRepository",
+                    "publishAllPublicationsToAllArtifactsRepository",
+                )
+
+            assertMainObfuscatedJarExecutes(result, "io.specmatic.example.internal.fluxcapacitor")
+            assertMainJarExecutes(result, "io.specmatic.example.internal.fluxcapacitor")
 
             assertPublished(*allArtifacts)
+
+            assertThat(
+                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates(),
+            ).containsExactlyInAnyOrder(*allObfuscatedArtifacts)
+
+            assertThat(
+                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates(),
+            ).containsExactlyInAnyOrder(*allArtifacts)
+
             allArtifacts.forEach { assertThat(getDependencies(it)).isEmpty() }
 
             allArtifacts.forEach {
@@ -194,26 +214,6 @@ class CommercialApplicationFeatureTest : AbstractFunctionalTest() {
                 assertThat(mainClass(it))
                     .isEqualTo("io.specmatic.example.Main")
             }
-        }
-
-        @Test
-        fun `it should obfuscate`() {
-            val result = runWithSuccess("runMain", "runMainOriginal")
-            assertMainObfuscatedJarExecutes(result, "io.specmatic.example.internal.fluxcapacitor")
-            assertMainJarExecutes(result, "io.specmatic.example.internal.fluxcapacitor")
-        }
-
-        @Test
-        fun `assert publication of obfuscated artifacts`() {
-            runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository", "publishAllPublicationsToAllArtifactsRepository")
-
-            assertThat(
-                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates(),
-            ).containsExactlyInAnyOrder(*allObfuscatedArtifacts)
-
-            assertThat(
-                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates(),
-            ).containsExactlyInAnyOrder(*allArtifacts)
         }
     }
 
@@ -319,17 +319,28 @@ class CommercialApplicationFeatureTest : AbstractFunctionalTest() {
         val allArtifacts = obfuscatedArtifacts + unobfuscatedArtifacts
 
         @Test
-        fun `it should obfuscate`() {
-            val result = runWithSuccess("runMain", "runMainOriginal")
+        fun `it obfuscates and publishes jars`() {
+            val result =
+                runWithSuccess(
+                    "publishAllPublicationsToStagingRepository",
+                    "publishToMavenLocal",
+                    "publishAllPublicationsToObfuscatedOnlyRepository",
+                    "publishAllPublicationsToAllArtifactsRepository",
+                    "runMain",
+                    "runMainOriginal",
+                )
             assertMainObfuscatedJarExecutes(result, "io.specmatic.example.executable.internal.fluxcapacitor")
             assertMainJarExecutes(result, "io.specmatic.example.executable.internal.fluxcapacitor")
-        }
-
-        @Test
-        fun `it publish single fat jar for executable with no deps, and core jar with dependencies`() {
-            runWithSuccess("publishAllPublicationsToStagingRepository", "publishToMavenLocal")
 
             assertPublished(*allArtifacts)
+
+            assertThat(
+                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates(),
+            ).containsExactlyInAnyOrder(*obfuscatedArtifacts)
+
+            assertThat(
+                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates(),
+            ).containsExactlyInAnyOrder(*allArtifacts)
 
             assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).isEmpty()
             assertThat(getDependencies("io.specmatic.example:executable-all-debug:1.2.3")).isEmpty()
@@ -395,19 +406,6 @@ class CommercialApplicationFeatureTest : AbstractFunctionalTest() {
             assertThat(projectDir.resolve("executable/build/specmatic-foo").readText().lines())
                 .contains("""#!/usr/bin/env bash""")
                 .contains("""exec java ${'$'}JAVA_OPTS -jar /usr/local/share/specmatic-foo.jar "${'$'}@"""")
-        }
-
-        @Test
-        fun `assert publication of obfuscated artifacts`() {
-            runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository", "publishAllPublicationsToAllArtifactsRepository")
-
-            assertThat(
-                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates(),
-            ).containsExactlyInAnyOrder(*obfuscatedArtifacts)
-
-            assertThat(
-                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates(),
-            ).containsExactlyInAnyOrder(*allArtifacts)
         }
     }
 
@@ -511,17 +509,29 @@ class CommercialApplicationFeatureTest : AbstractFunctionalTest() {
         val allArtifacts = obfuscatedArtifacts + unobfuscatedArtifacts
 
         @Test
-        fun `it should obfuscate`() {
-            val result = runWithSuccess("runMain", "runMainOriginal")
+        fun `it obfuscates and publishes jars`() {
+            val result =
+                runWithSuccess(
+                    "runMain",
+                    "runMainOriginal",
+                    "publishAllPublicationsToStagingRepository",
+                    "publishToMavenLocal",
+                    "publishAllPublicationsToObfuscatedOnlyRepository",
+                    "publishAllPublicationsToAllArtifactsRepository",
+                )
+
             assertMainObfuscatedJarExecutes(result, "io.specmatic.example.executable.internal.fluxcapacitor")
             assertMainJarExecutes(result, "io.specmatic.example.executable.internal.fluxcapacitor")
-        }
-
-        @Test
-        fun `it publish single fat jar for executable with no deps, and core jar with dependencies`() {
-            runWithSuccess("publishAllPublicationsToStagingRepository", "publishToMavenLocal")
 
             assertPublished(*allArtifacts)
+
+            assertThat(
+                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates(),
+            ).containsExactlyInAnyOrder(*obfuscatedArtifacts)
+
+            assertThat(
+                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates(),
+            ).containsExactlyInAnyOrder(*allArtifacts)
 
             assertThat(getDependencies("io.specmatic.example:executable:1.2.3")).isEmpty()
             assertThat(getDependencies("io.specmatic.example:core:1.2.3")).isEmpty()
@@ -539,19 +549,6 @@ class CommercialApplicationFeatureTest : AbstractFunctionalTest() {
 
             assertThat(mainClass("io.specmatic.example:executable:1.2.3"))
                 .isEqualTo("io.specmatic.example.executable.Main")
-        }
-
-        @Test
-        fun `assert publication of obfuscated artifacts`() {
-            runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository", "publishAllPublicationsToAllArtifactsRepository")
-
-            assertThat(
-                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates(),
-            ).containsExactlyInAnyOrder(*obfuscatedArtifacts)
-
-            assertThat(
-                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates(),
-            ).containsExactlyInAnyOrder(*allArtifacts)
         }
     }
 }

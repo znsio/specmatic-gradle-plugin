@@ -51,9 +51,30 @@ class OSSApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
         }
 
         @Test
-        fun `it publish single fat jar without any dependencies declared in the pom to staging repository`() {
-            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain", "publishToMavenLocal")
+        fun `it should publish artifacts`() {
+            val result =
+                runWithSuccess(
+                    "publishAllPublicationsToStagingRepository",
+                    "runMain",
+                    "publishToMavenLocal",
+                    "publishAllPublicationsToObfuscatedOnlyRepository",
+                    "publishAllPublicationsToAllArtifactsRepository",
+                )
             assertMainJarExecutes(result)
+
+            assertThat(
+                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates(),
+            ).containsExactlyInAnyOrder(
+                "io.specmatic.example:example-project:1.2.3",
+                "io.specmatic.example:example-project-all:1.2.3",
+            )
+
+            assertThat(
+                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates(),
+            ).containsExactlyInAnyOrder(
+                "io.specmatic.example:example-project:1.2.3",
+                "io.specmatic.example:example-project-all:1.2.3",
+            )
 
             assertPublishedWithJavadocAndSources(
                 "io.specmatic.example:example-project:1.2.3",
@@ -94,25 +115,6 @@ class OSSApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
             assertThat(projectDir.resolve("build/example-project").readText().lines())
                 .contains("""#!/usr/bin/env bash""")
                 .contains("""exec java ${'$'}JAVA_OPTS -jar /usr/local/share/example-project.jar "${'$'}@"""")
-        }
-
-        @Test
-        fun `assert publication of obfuscated artifacts`() {
-            runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository", "publishAllPublicationsToAllArtifactsRepository")
-
-            assertThat(
-                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates(),
-            ).containsExactlyInAnyOrder(
-                "io.specmatic.example:example-project:1.2.3",
-                "io.specmatic.example:example-project-all:1.2.3",
-            )
-
-            assertThat(
-                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates(),
-            ).containsExactlyInAnyOrder(
-                "io.specmatic.example:example-project:1.2.3",
-                "io.specmatic.example:example-project-all:1.2.3",
-            )
         }
     }
 
@@ -160,9 +162,30 @@ class OSSApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
         }
 
         @Test
-        fun `it publish single fat jar without any dependencies declared in the pom to staging repository`() {
-            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain", "publishToMavenLocal")
+        fun `it should publish artifacts`() {
+            val result =
+                runWithSuccess(
+                    "publishAllPublicationsToStagingRepository",
+                    "runMain",
+                    "publishToMavenLocal",
+                    "publishAllPublicationsToObfuscatedOnlyRepository",
+                    "publishAllPublicationsToAllArtifactsRepository",
+                )
             assertMainJarExecutes(result)
+
+            assertThat(
+                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates(),
+            ).containsExactlyInAnyOrder(
+                "io.specmatic.example:example-project:1.2.3",
+                "io.specmatic.example:example-project-all:1.2.3",
+            )
+
+            assertThat(
+                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates(),
+            ).containsExactlyInAnyOrder(
+                "io.specmatic.example:example-project:1.2.3",
+                "io.specmatic.example:example-project-all:1.2.3",
+            )
 
             assertPublishedWithJavadocAndSources(
                 "io.specmatic.example:example-project:1.2.3",
@@ -186,25 +209,6 @@ class OSSApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
 
             assertThat(mainClass("io.specmatic.example:example-project-all:1.2.3")).isEqualTo(
                 "io.specmatic.example.Main",
-            )
-        }
-
-        @Test
-        fun `assert publication of obfuscated artifacts`() {
-            runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository", "publishAllPublicationsToAllArtifactsRepository")
-
-            assertThat(
-                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates(),
-            ).containsExactlyInAnyOrder(
-                "io.specmatic.example:example-project:1.2.3",
-                "io.specmatic.example:example-project-all:1.2.3",
-            )
-
-            assertThat(
-                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates(),
-            ).containsExactlyInAnyOrder(
-                "io.specmatic.example:example-project:1.2.3",
-                "io.specmatic.example:example-project-all:1.2.3",
             )
         }
     }
@@ -279,9 +283,32 @@ class OSSApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
         }
 
         @Test
-        fun `it publish single fat jar for executable with no deps, and core jar with dependencies`() {
-            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain", "publishToMavenLocal")
+        fun `it should publish artifacts`() {
+            val result =
+                runWithSuccess(
+                    "publishAllPublicationsToStagingRepository",
+                    "runMain",
+                    "publishToMavenLocal",
+                    "publishAllPublicationsToObfuscatedOnlyRepository",
+                    "publishAllPublicationsToAllArtifactsRepository",
+                )
             assertMainJarExecutes(result)
+
+            assertThat(
+                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates(),
+            ).containsExactlyInAnyOrder(
+                "io.specmatic.example:executable:1.2.3",
+                "io.specmatic.example:executable-all:1.2.3",
+                "io.specmatic.example:core:1.2.3",
+            )
+
+            assertThat(
+                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates(),
+            ).containsExactlyInAnyOrder(
+                "io.specmatic.example:executable:1.2.3",
+                "io.specmatic.example:executable-all:1.2.3",
+                "io.specmatic.example:core:1.2.3",
+            )
 
             assertPublishedWithJavadocAndSources(
                 "io.specmatic.example:executable:1.2.3",
@@ -331,27 +358,6 @@ class OSSApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
             assertThat(projectDir.resolve("executable/build/specmatic-foo").readText().lines())
                 .contains("""#!/usr/bin/env bash""")
                 .contains("""exec java ${'$'}JAVA_OPTS -jar /usr/local/share/specmatic-foo.jar "${'$'}@"""")
-        }
-
-        @Test
-        fun `assert publication of obfuscated artifacts`() {
-            runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository", "publishAllPublicationsToAllArtifactsRepository")
-
-            assertThat(
-                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates(),
-            ).containsExactlyInAnyOrder(
-                "io.specmatic.example:executable:1.2.3",
-                "io.specmatic.example:executable-all:1.2.3",
-                "io.specmatic.example:core:1.2.3",
-            )
-
-            assertThat(
-                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates(),
-            ).containsExactlyInAnyOrder(
-                "io.specmatic.example:executable:1.2.3",
-                "io.specmatic.example:executable-all:1.2.3",
-                "io.specmatic.example:core:1.2.3",
-            )
         }
     }
 
@@ -423,9 +429,32 @@ class OSSApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
         }
 
         @Test
-        fun `it publish single fat jar for executable with no deps, and core jar with dependencies`() {
-            val result = runWithSuccess("publishAllPublicationsToStagingRepository", "runMain", "publishToMavenLocal")
+        fun `should publish artifacts`() {
+            val result =
+                runWithSuccess(
+                    "publishAllPublicationsToStagingRepository",
+                    "runMain",
+                    "publishToMavenLocal",
+                    "publishAllPublicationsToObfuscatedOnlyRepository",
+                    "publishAllPublicationsToAllArtifactsRepository",
+                )
             assertMainJarExecutes(result)
+
+            assertThat(
+                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates(),
+            ).containsExactlyInAnyOrder(
+                "io.specmatic.example:executable:1.2.3",
+                "io.specmatic.example:executable-all:1.2.3",
+                "io.specmatic.example:core:1.2.3",
+            )
+
+            assertThat(
+                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates(),
+            ).containsExactlyInAnyOrder(
+                "io.specmatic.example:executable:1.2.3",
+                "io.specmatic.example:executable-all:1.2.3",
+                "io.specmatic.example:core:1.2.3",
+            )
 
             assertPublishedWithJavadocAndSources(
                 "io.specmatic.example:executable:1.2.3",
@@ -458,27 +487,6 @@ class OSSApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
 
             assertThat(mainClass("io.specmatic.example:executable-all:1.2.3")).isEqualTo(
                 "io.specmatic.example.executable.Main",
-            )
-        }
-
-        @Test
-        fun `assert publication of obfuscated artifacts`() {
-            runWithSuccess("publishAllPublicationsToObfuscatedOnlyRepository", "publishAllPublicationsToAllArtifactsRepository")
-
-            assertThat(
-                projectDir.resolve("build/obfuscated-only").getPublishedArtifactCoordinates(),
-            ).containsExactlyInAnyOrder(
-                "io.specmatic.example:executable:1.2.3",
-                "io.specmatic.example:executable-all:1.2.3",
-                "io.specmatic.example:core:1.2.3",
-            )
-
-            assertThat(
-                projectDir.resolve("build/all-artifacts").getPublishedArtifactCoordinates(),
-            ).containsExactlyInAnyOrder(
-                "io.specmatic.example:executable:1.2.3",
-                "io.specmatic.example:executable-all:1.2.3",
-                "io.specmatic.example:core:1.2.3",
             )
         }
     }
