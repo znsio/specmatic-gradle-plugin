@@ -60,6 +60,7 @@ class CommercialApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
         val allUnobfuscatedArtifacts =
             arrayOf(
                 "io.specmatic.example:example-project-all-debug:1.2.3",
+                "io.specmatic.example:example-project-dont-use-this-unless-you-know-what-you-are-doing:1.2.3",
             )
 
         val allObfuscatedArtifacts =
@@ -191,6 +192,7 @@ class CommercialApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
         val allUnobfuscatedArtifacts =
             arrayOf(
                 "io.specmatic.example:example-project-all-debug:1.2.3",
+                "io.specmatic.example:example-project-dont-use-this-unless-you-know-what-you-are-doing:1.2.3",
             )
 
         val allObfuscatedArtifacts =
@@ -347,6 +349,7 @@ class CommercialApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
             arrayOf(
                 "io.specmatic.example:executable-all-debug:1.2.3",
                 "io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3",
+                "io.specmatic.example:executable-dont-use-this-unless-you-know-what-you-are-doing:1.2.3",
                 "io.specmatic.example:core-all-debug:1.2.3",
             )
 
@@ -534,6 +537,7 @@ class CommercialApplicationAndLibraryFeatureTest : AbstractFunctionalTest() {
                 "io.specmatic.example:core-all-debug:1.2.3",
                 "io.specmatic.example:core-dont-use-this-unless-you-know-what-you-are-doing:1.2.3",
                 "io.specmatic.example:executable-all-debug:1.2.3",
+                "io.specmatic.example:executable-dont-use-this-unless-you-know-what-you-are-doing:1.2.3",
             )
 
         val allObfuscatedArtifacts =
