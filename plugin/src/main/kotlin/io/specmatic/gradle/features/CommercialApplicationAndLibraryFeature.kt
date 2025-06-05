@@ -7,6 +7,7 @@ import io.specmatic.gradle.jar.publishing.createObfuscatedOriginalJarPublication
 import io.specmatic.gradle.jar.publishing.createObfuscatedShadowJar
 import io.specmatic.gradle.jar.publishing.createShadowedObfuscatedJarPublication
 import io.specmatic.gradle.jar.publishing.createShadowedUnobfuscatedJarPublication
+import io.specmatic.gradle.jar.publishing.createUnobfuscatedJarPublication
 import io.specmatic.gradle.jar.publishing.createUnobfuscatedShadowJar
 import org.gradle.api.Action
 import org.gradle.api.Project
@@ -37,6 +38,9 @@ class CommercialApplicationAndLibraryFeature(project: Project) :
                 project.createObfuscatedShadowJar(obfuscatedOriginalJar, shadowActions, shadowPrefix, true)
 
             project.plugins.withType(MavenPublishPlugin::class.java) {
+                project.createUnobfuscatedJarPublication(
+                    "${project.name}-dont-use-this-unless-you-know-what-you-are-doing",
+                )
                 project.createShadowedObfuscatedJarPublication(
                     obfuscatedShadowJar,
                     "${project.name}-all",
